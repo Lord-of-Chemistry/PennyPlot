@@ -1,13 +1,21 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import SideBar from "@/components/SideBar.jsx";
+import { useState } from "react";
 
 function Dashboard() {
+  const [isCollapsed, setIsCollapsed] = useState(false);
   return (
     <div className="min-h-screen bg-[#0f1714]">
-      <SideBar />
-      <main className="p-4 flex-1 bg-[#0f1714] text-white md:ml-64 min-h-screen overflow-y-auto">
+      <SideBar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+      <main
+        className={`p-4 bg-[#0f1714] text-white min-h-screen overflow-y-auto transition-[margin] duration-300 ease-in-out ${
+          isCollapsed ? "ml-20" : "ml-64"
+        }`}
+      >
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-sm text-gray-400">Here's your financial review.</p>
+        <p className="text-sm text-gray-400 mb-10">
+          Here's your financial review.
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
           <Card className="rounded-xl border border-white/10 hover:bg-[#049552]/10 transition-colors duration-200 ease-in-out">
             <CardHeader>
