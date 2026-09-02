@@ -133,9 +133,7 @@ function Dashboard() {
                   {card.value}
                 </p>
 
-                <p className="mt-3 text-xs text-gray-500">
-                  {card.description}
-                </p>
+                <p className="mt-3 text-xs text-gray-500">{card.description}</p>
               </CardContent>
             </Card>
           );
@@ -150,9 +148,7 @@ function Dashboard() {
           </div>
 
           <div>
-            <h2 className="text-lg font-semibold text-white">
-              This Month
-            </h2>
+            <h2 className="text-lg font-semibold text-white">This Month</h2>
 
             <p className="text-sm text-gray-500">
               Your financial activity for{" "}
@@ -163,10 +159,7 @@ function Dashboard() {
 
         {thisMonthTransactions.length === 0 ? (
           <div className="rounded-xl border border-dashed border-white/10 px-5 py-8 text-center">
-            <CalendarDays
-              size={28}
-              className="mx-auto mb-3 text-gray-600"
-            />
+            <CalendarDays size={28} className="mx-auto mb-3 text-gray-600" />
 
             <p className="text-sm font-medium text-gray-400">
               Nothing recorded this month
@@ -183,10 +176,7 @@ function Dashboard() {
               <div className="flex items-center justify-between">
                 <p className="text-sm text-gray-400">Income</p>
 
-                <ArrowUpRight
-                  size={17}
-                  className="text-[#049552]"
-                />
+                <ArrowUpRight size={17} className="text-[#049552]" />
               </div>
 
               <p className="mt-3 text-2xl font-bold text-[#049552]">
@@ -199,10 +189,7 @@ function Dashboard() {
               <div className="flex items-center justify-between">
                 <p className="text-sm text-gray-400">Expenses</p>
 
-                <ArrowDownRight
-                  size={17}
-                  className="text-red-400"
-                />
+                <ArrowDownRight size={17} className="text-red-400" />
               </div>
 
               <p className="mt-3 text-2xl font-bold text-red-400">
@@ -218,18 +205,14 @@ function Dashboard() {
                 <Wallet
                   size={17}
                   className={
-                    monthlyNet >= 0
-                      ? "text-[#049552]"
-                      : "text-red-400"
+                    monthlyNet >= 0 ? "text-[#049552]" : "text-red-400"
                   }
                 />
               </div>
 
               <p
                 className={`mt-3 text-2xl font-bold ${
-                  monthlyNet >= 0
-                    ? "text-[#049552]"
-                    : "text-red-400"
+                  monthlyNet >= 0 ? "text-[#049552]" : "text-red-400"
                 }`}
               >
                 {formatCurrency(monthlyNet)}
@@ -255,18 +238,15 @@ function Dashboard() {
 
           {income === 0 && expenses === 0 ? (
             <div className="rounded-xl border border-dashed border-white/10 px-5 py-10 text-center">
-              <TrendingUp
-                size={30}
-                className="mx-auto mb-3 text-gray-600"
-              />
+              <TrendingUp size={30} className="mx-auto mb-3 text-gray-600" />
 
               <p className="text-sm font-medium text-gray-400">
                 No financial activity yet
               </p>
 
               <p className="mt-1 text-xs text-gray-600">
-                Your income and expenses will appear here once you
-                add transactions.
+                Your income and expenses will appear here once you add
+                transactions.
               </p>
             </div>
           ) : (
@@ -274,9 +254,7 @@ function Dashboard() {
               {/* Income */}
               <div>
                 <div className="mb-2 flex items-center justify-between">
-                  <span className="text-sm text-gray-400">
-                    Income
-                  </span>
+                  <span className="text-sm text-gray-400">Income</span>
 
                   <span className="text-sm font-semibold text-[#049552]">
                     {formatCurrency(income)}
@@ -300,9 +278,7 @@ function Dashboard() {
               {/* Expenses */}
               <div>
                 <div className="mb-2 flex items-center justify-between">
-                  <span className="text-sm text-gray-400">
-                    Expenses
-                  </span>
+                  <span className="text-sm text-gray-400">Expenses</span>
 
                   <span className="text-sm font-semibold text-red-400">
                     {formatCurrency(expenses)}
@@ -324,15 +300,11 @@ function Dashboard() {
               </div>
 
               <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
-                <p className="text-xs text-gray-500">
-                  Net balance
-                </p>
+                <p className="text-xs text-gray-500">Net balance</p>
 
                 <p
                   className={`mt-1 text-xl font-bold ${
-                    balance >= 0
-                      ? "text-[#049552]"
-                      : "text-red-400"
+                    balance >= 0 ? "text-[#049552]" : "text-red-400"
                   }`}
                 >
                   {formatCurrency(balance)}
@@ -362,10 +334,7 @@ function Dashboard() {
 
           {spendingBreakdown.length === 0 ? (
             <div className="rounded-xl border border-dashed border-white/10 px-5 py-10 text-center">
-              <Receipt
-                size={30}
-                className="mx-auto mb-3 text-gray-600"
-              />
+              <Receipt size={30} className="mx-auto mb-3 text-gray-600" />
 
               <p className="text-sm font-medium text-gray-400">
                 No spending to analyze
@@ -386,9 +355,7 @@ function Dashboard() {
                 return (
                   <div key={category}>
                     <div className="mb-2 flex items-center justify-between">
-                      <span className="text-sm text-gray-300">
-                        {category}
-                      </span>
+                      <span className="text-sm text-gray-300">{category}</span>
 
                       <span className="text-sm font-medium text-white">
                         {formatCurrency(amount)}
@@ -432,10 +399,7 @@ function Dashboard() {
           <div className="space-y-3">
             {transactions.length === 0 ? (
               <div className="rounded-xl border border-dashed border-white/10 px-5 py-10 text-center">
-                <Receipt
-                  size={30}
-                  className="mx-auto mb-3 text-gray-600"
-                />
+                <Receipt size={30} className="mx-auto mb-3 text-gray-600" />
 
                 <p className="text-sm font-medium text-gray-400">
                   Your transactions will appear here
