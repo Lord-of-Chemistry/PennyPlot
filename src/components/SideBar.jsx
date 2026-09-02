@@ -7,8 +7,18 @@ import {
   ArrowRightToLine,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { NavLink } from "react-router-dom";
 
 function SideBar({ isCollapsed, setIsCollapsed }) {
+  const menuItems = [
+    { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+    { name: "Transactions", path: "/transactions", icon: ArrowLeftRight },
+    { name: "Analytics", path: "/analytics", icon: ChartNoAxesCombined },
+    { name: "Budgets", path: "/budgets", icon: Wallet },
+  ];
+  const currentPath = window.location.pathname;
+
+  console.log(currentPath);
   return (
     <aside
       className={`flex ${
@@ -27,96 +37,58 @@ function SideBar({ isCollapsed, setIsCollapsed }) {
           <ArrowRightToLine size={20} />
         </Button>
 
-        <a
-          href="/dashboard"
-          className={`flex items-center mb-3 px-3 py-2 rounded-md bg-[#049552]/10 text-[#049552] transition-all duration-300 ease-in-out ${
-            isCollapsed ? "justify-center" : "gap-3"
-          }`}
-        >
-          <LayoutDashboard size={20} className="shrink-0" />
-          <span
-            className={`whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out ${
-              isCollapsed
-                ? "max-w-0 opacity-0"
-                : "max-w-40 opacity-100"
-            }`}
-          >
-            Dashboard
-          </span>
-        </a>
+        {menuItems.map((item) => {
+          const Icon = item.icon;
 
-        <a
-          href="/transactions"
-          className={`flex items-center mb-3 px-3 py-2 hover:text-[#049552] transition-all duration-300 ease-in-out ${
-            isCollapsed ? "justify-center" : "gap-3"
-          }`}
-        >
-          <ArrowLeftRight size={20} className="shrink-0" />
-          <span
-            className={`whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out ${
-              isCollapsed
-                ? "max-w-0 opacity-0"
-                : "max-w-40 opacity-100"
-            }`}
-          >
-            Transactions
-          </span>
-        </a>
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={`flex items-center mb-3 px-3 py-2 rounded-md transition-all duration-300 ease-in-out ${
+                isCollapsed ? "justify-center" : "gap-3"
+              }`}
+            >
+              {({ isActive }) => (
+                <>
+                  <Icon
+                    size={20}
+                    className={`shrink-0 ${isActive ? "text-[#049552]" : ""}`}
+                  />
 
-        <a
-          href="/analytics"
-          className={`flex items-center mb-3 px-3 py-2 hover:text-[#049552] transition-all duration-300 ease-in-out ${
-            isCollapsed ? "justify-center" : "gap-3"
-          }`}
-        >
-          <ChartNoAxesCombined size={20} className="shrink-0" />
-          <span
-            className={`whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out ${
-              isCollapsed
-                ? "max-w-0 opacity-0"
-                : "max-w-40 opacity-100"
-            }`}
-          >
-            Analytics
-          </span>
-        </a>
-
-        <a
-          href="/budgets"
-          className={`flex items-center mb-3 px-3 py-2 hover:text-[#049552] transition-all duration-300 ease-in-out ${
-            isCollapsed ? "justify-center" : "gap-3"
-          }`}
-        >
-          <Wallet size={20} className="shrink-0" />
-          <span
-            className={`whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out ${
-              isCollapsed
-                ? "max-w-0 opacity-0"
-                : "max-w-40 opacity-100"
-            }`}
-          >
-            Budgets
-          </span>
-        </a>
+                  <span
+                    className={`whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out ${
+                      isCollapsed ? "max-w-0 opacity-0" : "max-w-40 opacity-100"
+                    } ${isActive ? "text-[#049552]" : "text-white"}`}
+                  >
+                    {item.name}
+                  </span>
+                </>
+              )}
+            </NavLink>
+          );
+        })}
       </div>
 
-      <a
-        href="/settings"
-        className={`mt-auto flex items-center mb-3 px-3 py-2 rounded-md bg-white/10 text-white transition-all duration-300 ease-in-out ${
+      <NavLink
+        to="/settings"
+        className={`mt-auto flex items-center mb-3 px-3 py-2 rounded-md transition-all duration-300 ease-in-out ${
           isCollapsed ? "justify-center" : "gap-3"
         }`}
       >
-        <Settings size={20} className="shrink-0" />
-        <span
-          className={`whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out ${
-            isCollapsed
-              ? "max-w-0 opacity-0"
-              : "max-w-40 opacity-100"
-          }`}
-        >
-          Settings
-        </span>
-      </a>
+        {({ isActive }) => (
+          <>
+            <Settings size={20} className={isActive ? "text-[#049552]" : ""} />
+
+            <span
+              className={`whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out ${
+                isCollapsed ? "max-w-0 opacity-0" : "max-w-40 opacity-100"
+              } ${isActive ? "text-[#049552]" : "text-white"}`}
+            >
+              Settings
+            </span>
+          </>
+        )}
+      </NavLink>
     </aside>
   );
 }
