@@ -5,10 +5,13 @@ import Transactions from "./pages/Transactions";
 import Analytics from "./pages/Analytics";
 import Budgets from "./pages/Budgets";
 import Settings from "./pages/Settings";
+import { Toaster } from "@/components/ui/sonner";
 
 function App() {
   return (
     <BrowserRouter>
+    <Toaster />
+    
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<Navigate to="/dashboard" />} />

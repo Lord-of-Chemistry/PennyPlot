@@ -173,7 +173,7 @@ function SideBar({ isCollapsed, setIsCollapsed, isOnline }) {
       </aside>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 gap-2 rounded-2xl border border-white/10 bg-[#22332b]/90 p-3 shadow-xl backdrop-blur-md md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 w-full z-50 flex justify-around gap-2 rounded-t-2xl border border-white/10 bg-[#22332b]/90 p-3 shadow-xl backdrop-blur-md md:hidden">
         {menuItems.map((item) => {
           const Icon = item.icon;
 

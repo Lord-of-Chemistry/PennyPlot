@@ -7,9 +7,19 @@ import {
   Receipt,
   BarChart3,
   PieChart,
+  PiggyBank,
+  CalendarDays,
+  ArrowUpRight,
+  ArrowDownRight,
+  Minus,
 } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 import {
   ChartContainer,
@@ -18,8 +28,6 @@ import {
 } from "@/components/ui/chart";
 
 import {
-  Bar,
-  BarChart,
   CartesianGrid,
   Line,
   LineChart,
@@ -37,24 +45,13 @@ function Analytics() {
   }
 
   function formatPercent(value) {
-    if (!Number.isFinite(value)) return "0%";
+    if (!Number.isFinite(value)) {
+      return "0%";
+    }
 
     return `${value >= 0 ? "+" : ""}${Math.round(value)}%`;
   }
 
-  const income = transactions
-    .filter((transaction) => transaction.type === "income")
-    .reduce((total, transaction) => total + Number(transaction.amount), 0);
-
-  const expenses = transactions
-    .filter((transaction) => transaction.type === "expense")
-    .reduce((total, transaction) => total + Number(transaction.amount), 0);
-
-  const balance = income - expenses;
-
-  /*
-    Get the start of a given period.
-  */
   function getPeriodStart(date, selectedPeriod) {
     const result = new Date(date);
 
@@ -83,9 +80,6 @@ function Analytics() {
     return result;
   }
 
-  /*
-    Add/subtract one period.
-  */
   function movePeriod(date, selectedPeriod, amount) {
     const result = new Date(date);
 
@@ -108,9 +102,6 @@ function Analytics() {
     return result;
   }
 
-  /*
-    Format the label shown on the chart.
-  */
   function formatPeriodLabel(date, selectedPeriod) {
     if (selectedPeriod === "daily") {
       return date.toLocaleDateString("en-US", {
@@ -120,10 +111,10 @@ function Analytics() {
     }
 
     if (selectedPeriod === "weekly") {
-      return `Week ${date.toLocaleDateString("en-US", {
+      return date.toLocaleDateString("en-US", {
         day: "numeric",
         month: "short",
-      })}`;
+      });
     }
 
     if (selectedPeriod === "monthly") {
@@ -135,41 +126,49 @@ function Analytics() {
     return date.getFullYear().toString();
   }
 
-  /*
-    Build the chart data based on the selected period.
-  */
-  const periodData = useMemo(() => {
-    const validTransactions = transactions
-      .map((transaction) => {
-        const date = new Date(transaction.date);
+  const validTransactions = useMemo(() => {
+    return transactions
+      .map((transaction) => ({
+        ...transaction,
+        parsedDate: new Date(transaction.date),
+        numericAmount: Number(transaction.amount) || 0,
+      }))
+      .filter(
+        (transaction) =>
+          !Number.isNaN(transaction.parsedDate.getTime()),
+      );
+  }, [transactions]);
 
-        return {
-          ...transaction,
-          parsedDate: date,
-          numericAmount: Number(transaction.amount) || 0,
-        };
-      })
-      .filter((transaction) => !Number.isNaN(transaction.parsedDate.getTime()));
-
-    if (validTransactions.length === 0) {
-      return [];
-    }
-
-    const latestDate = validTransactions.reduce(
-      (latest, transaction) =>
-        transaction.parsedDate > latest ? transaction.parsedDate : latest,
-      validTransactions[0].parsedDate,
+  const income = validTransactions
+    .filter((transaction) => transaction.type === "income")
+    .reduce(
+      (total, transaction) => total + transaction.numericAmount,
+      0,
     );
 
-    const currentPeriodStart = getPeriodStart(latestDate, period);
+  const expenses = validTransactions
+    .filter((transaction) => transaction.type === "expense")
+    .reduce(
+      (total, transaction) => total + transaction.numericAmount,
+      0,
+    );
 
-    /*
-      Show:
-      Daily   → last 7 days
-      Weekly  → last 8 weeks
-      Monthly → last 6 months
-      Yearly   → last 5 years
-    */
+  const balance = income - expenses;
+
+  /*
+   * PERIOD DATA
+   *
+   * Builds the chart and all period-based analytics
+   * around the current date.
+   */
+  const periodData = useMemo(() => {
+    const today = new Date();
+
+    const currentPeriodStart = getPeriodStart(
+      today,
+      period,
+    );
+
     const numberOfPeriods =
       period === "daily"
         ? 7
@@ -182,100 +181,246 @@ function Analytics() {
     const periods = [];
 
     for (let i = numberOfPeriods - 1; i >= 0; i--) {
-      const start = movePeriod(currentPeriodStart, period, -i);
-
-      const end = movePeriod(start, period, 1);
-
-      const periodTransactions = validTransactions.filter(
-        (transaction) =>
-          transaction.parsedDate >= start && transaction.parsedDate < end,
+      const start = movePeriod(
+        currentPeriodStart,
+        period,
+        -i,
       );
 
-      const periodIncome = periodTransactions
-        .filter((transaction) => transaction.type === "income")
-        .reduce((total, transaction) => total + transaction.numericAmount, 0);
+      const end = movePeriod(
+        start,
+        period,
+        1,
+      );
 
-      const periodExpenses = periodTransactions
-        .filter((transaction) => transaction.type === "expense")
-        .reduce((total, transaction) => total + transaction.numericAmount, 0);
+      const periodTransactions =
+        validTransactions.filter(
+          (transaction) =>
+            transaction.parsedDate >= start &&
+            transaction.parsedDate < end,
+        );
+
+      const periodIncome =
+        periodTransactions
+          .filter(
+            (transaction) =>
+              transaction.type === "income",
+          )
+          .reduce(
+            (total, transaction) =>
+              total + transaction.numericAmount,
+            0,
+          );
+
+      const periodExpenses =
+        periodTransactions
+          .filter(
+            (transaction) =>
+              transaction.type === "expense",
+          )
+          .reduce(
+            (total, transaction) =>
+              total + transaction.numericAmount,
+            0,
+          );
 
       periods.push({
         key: start.toISOString(),
         date: start,
-        label: formatPeriodLabel(start, period),
+        label: formatPeriodLabel(
+          start,
+          period,
+        ),
         income: periodIncome,
         expenses: periodExpenses,
+        net: periodIncome - periodExpenses,
       });
     }
 
     return periods;
-  }, [transactions, period]);
+  }, [validTransactions, period]);
+
+  const currentPeriodData =
+    periodData[periodData.length - 1] || {
+      income: 0,
+      expenses: 0,
+      net: 0,
+    };
 
   /*
-    Current and previous period comparison.
-  */
+   * COMPARISON
+   */
   const comparison = useMemo(() => {
     if (periodData.length < 2) {
       return {
         incomeChange: 0,
         expenseChange: 0,
         netChange: 0,
-        hasPrevious: false,
       };
     }
 
-    const current = periodData[periodData.length - 1];
-    const previous = periodData[periodData.length - 2];
+    const current =
+      periodData[periodData.length - 1];
 
-    function calculateChange(currentValue, previousValue) {
+    const previous =
+      periodData[periodData.length - 2];
+
+    function calculateChange(
+      currentValue,
+      previousValue,
+    ) {
       if (previousValue === 0) {
-        if (currentValue === 0) return 0;
+        if (currentValue === 0) {
+          return 0;
+        }
+
         return 100;
       }
 
-      return ((currentValue - previousValue) / previousValue) * 100;
+      return (
+        ((currentValue - previousValue) /
+          Math.abs(previousValue)) *
+        100
+      );
     }
 
     return {
-      incomeChange: calculateChange(current.income, previous.income),
-
-      expenseChange: calculateChange(current.expenses, previous.expenses),
-
-      netChange: calculateChange(
-        current.income - current.expenses,
-        previous.income - previous.expenses,
+      incomeChange: calculateChange(
+        current.income,
+        previous.income,
       ),
 
-      hasPrevious: true,
+      expenseChange: calculateChange(
+        current.expenses,
+        previous.expenses,
+      ),
+
+      netChange: calculateChange(
+        current.net,
+        previous.net,
+      ),
     };
   }, [periodData]);
 
   /*
-    Category spending.
-  */
-  const categoryData = useMemo(() => {
+   * PERIOD-AWARE SPENDING BREAKDOWN
+   *
+   * This is now based on the selected period
+   * instead of all-time spending.
+   */
+  const spendingBreakdown = useMemo(() => {
+    const today = new Date();
+
+    const currentPeriodStart = getPeriodStart(
+      today,
+      period,
+    );
+
+    const currentPeriodEnd = movePeriod(
+      currentPeriodStart,
+      period,
+      1,
+    );
+
+    const currentPeriodTransactions =
+      validTransactions.filter(
+        (transaction) =>
+          transaction.parsedDate >=
+            currentPeriodStart &&
+          transaction.parsedDate <
+            currentPeriodEnd &&
+          transaction.type === "expense",
+      );
+
     const categories = {};
 
-    transactions
-      .filter((transaction) => transaction.type === "expense")
-      .forEach((transaction) => {
-        const amount = Number(transaction.amount) || 0;
+    currentPeriodTransactions.forEach(
+      (transaction) => {
+        const category =
+          transaction.category || "Other";
 
-        categories[transaction.category] =
-          (categories[transaction.category] || 0) + amount;
-      });
+        categories[category] =
+          (categories[category] || 0) +
+          transaction.numericAmount;
+      },
+    );
 
     return Object.entries(categories)
       .map(([category, amount]) => ({
         category,
         amount,
       }))
-      .sort((a, b) => b.amount - a.amount);
-  }, [transactions]);
+      .sort(
+        (a, b) => b.amount - a.amount,
+      );
+  }, [validTransactions, period]);
 
-  const topCategories = categoryData.slice(0, 6);
-  const topCategory = categoryData[0];
+  const currentPeriodExpenses =
+    currentPeriodData.expenses;
 
+  const topCategories =
+    spendingBreakdown.slice(0, 6);
+
+  /*
+   * SAVINGS RATE
+   *
+   * How much of the selected period's income
+   * remains after expenses.
+   */
+  const savingsRate =
+    currentPeriodData.income > 0
+      ? (currentPeriodData.net /
+          currentPeriodData.income) *
+        100
+      : 0;
+
+  /*
+   * AVERAGE SPENDING
+   *
+   * For daily mode this is average daily spending.
+   * For weekly mode it's average weekly spending, etc.
+   */
+  const periodsWithSpending =
+    periodData.filter(
+      (item) => item.expenses > 0,
+    );
+
+  const averageSpending =
+    periodsWithSpending.length > 0
+      ? periodsWithSpending.reduce(
+          (total, item) =>
+            total + item.expenses,
+          0,
+        ) / periodsWithSpending.length
+      : 0;
+
+  /*
+   * HIGHEST / LOWEST SPENDING PERIOD
+   */
+  const highestSpendingPeriod =
+    periodData.length > 0
+      ? [...periodData].sort(
+          (a, b) =>
+            b.expenses - a.expenses,
+        )[0]
+      : null;
+
+  const spendingPeriods =
+    periodData.filter(
+      (item) => item.expenses > 0,
+    );
+
+  const lowestSpendingPeriod =
+    spendingPeriods.length > 0
+      ? [...spendingPeriods].sort(
+          (a, b) =>
+            a.expenses - b.expenses,
+        )[0]
+      : null;
+
+  /*
+   * PERIOD NAME
+   */
   const periodNames = {
     daily: {
       label: "Today",
@@ -302,8 +447,12 @@ function Analytics() {
     },
   };
 
-  const currentPeriod = periodNames[period];
+  const currentPeriod =
+    periodNames[period];
 
+  /*
+   * CHART CONFIG
+   */
   const chartConfig = {
     income: {
       label: "Income",
@@ -317,16 +466,19 @@ function Analytics() {
   };
 
   /*
-    Empty state.
-  */
+   * EMPTY STATE
+   */
   if (transactions.length === 0) {
     return (
       <div className="min-h-screen bg-[#0f1714]">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white">Analytics</h1>
+          <h1 className="text-3xl font-bold text-white">
+            Analytics
+          </h1>
 
           <p className="mt-1 text-sm text-gray-400">
-            Understand your financial patterns and spending habits.
+            Understand your financial patterns
+            and spending habits.
           </p>
         </div>
 
@@ -341,8 +493,10 @@ function Analytics() {
             </h2>
 
             <p className="mt-2 text-sm leading-6 text-gray-500">
-              Add a few income and expense transactions and PennyPlot will start
-              turning your activity into useful financial insights.
+              Add a few income and expense
+              transactions and PennyPlot will
+              start turning your activity into
+              useful financial insights.
             </p>
           </div>
         </div>
@@ -352,122 +506,173 @@ function Analytics() {
 
   return (
     <div className="min-h-screen bg-[#0f1714]">
-      {/* Header */}
+      {/* HEADER */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">Analytics</h1>
+        <h1 className="text-3xl font-bold text-white">
+          Analytics
+        </h1>
 
         <p className="mt-1 text-sm text-gray-400">
-          Understand your financial patterns and spending habits.
+          Understand your financial patterns
+          and spending habits.
         </p>
       </div>
 
-      {/* Overview Cards */}
+      {/* OVERVIEW CARDS */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-white/10 bg-[#22332b]/40">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Total Income</p>
+        {/* BALANCE */}
+        <Card className="border-white/10 bg-[#22332b]/60 transition-all duration-200 hover:-translate-y-1 hover:border-[#049552]/30">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-sm font-medium text-gray-400">
+              Total Balance
+            </CardTitle>
 
-                <p className="mt-2 text-2xl font-bold text-white">
-                  {formatCurrency(income)}
-                </p>
-              </div>
+            <Wallet
+              size={20}
+              className={
+                balance >= 0
+                  ? "text-[#049552]"
+                  : "text-red-400"
+              }
+            />
+          </CardHeader>
 
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#049552]/10 text-[#049552]">
-                <TrendingUp size={20} />
-              </div>
-            </div>
+          <CardContent>
+            <p
+              className={`text-2xl font-bold ${
+                balance >= 0
+                  ? "text-[#049552]"
+                  : "text-red-400"
+              }`}
+            >
+              {formatCurrency(balance)}
+            </p>
+
+            <p className="mt-2 text-xs text-gray-500">
+              Income minus expenses
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="border-white/10 bg-[#22332b]/40">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Total Expenses</p>
+        {/* INCOME */}
+        <Card className="border-white/10 bg-[#22332b]/60 transition-all duration-200 hover:-translate-y-1 hover:border-[#049552]/30">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-sm font-medium text-gray-400">
+              Total Income
+            </CardTitle>
 
-                <p className="mt-2 text-2xl font-bold text-white">
-                  {formatCurrency(expenses)}
-                </p>
-              </div>
+            <TrendingUp
+              size={20}
+              className="text-[#049552]"
+            />
+          </CardHeader>
 
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-500/10 text-red-400">
-                <TrendingDown size={20} />
-              </div>
-            </div>
+          <CardContent>
+            <p className="text-2xl font-bold text-[#049552]">
+              {formatCurrency(income)}
+            </p>
+
+            <p className="mt-2 text-xs text-gray-500">
+              Total money received
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="border-white/10 bg-[#22332b]/40">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Net Balance</p>
+        {/* EXPENSES */}
+        <Card className="border-white/10 bg-[#22332b]/60 transition-all duration-200 hover:-translate-y-1 hover:border-red-400/30">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-sm font-medium text-gray-400">
+              Total Expenses
+            </CardTitle>
 
-                <p
-                  className={`mt-2 text-2xl font-bold ${
-                    balance >= 0 ? "text-[#049552]" : "text-red-400"
-                  }`}
-                >
-                  {formatCurrency(balance)}
-                </p>
-              </div>
+            <TrendingDown
+              size={20}
+              className="text-red-400"
+            />
+          </CardHeader>
 
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/5 text-gray-300">
-                <Wallet size={20} />
-              </div>
-            </div>
+          <CardContent>
+            <p className="text-2xl font-bold text-red-400">
+              {formatCurrency(expenses)}
+            </p>
+
+            <p className="mt-2 text-xs text-gray-500">
+              Total money spent
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="border-white/10 bg-[#22332b]/40">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Transactions</p>
+        {/* SAVINGS RATE */}
+        <Card className="border-white/10 bg-[#22332b]/60 transition-all duration-200 hover:-translate-y-1 hover:border-[#049552]/30">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-sm font-medium text-gray-400">
+              Savings Rate
+            </CardTitle>
 
-                <p className="mt-2 text-2xl font-bold text-white">
-                  {transactions.length}
-                </p>
-              </div>
+            <PiggyBank
+              size={20}
+              className={
+                savingsRate >= 0
+                  ? "text-[#049552]"
+                  : "text-red-400"
+              }
+            />
+          </CardHeader>
 
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#049552]/10 text-[#049552]">
-                <Receipt size={20} />
-              </div>
-            </div>
+          <CardContent>
+            <p
+              className={`text-2xl font-bold ${
+                savingsRate >= 0
+                  ? "text-[#049552]"
+                  : "text-red-400"
+              }`}
+            >
+              {Math.round(savingsRate)}%
+            </p>
+
+            <p className="mt-2 text-xs text-gray-500">
+              {currentPeriod.label}
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Income vs Expenses */}
+      {/* INCOME VS EXPENSES */}
       <Card className="mt-6 border-white/10 bg-[#22332b]/40">
         <CardHeader>
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <CardTitle className="text-lg text-white">
                 Income vs Expenses
               </CardTitle>
 
               <p className="mt-1 text-sm text-gray-500">
-                Compare your financial activity over time.
+                Compare your financial activity
+                over time.
               </p>
             </div>
 
-            {/* Period Selector */}
-            <div className="flex w-full rounded-xl border border-white/10 bg-[#0f1714] p-1 lg:w-auto">
-              {["daily", "weekly", "monthly", "yearly"].map((item) => (
+            {/* PERIOD SELECTOR */}
+            <div className="flex flex-wrap rounded-xl border border-white/10 bg-white/[0.03] p-1">
+              {[
+                ["daily", "Daily"],
+                ["weekly", "Weekly"],
+                ["monthly", "Monthly"],
+                ["yearly", "Yearly"],
+              ].map(([value, label]) => (
                 <button
-                  key={item}
+                  key={value}
                   type="button"
-                  onClick={() => setPeriod(item)}
-                  className={`flex-1 rounded-lg px-3 py-2 text-xs font-medium capitalize transition sm:px-4 ${
-                    period === item
+                  onClick={() =>
+                    setPeriod(value)
+                  }
+                  className={`rounded-lg px-3 py-2 text-xs font-medium transition-all ${
+                    period === value
                       ? "bg-[#049552] text-white shadow-lg shadow-[#049552]/20"
-                      : "text-gray-500 hover:bg-white/5 hover:text-white"
+                      : "text-gray-500 hover:text-white"
                   }`}
                 >
-                  {item}
+                  {label}
                 </button>
               ))}
             </div>
@@ -475,75 +680,128 @@ function Analytics() {
         </CardHeader>
 
         <CardContent>
-          {/* Comparison Insight */}
-          {comparison.hasPrevious && (
-            <div className="mb-6 grid gap-3 sm:grid-cols-2">
-              {/* Income comparison */}
-              <div className="rounded-2xl border border-white/10 bg-[#0f1714]/60 p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-500">Income</p>
+          {/* COMPARISON CARDS */}
+          <div className="grid gap-3 sm:grid-cols-3">
+            {/* INCOME */}
+            <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-gray-500">
+                  Income
+                </p>
 
-                    <p className="mt-1 text-sm text-gray-300">
-                      {formatPercent(comparison.incomeChange)}{" "}
-                      {comparison.incomeChange >= 0 ? "higher" : "lower"} than{" "}
-                      {currentPeriod.previous}
-                    </p>
-                  </div>
-
-                  <div
-                    className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-                      comparison.incomeChange >= 0
-                        ? "bg-[#049552]/10 text-[#049552]"
-                        : "bg-red-500/10 text-red-400"
-                    }`}
-                  >
-                    {comparison.incomeChange >= 0 ? (
-                      <TrendingUp size={17} />
-                    ) : (
-                      <TrendingDown size={17} />
-                    )}
-                  </div>
-                </div>
+                <ArrowUpRight
+                  size={16}
+                  className="text-[#049552]"
+                />
               </div>
 
-              {/* Expense comparison */}
-              <div className="rounded-2xl border border-white/10 bg-[#0f1714]/60 p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-500">Expenses</p>
+              <p className="mt-2 text-xl font-bold text-[#049552]">
+                {formatCurrency(
+                  currentPeriodData.income,
+                )}
+              </p>
 
-                    <p className="mt-1 text-sm text-gray-300">
-                      {formatPercent(comparison.expenseChange)}{" "}
-                      {comparison.expenseChange >= 0 ? "higher" : "lower"} than{" "}
-                      {currentPeriod.previous}
-                    </p>
-                  </div>
+              <p
+                className={`mt-1 text-xs ${
+                  comparison.incomeChange >= 0
+                    ? "text-[#049552]"
+                    : "text-red-400"
+                }`}
+              >
+                {formatPercent(
+                  comparison.incomeChange,
+                )}{" "}
+                vs {currentPeriod.previous}
+              </p>
+            </div>
 
-                  <div
-                    className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-                      comparison.expenseChange <= 0
-                        ? "bg-[#049552]/10 text-[#049552]"
-                        : "bg-red-500/10 text-red-400"
-                    }`}
-                  >
-                    {comparison.expenseChange <= 0 ? (
-                      <TrendingDown size={17} />
-                    ) : (
-                      <TrendingUp size={17} />
-                    )}
-                  </div>
-                </div>
+            {/* EXPENSES */}
+            <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-gray-500">
+                  Expenses
+                </p>
+
+                <ArrowDownRight
+                  size={16}
+                  className="text-red-400"
+                />
               </div>
-            </div>
-          )}
 
-          {periodData.length < 1 ? (
-            <div className="flex h-[320px] items-center justify-center text-sm text-gray-500">
-              Not enough date information to display this chart.
+              <p className="mt-2 text-xl font-bold text-red-400">
+                {formatCurrency(
+                  currentPeriodData.expenses,
+                )}
+              </p>
+
+              <p
+                className={`mt-1 text-xs ${
+                  comparison.expenseChange <= 0
+                    ? "text-[#049552]"
+                    : "text-red-400"
+                }`}
+              >
+                {formatPercent(
+                  comparison.expenseChange,
+                )}{" "}
+                vs {currentPeriod.previous}
+              </p>
             </div>
-          ) : (
-            <ChartContainer config={chartConfig} className="h-[320px] w-full">
+
+            {/* NET */}
+            <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-gray-500">
+                  Net
+                </p>
+
+                {currentPeriodData.net >=
+                0 ? (
+                  <TrendingUp
+                    size={16}
+                    className="text-[#049552]"
+                  />
+                ) : (
+                  <TrendingDown
+                    size={16}
+                    className="text-red-400"
+                  />
+                )}
+              </div>
+
+              <p
+                className={`mt-2 text-xl font-bold ${
+                  currentPeriodData.net >= 0
+                    ? "text-[#049552]"
+                    : "text-red-400"
+                }`}
+              >
+                {formatCurrency(
+                  currentPeriodData.net,
+                )}
+              </p>
+
+              <p
+                className={`mt-1 text-xs ${
+                  comparison.netChange >= 0
+                    ? "text-[#049552]"
+                    : "text-red-400"
+                }`}
+              >
+                {formatPercent(
+                  comparison.netChange,
+                )}{" "}
+                vs {currentPeriod.previous}
+              </p>
+            </div>
+          </div>
+
+          {/* CHART */}
+          <div className="mt-8">
+            <ChartContainer
+              config={chartConfig}
+              className="h-[300px] w-full"
+            >
               <LineChart
                 data={periodData}
                 margin={{
@@ -555,36 +813,42 @@ function Analytics() {
               >
                 <CartesianGrid
                   vertical={false}
-                  stroke="rgba(255,255,255,0.06)"
+                  strokeDasharray="3 3"
+                  className="stroke-white/5"
                 />
 
                 <XAxis
                   dataKey="label"
                   tickLine={false}
                   axisLine={false}
-                  tick={{
-                    fill: "#6b7280",
-                    fontSize: 12,
-                  }}
+                  tickMargin={10}
+                  className="text-xs"
                 />
 
                 <YAxis
                   tickLine={false}
                   axisLine={false}
-                  tick={{
-                    fill: "#6b7280",
-                    fontSize: 12,
-                  }}
+                  tickMargin={8}
+                  width={55}
                   tickFormatter={(value) =>
-                    `₦${Number(value).toLocaleString("en-NG")}`
+                    `₦${Number(
+                      value,
+                    ).toLocaleString("en-NG", {
+                      notation: "compact",
+                    })}`
                   }
-                  width={85}
                 />
 
                 <ChartTooltip
+                  cursor={{
+                    stroke: "#ffffff",
+                    strokeOpacity: 0.1,
+                  }}
                   content={
                     <ChartTooltipContent
-                      formatter={(value) => formatCurrency(Number(value))}
+                      formatter={(value) =>
+                        formatCurrency(value)
+                      }
                     />
                   }
                 />
@@ -592,29 +856,64 @@ function Analytics() {
                 <Line
                   type="monotone"
                   dataKey="income"
+                  name="Income"
                   stroke="var(--color-income)"
                   strokeWidth={3}
-                  dot={false}
-                  activeDot={{ r: 5 }}
+                  dot={{
+                    r: 4,
+                    fill: "#049552",
+                    strokeWidth: 0,
+                  }}
+                  activeDot={{
+                    r: 6,
+                    strokeWidth: 3,
+                    stroke: "#049552",
+                  }}
                 />
 
                 <Line
                   type="monotone"
                   dataKey="expenses"
+                  name="Expenses"
                   stroke="var(--color-expenses)"
                   strokeWidth={3}
-                  dot={false}
-                  activeDot={{ r: 5 }}
+                  dot={{
+                    r: 4,
+                    fill: "#f87171",
+                    strokeWidth: 0,
+                  }}
+                  activeDot={{
+                    r: 6,
+                    strokeWidth: 3,
+                    stroke: "#f87171",
+                  }}
                 />
               </LineChart>
             </ChartContainer>
-          )}
+
+            {/* LEGEND */}
+            <div className="mt-4 flex justify-center gap-6">
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-[#049552]" />
+                <span className="text-xs text-gray-500">
+                  Income
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
+                <span className="text-xs text-gray-500">
+                  Expenses
+                </span>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Spending + Insight */}
+      {/* PERIOD INSIGHTS */}
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        {/* Spending Breakdown */}
+        {/* SPENDING BREAKDOWN */}
         <Card className="border-white/10 bg-[#22332b]/40">
           <CardHeader>
             <div className="flex items-center gap-3">
@@ -628,7 +927,8 @@ function Analytics() {
                 </CardTitle>
 
                 <p className="mt-1 text-sm text-gray-500">
-                  Where your money is going.
+                  Where your money is going{" "}
+                  {currentPeriod.description}.
                 </p>
               </div>
             </div>
@@ -636,115 +936,314 @@ function Analytics() {
 
           <CardContent>
             {topCategories.length === 0 ? (
-              <div className="flex min-h-[280px] items-center justify-center text-center text-sm text-gray-500">
-                No expense data yet.
+              <div className="rounded-xl border border-dashed border-white/10 px-5 py-10 text-center">
+                <Receipt
+                  size={30}
+                  className="mx-auto mb-3 text-gray-600"
+                />
+
+                <p className="text-sm font-medium text-gray-400">
+                  No spending in this period
+                </p>
+
+                <p className="mt-1 text-xs text-gray-600">
+                  Expense categories will appear
+                  here when you spend money.
+                </p>
               </div>
             ) : (
               <div className="space-y-5">
-                {topCategories.map((item, index) => {
-                  const percentage =
-                    expenses > 0 ? (item.amount / expenses) * 100 : 0;
+                {topCategories.map(
+                  ({ category, amount }) => {
+                    const percentage =
+                      currentPeriodExpenses === 0
+                        ? 0
+                        : (amount /
+                            currentPeriodExpenses) *
+                          100;
 
-                  return (
-                    <div key={item.category}>
-                      <div className="mb-2 flex items-center justify-between gap-4">
-                        <span className="text-sm text-gray-300">
-                          {item.category}
-                        </span>
+                    return (
+                      <div key={category}>
+                        <div className="mb-2 flex items-center justify-between gap-4">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <span className="truncate text-sm text-gray-300">
+                              {category}
+                            </span>
+                          </div>
 
-                        <span className="text-sm font-medium text-white">
-                          {formatCurrency(item.amount)}
-                        </span>
+                          <div className="shrink-0 text-right">
+                            <span className="text-sm font-semibold text-white">
+                              {formatCurrency(
+                                amount,
+                              )}
+                            </span>
+
+                            <span className="ml-2 text-xs text-gray-500">
+                              {Math.round(
+                                percentage,
+                              )}
+                              %
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="h-2 overflow-hidden rounded-full bg-white/5">
+                          <div
+                            className="h-full rounded-full bg-[#049552] transition-all duration-700"
+                            style={{
+                              width: `${Math.min(
+                                percentage,
+                                100,
+                              )}%`,
+                            }}
+                          />
+                        </div>
                       </div>
+                    );
+                  },
+                )}
 
-                      <div className="h-2 overflow-hidden rounded-full bg-white/5">
-                        <div
-                          className={`h-full rounded-full ${
-                            index === 0 ? "bg-[#049552]" : "bg-[#049552]/40"
-                          }`}
-                          style={{
-                            width: `${Math.min(percentage, 100)}%`,
-                          }}
-                        />
-                      </div>
-
-                      <p className="mt-1 text-xs text-gray-600">
-                        {percentage.toFixed(1)}% of total expenses
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Spending Insight */}
-        <Card className="border-white/10 bg-[#22332b]/40">
-          <CardHeader>
-            <CardTitle className="text-lg text-white">
-              Spending Insight
-            </CardTitle>
-
-            <p className="mt-1 text-sm text-gray-500">
-              A quick look at your financial habits.
-            </p>
-          </CardHeader>
-
-          <CardContent>
-            {!topCategory ? (
-              <div className="flex min-h-[280px] items-center justify-center text-center text-sm text-gray-500">
-                Add some expenses to unlock spending insights.
-              </div>
-            ) : (
-              <div className="space-y-5">
-                <div className="rounded-2xl border border-[#049552]/15 bg-[#049552]/5 p-5">
-                  <p className="text-sm text-gray-500">Top spending category</p>
-
-                  <p className="mt-2 text-2xl font-bold text-white">
-                    {topCategory.category}
+                {spendingBreakdown.length >
+                  6 && (
+                  <p className="pt-1 text-center text-xs text-gray-600">
+                    Showing your top 6
+                    categories.
                   </p>
-
-                  <p className="mt-1 text-sm text-gray-400">
-                    {formatCurrency(topCategory.amount)} spent
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-white/10 bg-[#0f1714]/60 p-5">
-                  <p className="text-sm leading-6 text-gray-400">
-                    {topCategory.category} accounts for{" "}
-                    <span className="font-semibold text-white">
-                      {expenses > 0
-                        ? ((topCategory.amount / expenses) * 100).toFixed(1)
-                        : 0}
-                      %
-                    </span>{" "}
-                    of your total recorded expenses.
-                  </p>
-                </div>
-
-                {comparison.hasPrevious && (
-                  <div className="rounded-2xl border border-white/10 bg-[#0f1714]/60 p-5">
-                    <p className="text-sm leading-6 text-gray-400">
-                      Your income is{" "}
-                      <span
-                        className={
-                          comparison.incomeChange >= 0
-                            ? "font-semibold text-[#049552]"
-                            : "font-semibold text-red-400"
-                        }
-                      >
-                        {formatPercent(comparison.incomeChange)}
-                      </span>{" "}
-                      compared with {currentPeriod.previous}.
-                    </p>
-                  </div>
                 )}
               </div>
             )}
           </CardContent>
         </Card>
+
+        {/* SPENDING INSIGHTS */}
+        <Card className="border-white/10 bg-[#22332b]/40">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#049552]/10 text-[#049552]">
+                <BarChart3 size={19} />
+              </div>
+
+              <div>
+                <CardTitle className="text-lg text-white">
+                  Spending Insights
+                </CardTitle>
+
+                <p className="mt-1 text-sm text-gray-500">
+                  A quick look at your spending
+                  patterns.
+                </p>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {/* AVERAGE */}
+              <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
+                <p className="text-xs text-gray-500">
+                  Average Spending
+                </p>
+
+                <p className="mt-2 text-lg font-bold text-white">
+                  {formatCurrency(
+                    averageSpending,
+                  )}
+                </p>
+
+                <p className="mt-1 text-xs text-gray-600">
+                  Per {period === "daily"
+                    ? "day"
+                    : period === "weekly"
+                      ? "week"
+                      : period === "monthly"
+                        ? "month"
+                        : "year"}
+                </p>
+              </div>
+
+              {/* TOP CATEGORY */}
+              <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
+                <p className="text-xs text-gray-500">
+                  Top Category
+                </p>
+
+                <p className="mt-2 truncate text-lg font-bold text-white">
+                  {topCategories[0]
+                    ?.category || "—"}
+                </p>
+
+                <p className="mt-1 text-xs text-gray-600">
+                  {topCategories[0]
+                    ? formatCurrency(
+                        topCategories[0]
+                          .amount,
+                      )
+                    : "No spending"}
+                </p>
+              </div>
+
+              {/* HIGHEST */}
+              <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-gray-500">
+                    Highest Spending
+                  </p>
+
+                  <ArrowUpRight
+                    size={15}
+                    className="text-red-400"
+                  />
+                </div>
+
+                <p className="mt-2 text-lg font-bold text-red-400">
+                  {highestSpendingPeriod
+                    ? formatCurrency(
+                        highestSpendingPeriod.expenses,
+                      )
+                    : "—"}
+                </p>
+
+                <p className="mt-1 text-xs text-gray-600">
+                  {highestSpendingPeriod
+                    ? highestSpendingPeriod.label
+                    : "No spending"}
+                </p>
+              </div>
+
+              {/* LOWEST */}
+              <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-gray-500">
+                    Lowest Spending
+                  </p>
+
+                  <ArrowDownRight
+                    size={15}
+                    className="text-[#049552]"
+                  />
+                </div>
+
+                <p className="mt-2 text-lg font-bold text-[#049552]">
+                  {lowestSpendingPeriod
+                    ? formatCurrency(
+                        lowestSpendingPeriod.expenses,
+                      )
+                    : "—"}
+                </p>
+
+                <p className="mt-1 text-xs text-gray-600">
+                  {lowestSpendingPeriod
+                    ? lowestSpendingPeriod.label
+                    : "No spending"}
+                </p>
+              </div>
+            </div>
+
+            {/* SMART INSIGHT */}
+            <div className="mt-4 rounded-xl border border-[#049552]/10 bg-[#049552]/5 p-4">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 shrink-0">
+                  {currentPeriodData.net >
+                  0 ? (
+                    <TrendingUp
+                      size={18}
+                      className="text-[#049552]"
+                    />
+                  ) : currentPeriodData.net <
+                    0 ? (
+                    <TrendingDown
+                      size={18}
+                      className="text-red-400"
+                    />
+                  ) : (
+                    <Minus
+                      size={18}
+                      className="text-gray-500"
+                    />
+                  )}
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-white">
+                    {currentPeriodData.net >
+                    0
+                      ? "You're spending within your income."
+                      : currentPeriodData.net <
+                          0
+                        ? "Your expenses are currently higher than your income."
+                        : "Your income and expenses are currently balanced."}
+                  </p>
+
+                  <p className="mt-1 text-xs leading-5 text-gray-500">
+                    {topCategories[0]
+                      ? `${topCategories[0].category} is your biggest spending category for ${currentPeriod.description} activity.`
+                      : "Add more expense transactions to unlock more detailed spending insights."}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* PERIOD SUMMARY */}
+      <Card className="mt-6 border-white/10 bg-[#22332b]/40">
+        <CardContent className="p-5">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div>
+              <p className="text-xs text-gray-500">
+                {currentPeriod.label}
+              </p>
+
+              <p className="mt-1 text-lg font-semibold text-white">
+                {formatCurrency(
+                  currentPeriodData.net,
+                )}
+              </p>
+
+              <p className="mt-1 text-xs text-gray-600">
+                Net result
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs text-gray-500">
+                Savings Rate
+              </p>
+
+              <p
+                className={`mt-1 text-lg font-semibold ${
+                  savingsRate >= 0
+                    ? "text-[#049552]"
+                    : "text-red-400"
+                }`}
+              >
+                {Math.round(savingsRate)}%
+              </p>
+
+              <p className="mt-1 text-xs text-gray-600">
+                Income kept after expenses
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs text-gray-500">
+                Period Spending
+              </p>
+
+              <p className="mt-1 text-lg font-semibold text-red-400">
+                {formatCurrency(
+                  currentPeriodExpenses,
+                )}
+              </p>
+
+              <p className="mt-1 text-xs text-gray-600">
+                Total expenses
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { Plus, X, Wallet, ChevronDown } from "lucide-react";
+import { toast } from "sonner";
 
 function AddTransaction() {
   const { setTransactions } = useOutletContext();
@@ -73,13 +74,13 @@ function AddTransaction() {
     const numbersOnly = e.target.value.replace(/\D/g, "");
     setAmount(numbersOnly);
   }
-
   function handleSubmit(e) {
     e.preventDefault();
     setError("");
 
     if (!description.trim()) {
       setError("Please enter a description.");
+      toast.error("Please enter a description.");
       return;
     }
 
@@ -87,11 +88,13 @@ function AddTransaction() {
 
     if (!numericAmount || numericAmount <= 0) {
       setError("Please enter a valid amount.");
+      toast.error("Please enter a valid amount.");
       return;
     }
 
     if (!date) {
       setError("Please select a date.");
+      toast.error("Please select a date.");
       return;
     }
 
@@ -105,6 +108,10 @@ function AddTransaction() {
     };
 
     setTransactions((prev) => [newTransaction, ...prev]);
+
+    toast.success(
+      `${type === "income" ? "Income" : "Expense"} added successfully.`,
+    );
 
     setDescription("");
     setAmount("");

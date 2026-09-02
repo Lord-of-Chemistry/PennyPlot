@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
+import { toast } from "sonner";
 import {
   Search,
   ArrowUpDown,
@@ -7,7 +8,103 @@ import {
   Trash2,
   X,
   Check,
+  ChevronDown,
 } from "lucide-react";
+
+function CustomDropdown({
+  value,
+  onChange,
+  options,
+  icon: Icon,
+  className = "",
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const selectedOption = options.find((option) => option.value === value);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  function handleSelect(option) {
+    onChange(option.value);
+    setIsOpen(false);
+  }
+
+  return (
+    <div ref={dropdownRef} className={`relative min-w-0 ${className}`}>
+      <button
+        type="button"
+        onClick={() => setIsOpen((previous) => !previous)}
+        className={`flex w-full items-center justify-between gap-3 rounded-xl border bg-[#1b2922] px-4 py-3 text-sm text-white outline-none transition-all duration-200 ${
+          isOpen
+            ? "border-[#049552] ring-1 ring-[#049552]/30"
+            : "border-white/10 hover:border-white/20"
+        }`}
+      >
+        <span className="flex min-w-0 items-center gap-3">
+          {Icon && (
+            <Icon
+              size={16}
+              className={`shrink-0 transition-colors duration-200 ${
+                isOpen ? "text-[#049552]" : "text-gray-500"
+              }`}
+            />
+          )}
+
+          <span className="truncate">{selectedOption?.label}</span>
+        </span>
+
+        <ChevronDown
+          size={16}
+          className={`shrink-0 text-gray-500 transition-transform duration-200 ${
+            isOpen ? "rotate-180 text-[#049552]" : ""
+          }`}
+        />
+      </button>
+
+      <div
+        className={`absolute left-0 top-[calc(100%+8px)] z-50 w-full min-w-[180px] origin-top rounded-xl border border-white/10 bg-[#1b2922] p-1.5 shadow-2xl shadow-black/30 transition-all duration-200 ${
+          isOpen
+            ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
+            : "pointer-events-none -translate-y-2 scale-95 opacity-0"
+        }`}
+      >
+        {options.map((option) => {
+          const isSelected = option.value === value;
+
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => handleSelect(option)}
+              className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm transition-all duration-150 ${
+                isSelected
+                  ? "bg-[#049552]/10 text-[#8ff0bc]"
+                  : "text-gray-300 hover:bg-white/[0.06] hover:text-white"
+              }`}
+            >
+              <span>{option.label}</span>
+
+              {isSelected && <Check size={15} className="text-[#049552]" />}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 function Transactions() {
   const { transactions, setTransactions } = useOutletContext();
@@ -31,40 +128,56 @@ function Transactions() {
     "Other",
   ];
 
+  const typeOptions = [
+    { value: "all", label: "All types" },
+    { value: "income", label: "Income" },
+    { value: "expense", label: "Expenses" },
+  ];
+
+  const categoryOptions = [
+    { value: "all", label: "All categories" },
+    ...categories.map((category) => ({
+      value: category,
+      label: category,
+    })),
+  ];
+
+  const sortOptions = [
+    { value: "newest", label: "Newest first" },
+    { value: "oldest", label: "Oldest first" },
+    { value: "highest", label: "Highest amount" },
+    { value: "lowest", label: "Lowest amount" },
+    { value: "a-z", label: "A → Z" },
+    { value: "z-a", label: "Z → A" },
+  ];
+
   function formatCurrency(amount) {
     return `₦${amount.toLocaleString("en-NG")}`;
   }
 
-  // FILTER + SEARCH + SORT
   const filteredTransactions = useMemo(() => {
     let result = [...transactions];
 
-    // Search
     if (search.trim()) {
       const query = search.toLowerCase();
 
       result = result.filter(
         (transaction) =>
           transaction.description.toLowerCase().includes(query) ||
-          transaction.category.toLowerCase().includes(query)
+          transaction.category.toLowerCase().includes(query),
       );
     }
 
-    // Type filter
     if (typeFilter !== "all") {
-      result = result.filter(
-        (transaction) => transaction.type === typeFilter
-      );
+      result = result.filter((transaction) => transaction.type === typeFilter);
     }
 
-    // Category filter
     if (categoryFilter !== "all") {
       result = result.filter(
-        (transaction) => transaction.category === categoryFilter
+        (transaction) => transaction.category === categoryFilter,
       );
     }
 
-    // Sorting
     if (sortBy === "newest") {
       result.sort((a, b) => new Date(b.date) - new Date(a.date));
     }
@@ -82,34 +195,24 @@ function Transactions() {
     }
 
     if (sortBy === "a-z") {
-      result.sort((a, b) =>
-        a.description.localeCompare(b.description)
-      );
+      result.sort((a, b) => a.description.localeCompare(b.description));
     }
 
     if (sortBy === "z-a") {
-      result.sort((a, b) =>
-        b.description.localeCompare(a.description)
-      );
+      result.sort((a, b) => b.description.localeCompare(a.description));
     }
 
     return result;
-  }, [
-    transactions,
-    search,
-    typeFilter,
-    categoryFilter,
-    sortBy,
-  ]);
+  }, [transactions, search, typeFilter, categoryFilter, sortBy]);
 
-  // DELETE
   function handleDelete(id) {
     setTransactions((prev) =>
-      prev.filter((transaction) => transaction.id !== id)
+      prev.filter((transaction) => transaction.id !== id),
     );
+
+    toast.success("Transaction deleted.");
   }
 
-  // START EDITING
   function handleEdit(transaction) {
     setEditingId(transaction.id);
 
@@ -120,23 +223,29 @@ function Transactions() {
       category: transaction.category,
       date: transaction.date,
     });
+
+    toast.info("Editing transaction");
   }
 
-  // CANCEL EDIT
   function handleCancelEdit() {
     setEditingId(null);
     setEditData(null);
+
+    toast.info("Editing cancelled");
   }
 
-  // SAVE EDIT
   function handleSaveEdit(id) {
-    if (!editData.description.trim()) return;
+    if (!editData.description.trim()) {
+      toast.error("Please enter a description.");
+      return;
+    }
 
-    const numericAmount = Number(
-      editData.amount.replace(/,/g, "")
-    );
+    const numericAmount = Number(editData.amount.replace(/,/g, ""));
 
-    if (!numericAmount || numericAmount <= 0) return;
+    if (!numericAmount || numericAmount <= 0) {
+      toast.error("Please enter a valid amount.");
+      return;
+    }
 
     setTransactions((prev) =>
       prev.map((transaction) =>
@@ -149,12 +258,14 @@ function Transactions() {
               category: editData.category,
               date: editData.date,
             }
-          : transaction
-      )
+          : transaction,
+      ),
     );
 
     setEditingId(null);
     setEditData(null);
+
+    toast.success("Transaction updated successfully.");
   }
 
   function handleEditAmount(value) {
@@ -162,33 +273,29 @@ function Transactions() {
 
     setEditData((prev) => ({
       ...prev,
-      amount: numbersOnly
-        ? Number(numbersOnly).toLocaleString("en-NG")
-        : "",
+      amount: numbersOnly ? Number(numbersOnly).toLocaleString("en-NG") : "",
     }));
   }
 
   return (
     <div className="min-h-screen bg-[#0f1714] text-white">
-      {/* HEADER */}
+      {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">
-          Transactions
-        </h1>
+        <h1 className="text-3xl font-bold">Transactions</h1>
 
         <p className="mt-1 text-sm text-gray-400">
           View and manage all your financial activity.
         </p>
       </div>
 
-      {/* TOOLBAR */}
+      {/* Filters */}
       <div className="rounded-2xl border border-white/10 bg-[#22332b]/50 p-4">
         <div className="grid gap-3 lg:grid-cols-[1fr_auto_auto_auto]">
-          {/* SEARCH */}
-          <div className="relative">
+          {/* Search */}
+          <div className="group relative">
             <Search
               size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 transition-colors duration-200 group-focus-within:text-[#049552]"
             />
 
             <input
@@ -196,81 +303,52 @@ function Transactions() {
               placeholder="Search transactions..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-3 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-gray-600 focus:border-[#049552]"
+              className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-3 pl-11 pr-4 text-sm text-white outline-none transition-all duration-200 placeholder:text-gray-600 focus:border-[#049552] focus:ring-1 focus:ring-[#049552]/30"
             />
           </div>
 
-          {/* TYPE */}
-          <select
+          {/* Type Dropdown */}
+          <CustomDropdown
             value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            className="rounded-xl border border-white/10 bg-[#1b2922] px-4 py-3 text-sm text-white outline-none focus:border-[#049552]"
-          >
-            <option value="all">All types</option>
-            <option value="income">Income</option>
-            <option value="expense">Expenses</option>
-          </select>
+            onChange={setTypeFilter}
+            options={typeOptions}
+          />
 
-          {/* CATEGORY */}
-          <select
+          {/* Category Dropdown */}
+          <CustomDropdown
             value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="rounded-xl border border-white/10 bg-[#1b2922] px-4 py-3 text-sm text-white outline-none focus:border-[#049552]"
-          >
-            <option value="all">All categories</option>
+            onChange={setCategoryFilter}
+            options={categoryOptions}
+          />
 
-            {categories.map((category) => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
-
-          {/* SORT */}
-          <div className="relative">
-            <ArrowUpDown
-              size={16}
-              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"
-            />
-
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="rounded-xl border border-white/10 bg-[#1b2922] py-3 pl-10 pr-4 text-sm text-white outline-none focus:border-[#049552]"
-            >
-              <option value="newest">Newest first</option>
-              <option value="oldest">Oldest first</option>
-              <option value="highest">Highest amount</option>
-              <option value="lowest">Lowest amount</option>
-              <option value="a-z">A → Z</option>
-              <option value="z-a">Z → A</option>
-            </select>
-          </div>
+          {/* Sort Dropdown */}
+          <CustomDropdown
+            value={sortBy}
+            onChange={setSortBy}
+            options={sortOptions}
+            icon={ArrowUpDown}
+          />
         </div>
       </div>
 
-      {/* COUNT */}
+      {/* Result Count */}
       <div className="mt-6 flex items-center justify-between">
         <p className="text-sm text-gray-400">
           Showing{" "}
           <span className="font-medium text-white">
             {filteredTransactions.length}
           </span>{" "}
-          {filteredTransactions.length === 1
-            ? "transaction"
-            : "transactions"}
+          {filteredTransactions.length === 1 ? "transaction" : "transactions"}
         </p>
 
-        {(search ||
-          typeFilter !== "all" ||
-          categoryFilter !== "all") && (
+        {(search || typeFilter !== "all" || categoryFilter !== "all") && (
           <button
             onClick={() => {
               setSearch("");
               setTypeFilter("all");
               setCategoryFilter("all");
             }}
-            className="flex items-center gap-1 text-xs text-gray-400 transition hover:text-white"
+            className="flex items-center gap-1 text-xs text-gray-400 transition-all duration-200 hover:-translate-y-0.5 hover:text-white"
           >
             <X size={14} />
             Clear filters
@@ -278,7 +356,7 @@ function Transactions() {
         )}
       </div>
 
-      {/* TRANSACTIONS */}
+      {/* Transactions */}
       <div className="mt-4 space-y-3">
         {filteredTransactions.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-white/10 bg-[#22332b]/30 px-5 py-16 text-center">
@@ -303,13 +381,12 @@ function Transactions() {
             return (
               <div
                 key={transaction.id}
-                className="rounded-2xl border border-white/10 bg-[#22332b]/40 p-4 transition hover:border-white/15"
+                className="transaction-item rounded-2xl border border-white/10 bg-[#22332b]/40 p-4 transition hover:border-white/15"
               >
                 {isEditing ? (
-                  /* EDIT FORM */
                   <div className="space-y-4">
                     <div className="grid gap-3 md:grid-cols-2">
-                      {/* DESCRIPTION */}
+                      {/* Description */}
                       <input
                         type="text"
                         value={editData.description}
@@ -319,11 +396,11 @@ function Transactions() {
                             description: e.target.value,
                           })
                         }
-                        className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none focus:border-[#049552]"
+                        className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition-all duration-200 focus:border-[#049552] focus:ring-1 focus:ring-[#049552]/30"
                       />
 
-                      {/* AMOUNT */}
-                      <div className="flex overflow-hidden rounded-xl border border-white/10 bg-white/[0.04] focus-within:border-[#049552]">
+                      {/* Amount */}
+                      <div className="flex overflow-hidden rounded-xl border border-white/10 bg-white/[0.04] transition-all duration-200 focus-within:border-[#049552] focus-within:ring-1 focus-within:ring-[#049552]/30">
                         <span className="flex items-center border-r border-white/10 px-4 text-gray-400">
                           ₦
                         </span>
@@ -332,50 +409,48 @@ function Transactions() {
                           type="text"
                           inputMode="numeric"
                           value={editData.amount}
-                          onChange={(e) =>
-                            handleEditAmount(e.target.value)
-                          }
+                          onChange={(e) => handleEditAmount(e.target.value)}
                           className="w-full bg-transparent px-4 py-3 text-sm text-white outline-none"
                         />
                       </div>
 
-                      {/* TYPE */}
-                      <select
+                      {/* Edit Type */}
+                      <CustomDropdown
                         value={editData.type}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setEditData({
                             ...editData,
-                            type: e.target.value,
+                            type: value,
                           })
                         }
-                        className="rounded-xl border border-white/10 bg-[#1b2922] px-4 py-3 text-sm text-white outline-none focus:border-[#049552]"
-                      >
-                        <option value="expense">Expense</option>
-                        <option value="income">Income</option>
-                      </select>
+                        options={[
+                          {
+                            value: "expense",
+                            label: "Expense",
+                          },
+                          {
+                            value: "income",
+                            label: "Income",
+                          },
+                        ]}
+                      />
 
-                      {/* CATEGORY */}
-                      <select
+                      {/* Edit Category */}
+                      <CustomDropdown
                         value={editData.category}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setEditData({
                             ...editData,
-                            category: e.target.value,
+                            category: value,
                           })
                         }
-                        className="rounded-xl border border-white/10 bg-[#1b2922] px-4 py-3 text-sm text-white outline-none focus:border-[#049552]"
-                      >
-                        {categories.map((category) => (
-                          <option
-                            key={category}
-                            value={category}
-                          >
-                            {category}
-                          </option>
-                        ))}
-                      </select>
+                        options={categories.map((category) => ({
+                          value: category,
+                          label: category,
+                        }))}
+                      />
 
-                      {/* DATE */}
+                      {/* Date */}
                       <input
                         type="date"
                         value={editData.date}
@@ -385,17 +460,15 @@ function Transactions() {
                             date: e.target.value,
                           })
                         }
-                        className="rounded-xl border border-white/10 bg-[#1b2922] px-4 py-3 text-sm text-white outline-none focus:border-[#049552]"
+                        className="rounded-xl border border-white/10 bg-[#1b2922] px-4 py-3 text-sm text-white outline-none transition-all duration-200 focus:border-[#049552] focus:ring-1 focus:ring-[#049552]/30"
                       />
                     </div>
 
-                    {/* EDIT BUTTONS */}
+                    {/* Edit Actions */}
                     <div className="flex gap-2">
                       <button
-                        onClick={() =>
-                          handleSaveEdit(transaction.id)
-                        }
-                        className="flex items-center gap-2 rounded-xl bg-[#049552] px-4 py-2 text-sm font-medium transition hover:bg-[#038448]"
+                        onClick={() => handleSaveEdit(transaction.id)}
+                        className="flex items-center gap-2 rounded-xl bg-[#049552] px-4 py-2 text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#038448]"
                       >
                         <Check size={16} />
                         Save
@@ -403,7 +476,7 @@ function Transactions() {
 
                       <button
                         onClick={handleCancelEdit}
-                        className="flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2 text-sm text-gray-300 transition hover:bg-white/5"
+                        className="flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2 text-sm text-gray-300 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/5"
                       >
                         <X size={16} />
                         Cancel
@@ -411,7 +484,6 @@ function Transactions() {
                     </div>
                   </div>
                 ) : (
-                  /* NORMAL TRANSACTION */
                   <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div className="min-w-0">
                       <p className="truncate font-medium text-white">
@@ -420,11 +492,8 @@ function Transactions() {
 
                       <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
                         <span>{transaction.category}</span>
-
                         <span>•</span>
-
                         <span>{transaction.date}</span>
-
                         <span>•</span>
 
                         <span
@@ -434,9 +503,7 @@ function Transactions() {
                               : "text-red-400"
                           }
                         >
-                          {transaction.type === "income"
-                            ? "Income"
-                            : "Expense"}
+                          {transaction.type === "income" ? "Income" : "Expense"}
                         </span>
                       </div>
                     </div>
@@ -449,28 +516,22 @@ function Transactions() {
                             : "font-semibold text-red-400"
                         }
                       >
-                        {transaction.type === "income"
-                          ? "+"
-                          : "-"}
+                        {transaction.type === "income" ? "+" : "-"}
                         {formatCurrency(transaction.amount)}
                       </span>
 
                       <div className="flex items-center gap-1">
-                        {/* EDIT */}
                         <button
                           onClick={() => handleEdit(transaction)}
-                          className="rounded-lg p-2 text-gray-500 transition hover:bg-white/5 hover:text-white"
+                          className="rounded-lg p-2 text-gray-500 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/5 hover:text-white"
                           title="Edit transaction"
                         >
                           <Pencil size={16} />
                         </button>
 
-                        {/* DELETE */}
                         <button
-                          onClick={() =>
-                            handleDelete(transaction.id)
-                          }
-                          className="rounded-lg p-2 text-gray-500 transition hover:bg-red-500/10 hover:text-red-400"
+                          onClick={() => handleDelete(transaction.id)}
+                          className="rounded-lg p-2 text-gray-500 transition-all duration-200 hover:-translate-y-0.5 hover:bg-red-500/10 hover:text-red-400"
                           title="Delete transaction"
                         >
                           <Trash2 size={16} />
