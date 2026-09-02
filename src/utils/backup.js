@@ -1,0 +1,94 @@
+const BACKUP_KEY = "pennyplot-backup";
+
+export function createBackup() {
+  const transactions =
+    JSON.parse(
+      localStorage.getItem("pennyplot-transactions") || "[]",
+    );
+
+  const budgets =
+    JSON.parse(
+      localStorage.getItem("pennyplot-budgets") || "[]",
+    );
+
+  const currency =
+    localStorage.getItem("pennyplot-currency") || "NGN";
+
+  const dateFormat =
+    localStorage.getItem("pennyplot-date-format") ||
+    "DD/MM/YYYY";
+
+  const backup = {
+    app: "PennyPlot",
+    version: "1.0.0",
+    createdAt: new Date().toISOString(),
+
+    data: {
+      transactions,
+      budgets,
+      settings: {
+        currency,
+        dateFormat,
+      },
+    },
+  };
+
+  localStorage.setItem(
+    BACKUP_KEY,
+    JSON.stringify(backup),
+  );
+
+  return backup;
+}
+
+export function getBackup() {
+  try {
+    const savedBackup =
+      localStorage.getItem(BACKUP_KEY);
+
+    return savedBackup
+      ? JSON.parse(savedBackup)
+      : null;
+  } catch (error) {
+    console.error(
+      "Failed to load PennyPlot backup:",
+      error,
+    );
+
+    return null;
+  }
+}
+
+export function getLastBackupDate() {
+  const backup = getBackup();
+
+  return backup?.createdAt || null;
+}
+
+export function downloadBackup() {
+  const backup = createBackup();
+
+  const blob = new Blob(
+    [JSON.stringify(backup, null, 2)],
+    {
+      type: "application/json",
+    },
+  );
+
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = `pennyplot-backup-${new Date()
+    .toISOString()
+    .slice(0, 10)}.json`;
+
+  document.body.appendChild(link);
+
+  link.click();
+
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(url);
+}

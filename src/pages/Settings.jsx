@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import {
   Settings as SettingsIcon,
@@ -9,29 +9,25 @@ import {
   CheckCircle2,
   AlertTriangle,
 } from "lucide-react";
-
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  createBackup,
+  downloadBackup,
+  getLastBackupDate,
+} from "../utils/backup";
 
 function Settings() {
   const { transactions, setTransactions } = useOutletContext();
-
   const [currency, setCurrency] = useState(() => {
     return localStorage.getItem("pennyplot-currency") || "NGN";
   });
-
   const [dateFormat, setDateFormat] = useState(() => {
-    return (
-      localStorage.getItem("pennyplot-date-format") ||
-      "DD/MM/YYYY"
-    );
+    return localStorage.getItem("pennyplot-date-format") || "DD/MM/YYYY";
   });
 
   const [message, setMessage] = useState("");
+
+  const [lastBackup, setLastBackup] = useState(getLastBackupDate());
 
   function updateCurrency(value) {
     setCurrency(value);
@@ -63,13 +59,7 @@ function Settings() {
       return;
     }
 
-    const headers = [
-      "Description",
-      "Type",
-      "Amount",
-      "Category",
-      "Date",
-    ];
+    const headers = ["Description", "Type", "Amount", "Category", "Date"];
 
     const rows = transactions.map((transaction) => [
       transaction.description,
@@ -82,11 +72,7 @@ function Settings() {
     const csvContent = [
       headers.join(","),
       ...rows.map((row) =>
-        row
-          .map((value) =>
-            `"${String(value).replace(/"/g, '""')}"`
-          )
-          .join(",")
+        row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(","),
       ),
     ].join("\n");
 
@@ -99,9 +85,9 @@ function Settings() {
     const link = document.createElement("a");
 
     link.href = url;
-    link.download = `pennyplot-transactions-${new Date()
-      .toISOString()
-      .split("T")[0]}.csv`;
+    link.download = `pennyplot-transactions-${
+      new Date().toISOString().split("T")[0]
+    }.csv`;
 
     document.body.appendChild(link);
 
@@ -115,24 +101,16 @@ function Settings() {
   }
 
   function downloadBudgets() {
-    const savedBudgets = localStorage.getItem(
-      "pennyplot-budgets"
-    );
+    const savedBudgets = localStorage.getItem("pennyplot-budgets");
 
-    const budgets = savedBudgets
-      ? JSON.parse(savedBudgets)
-      : [];
+    const budgets = savedBudgets ? JSON.parse(savedBudgets) : [];
 
     if (budgets.length === 0) {
       showMessage("There are no budgets to download.");
       return;
     }
 
-    const headers = [
-      "Category",
-      "Period",
-      "Budget Amount",
-    ];
+    const headers = ["Category", "Period", "Budget Amount"];
 
     const rows = budgets.map((budget) => [
       budget.category,
@@ -143,11 +121,7 @@ function Settings() {
     const csvContent = [
       headers.join(","),
       ...rows.map((row) =>
-        row
-          .map((value) =>
-            `"${String(value).replace(/"/g, '""')}"`
-          )
-          .join(",")
+        row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(","),
       ),
     ].join("\n");
 
@@ -160,9 +134,9 @@ function Settings() {
     const link = document.createElement("a");
 
     link.href = url;
-    link.download = `pennyplot-budgets-${new Date()
-      .toISOString()
-      .split("T")[0]}.csv`;
+    link.download = `pennyplot-budgets-${
+      new Date().toISOString().split("T")[0]
+    }.csv`;
 
     document.body.appendChild(link);
 
@@ -175,9 +149,86 @@ function Settings() {
     showMessage("Budgets downloaded.");
   }
 
+  function handleDownloadBackup() {
+    downloadBackup();
+
+    setLastBackup(getLastBackupDate());
+
+    showMessage("Backup downloaded successfully.");
+  }
+
+  function handleCreateBackup() {
+    createBackup();
+
+    setLastBackup(getLastBackupDate());
+
+    showMessage("PennyPlot backup created.");
+  }
+
+  function handleRestoreBackup(event) {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = (loadEvent) => {
+      try {
+        const backup = JSON.parse(loadEvent.target.result);
+
+        if (backup?.app !== "PennyPlot" || !backup?.data) {
+          showMessage("Invalid PennyPlot backup file.");
+          return;
+        }
+
+        const confirmed = window.confirm(
+          "Restoring this backup will replace your current PennyPlot data. Continue?",
+        );
+
+        if (!confirmed) return;
+
+        const transactions = backup.data.transactions || [];
+
+        const budgets = backup.data.budgets || [];
+
+        const settings = backup.data.settings || {};
+
+        localStorage.setItem(
+          "pennyplot-transactions",
+          JSON.stringify(transactions),
+        );
+
+        localStorage.setItem("pennyplot-budgets", JSON.stringify(budgets));
+
+        if (settings.currency) {
+          localStorage.setItem("pennyplot-currency", settings.currency);
+        }
+
+        if (settings.dateFormat) {
+          localStorage.setItem("pennyplot-date-format", settings.dateFormat);
+        }
+
+        setTransactions(transactions);
+
+        showMessage("Backup restored successfully.");
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } catch (error) {
+        console.error("Failed to restore backup:", error);
+        showMessage("Could not read this backup file.");
+      }
+    };
+
+    reader.readAsText(file);
+
+    event.target.value = "";
+  }
+
   function clearTransactions() {
     const confirmed = window.confirm(
-      "Are you sure you want to delete all transactions? This cannot be undone."
+      "Are you sure you want to delete all transactions? This cannot be undone.",
     );
 
     if (!confirmed) return;
@@ -191,7 +242,7 @@ function Settings() {
 
   function clearBudgets() {
     const confirmed = window.confirm(
-      "Are you sure you want to delete all budgets? This cannot be undone."
+      "Are you sure you want to delete all budgets? This cannot be undone.",
     );
 
     if (!confirmed) return;
@@ -205,7 +256,7 @@ function Settings() {
 
   function clearEverything() {
     const confirmed = window.confirm(
-      "This will permanently delete ALL PennyPlot data. Are you sure?"
+      "This will permanently delete ALL PennyPlot data. Are you sure?",
     );
 
     if (!confirmed) return;
@@ -234,9 +285,7 @@ function Settings() {
           </div>
 
           <div>
-            <h1 className="text-3xl font-bold text-white">
-              Settings
-            </h1>
+            <h1 className="text-3xl font-bold text-white">Settings</h1>
 
             <p className="mt-1 text-sm text-gray-400">
               Manage your PennyPlot preferences and data.
@@ -257,9 +306,7 @@ function Settings() {
         {/* Preferences */}
         <Card className="border-white/10 bg-[#22332b]/40">
           <CardHeader>
-            <CardTitle className="text-lg text-white">
-              Preferences
-            </CardTitle>
+            <CardTitle className="text-lg text-white">Preferences</CardTitle>
 
             <p className="text-sm text-gray-500">
               Customize how PennyPlot displays your information.
@@ -270,9 +317,7 @@ function Settings() {
             {/* Currency */}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-medium text-white">
-                  Currency
-                </p>
+                <p className="text-sm font-medium text-white">Currency</p>
 
                 <p className="mt-1 text-xs text-gray-500">
                   Choose the currency used throughout PennyPlot.
@@ -281,9 +326,7 @@ function Settings() {
 
               <select
                 value={currency}
-                onChange={(e) =>
-                  updateCurrency(e.target.value)
-                }
+                onChange={(e) => updateCurrency(e.target.value)}
                 className="rounded-xl border border-white/10 bg-[#0f1714] px-4 py-2.5 text-sm text-white outline-none focus:border-[#049552]"
               >
                 <option value="NGN">₦ Nigerian Naira</option>
@@ -296,9 +339,7 @@ function Settings() {
             {/* Date Format */}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-medium text-white">
-                  Date Format
-                </p>
+                <p className="text-sm font-medium text-white">Date Format</p>
 
                 <p className="mt-1 text-xs text-gray-500">
                   Choose how dates should be displayed.
@@ -307,22 +348,14 @@ function Settings() {
 
               <select
                 value={dateFormat}
-                onChange={(e) =>
-                  updateDateFormat(e.target.value)
-                }
+                onChange={(e) => updateDateFormat(e.target.value)}
                 className="rounded-xl border border-white/10 bg-[#0f1714] px-4 py-2.5 text-sm text-white outline-none focus:border-[#049552]"
               >
-                <option value="DD/MM/YYYY">
-                  DD/MM/YYYY
-                </option>
+                <option value="DD/MM/YYYY">DD/MM/YYYY</option>
 
-                <option value="MM/DD/YYYY">
-                  MM/DD/YYYY
-                </option>
+                <option value="MM/DD/YYYY">MM/DD/YYYY</option>
 
-                <option value="YYYY-MM-DD">
-                  YYYY-MM-DD
-                </option>
+                <option value="YYYY-MM-DD">YYYY-MM-DD</option>
               </select>
             </div>
           </CardContent>
@@ -344,15 +377,10 @@ function Settings() {
             {/* Transactions */}
             <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-[#0f1714]/50 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-3">
-                <Database
-                  size={19}
-                  className="mt-0.5 text-[#049552]"
-                />
+                <Database size={19} className="mt-0.5 text-[#049552]" />
 
                 <div>
-                  <p className="text-sm font-medium text-white">
-                    Transactions
-                  </p>
+                  <p className="text-sm font-medium text-white">Transactions</p>
 
                   <p className="mt-1 text-xs text-gray-500">
                     {transactions.length} transaction
@@ -374,15 +402,10 @@ function Settings() {
             {/* Budgets */}
             <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-[#0f1714]/50 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-3">
-                <Wallet
-                  size={19}
-                  className="mt-0.5 text-[#049552]"
-                />
+                <Wallet size={19} className="mt-0.5 text-[#049552]" />
 
                 <div>
-                  <p className="text-sm font-medium text-white">
-                    Budgets
-                  </p>
+                  <p className="text-sm font-medium text-white">Budgets</p>
 
                   <p className="mt-1 text-xs text-gray-500">
                     Export your saved budget data.
@@ -402,14 +425,116 @@ function Settings() {
           </CardContent>
         </Card>
 
+        {/* Backup & Restore */}
+        <Card className="border-white/10 bg-[#22332b]/40">
+          <CardHeader>
+            <CardTitle className="text-lg text-white">
+              Backup & Restore
+            </CardTitle>
+
+            <p className="text-sm text-gray-500">
+              Keep a portable copy of your PennyPlot data.
+            </p>
+          </CardHeader>
+
+          <CardContent className="space-y-4">
+            {/* Backup Status */}
+            <div className="rounded-2xl border border-[#049552]/10 bg-[#049552]/5 p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#049552]/10 text-[#049552]">
+                  <Database size={19} />
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-white">
+                    Backup status
+                  </p>
+
+                  <p className="mt-1 text-xs text-gray-500">
+                    {lastBackup
+                      ? `Last backup: ${new Date(lastBackup).toLocaleString()}`
+                      : "No backup has been created yet."}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Create Backup */}
+            <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-[#0f1714]/50 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-medium text-white">Create backup</p>
+
+                <p className="mt-1 text-xs text-gray-500">
+                  Save your current PennyPlot data locally.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleCreateBackup}
+                className="flex items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-sm text-gray-300 transition hover:bg-white/5 hover:text-white"
+              >
+                <Database size={16} />
+                Create Backup
+              </button>
+            </div>
+
+            {/* Download Backup */}
+            <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-[#0f1714]/50 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-medium text-white">
+                  Download backup
+                </p>
+
+                <p className="mt-1 text-xs text-gray-500">
+                  Download a complete copy of your PennyPlot data.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleDownloadBackup}
+                className="flex items-center justify-center gap-2 rounded-xl bg-[#049552] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#038247]"
+              >
+                <Download size={16} />
+                Download Backup
+              </button>
+            </div>
+
+            {/* Restore Backup */}
+            <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-[#0f1714]/50 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-medium text-white">Restore backup</p>
+
+                <p className="mt-1 text-xs text-gray-500">
+                  Restore your data from a PennyPlot backup file.
+                </p>
+              </div>
+
+              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-sm text-gray-300 transition hover:bg-white/5 hover:text-white">
+                <Download size={16} className="rotate-180" />
+                Restore Backup
+                <input
+                  type="file"
+                  accept=".json,application/json"
+                  onChange={handleRestoreBackup}
+                  className="hidden"
+                />
+              </label>
+            </div>
+
+            <p className="text-xs leading-5 text-gray-600">
+              Backup files contain your transactions, budgets, currency, and
+              date-format preferences. Keep downloaded backups somewhere safe.
+            </p>
+          </CardContent>
+        </Card>
+
         {/* Danger Zone */}
         <Card className="border-red-500/15 bg-red-500/[0.02]">
           <CardHeader>
             <div className="flex items-center gap-3">
-              <AlertTriangle
-                size={20}
-                className="text-red-400"
-              />
+              <AlertTriangle size={20} className="text-red-400" />
 
               <div>
                 <CardTitle className="text-lg text-white">
@@ -461,9 +586,7 @@ function Settings() {
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-semibold text-white">
-                  PennyPlot
-                </p>
+                <p className="font-semibold text-white">PennyPlot</p>
 
                 <p className="mt-1 text-xs text-gray-500">
                   Personal finance dashboard
@@ -477,8 +600,8 @@ function Settings() {
 
             <div className="mt-5 border-t border-white/10 pt-4">
               <p className="text-xs leading-5 text-gray-600">
-                Your current data is stored locally on this
-                device. Cloud synchronization can be added later.
+                Your current data is stored locally on this device. Cloud
+                synchronization can be added later.
               </p>
             </div>
           </CardContent>

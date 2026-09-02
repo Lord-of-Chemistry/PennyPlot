@@ -120,13 +120,16 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    }
+  }
+
   body {
-    @apply bg-background text-foreground;
-    }
+    background: #0f1714;
+    color: white;
+  }
+
   html {
     @apply font-sans;
-    }
+  }
 }
 
 .page-transition {

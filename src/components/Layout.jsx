@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import SideBar from "./SideBar";
+import { createBackup } from "../utils/backup";
 
 function Layout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -85,6 +86,10 @@ function Layout() {
     );
   }, [transactions]);
 
+  useEffect(() => {
+  createBackup();
+}, [transactions]);
+
   return (
     <div className="min-h-screen bg-[#0f1714]">
       <SideBar
@@ -106,7 +111,7 @@ function Layout() {
       </div>
 
       <main
-        className={`min-h-screen bg-[#0f1714] p-4 pb-24 text-white transition-[margin] duration-300 ease-in-out md:pb-4 ${
+        className={`bg-[#0f1714] p-4 pb-24 text-white transition-[margin] duration-300 ease-in-out md:pb-4 ${
           isCollapsed ? "md:ml-20" : "md:ml-56"
         }`}
       >

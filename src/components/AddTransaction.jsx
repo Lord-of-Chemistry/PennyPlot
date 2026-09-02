@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { Plus, X, Wallet, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
+import { getCurrencyName, getCurrencySymbol } from "../utils/currency";
 
 function AddTransaction() {
   const { setTransactions } = useOutletContext();
@@ -182,7 +183,7 @@ function AddTransaction() {
 
               <div className="flex overflow-hidden rounded-xl border border-white/15 bg-[#0f1714] transition-all duration-200 hover:border-white/25 focus-within:border-[#049552] focus-within:ring-2 focus-within:ring-[#049552]/15">
                 <div className="flex items-center border-r border-white/15 bg-white/[0.02] px-4 text-base font-bold text-[#049552]">
-                  ₦
+                  {getCurrencySymbol()}
                 </div>
 
                 <input
@@ -197,8 +198,8 @@ function AddTransaction() {
 
               <p className="mt-2 text-xs text-gray-600 transition-all duration-200">
                 {amount
-                  ? `₦${formatAmount(amount)}`
-                  : "Enter amount in Nigerian naira"}
+                  ? `${getCurrencySymbol()}${formatAmount(amount)}`
+                  : `Enter amount in ${getCurrencyName()}`}
               </p>
             </div>
 

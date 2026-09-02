@@ -12,6 +12,7 @@ import {
   PieChart,
   Receipt,
 } from "lucide-react";
+import { formatCurrency } from "../utils/currency";
 
 function Dashboard() {
   const { transactions } = useOutletContext();
@@ -26,10 +27,6 @@ function Dashboard() {
 
   const balance = income - expenses;
   const savings = balance > 0 ? balance : 0;
-
-  function formatCurrency(amount) {
-    return `₦${amount.toLocaleString("en-NG")}`;
-  }
 
   // THIS MONTH
   const now = new Date();
@@ -103,7 +100,7 @@ function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0f1714]">
+    <div className="bg-[#0f1714]">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white">Dashboard</h1>
         <p className="mt-1 text-sm text-gray-400">
