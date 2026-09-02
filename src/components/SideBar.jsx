@@ -23,7 +23,7 @@ function SideBar({ isCollapsed, setIsCollapsed }) {
     <>
       <aside
         className={`hidden md:flex ${
-          isCollapsed ? "w-20" : "w-64"
+          isCollapsed ? "w-20" : "w-56"
         } p-5 border-r border-white/10 bg-[#22332b] text-white rounded-r-xl fixed h-screen overflow-y-auto flex-col transition-[width] duration-300 ease-in-out`}
       >
         <div>

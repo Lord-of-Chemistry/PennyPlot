@@ -10,7 +10,7 @@ function Layout() {
       <SideBar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
 
       <main
-        className={`p-4 bg-[#0f1714] text-white min-h-screen overflow-y-auto transition-[margin] duration-300 ease-in-out ${
+        className={`p-4 pb-24 md:pb-4 bg-[#0f1714] text-white min-h-screen overflow-y-auto transition-[margin] duration-300 ease-in-out ${
           isCollapsed ? "md:ml-20" : "md:ml-56"
         }`}
       >
