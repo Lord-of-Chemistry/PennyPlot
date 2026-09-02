@@ -16,15 +16,12 @@ function SideBar({ isCollapsed, setIsCollapsed }) {
     { name: "Analytics", path: "/analytics", icon: ChartNoAxesCombined },
     { name: "Budgets", path: "/budgets", icon: Wallet },
   ];
-  const currentPath = window.location.pathname;
-
-  console.log(currentPath);
   return (
     <>
       <aside
         className={`hidden md:flex ${
           isCollapsed ? "w-20" : "w-56"
-        } p-5 border-r border-white/10 bg-[#22332b] text-white rounded-r-xl fixed h-screen overflow-y-auto flex-col transition-[width] duration-300 ease-in-out`}
+        } p-5 border-r border-white/10 bg-[#22332b] text-white rounded-r-xl fixed h-screen overflow-visible flex-col transition-[width] duration-300 ease-in-out`}
       >
         <div>
           <Button
@@ -45,26 +42,34 @@ function SideBar({ isCollapsed, setIsCollapsed }) {
               <NavLink
                 key={item.path}
                 to={item.path}
-                className="group relative px-2 cursor-pointer"
+                className={`group relative flex items-center mb-3 px-3 py-2 rounded-md transition-all duration-300 ease-in-out ${
+                  isCollapsed ? "justify-center" : "gap-3"
+                }`}
               >
                 {({ isActive }) => (
                   <>
-                    <div
-                      className={`flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-300 ${
-                        isActive
-                          ? "bg-[#049552]/15 text-[#049552]"
-                          : "text-gray-400 hover:bg-[#049552]/10 hover:text-[#049552]"
-                      }`}
-                    >
-                      <Icon
-                        size={20}
-                        className="transition-transform duration-300 group-hover:scale-110"
-                      />
-                    </div>
+                    <Icon
+                      size={22}
+                      className={`shrink-0 transition-transform duration-300 ${
+                        isActive ? "text-[#049552]" : "text-gray-400"
+                      } ${isCollapsed ? "group-hover:scale-110" : ""}`}
+                    />
 
-                    <span className="absolute -top-12 left-1/2 -translate-x-1/2 z-20 origin-bottom scale-0 px-3 py-1.5 rounded-lg border border-white/10 bg-[#22332b] text-xs font-medium text-white shadow-lg transition-all duration-300 ease-in-out group-hover:scale-100 whitespace-nowrap">
+                    <span
+                      className={`whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out ${
+                        isCollapsed
+                          ? "max-w-0 opacity-0"
+                          : "max-w-40 opacity-100"
+                      } ${isActive ? "text-[#049552]" : "text-white"}`}
+                    >
                       {item.name}
                     </span>
+
+                    {isCollapsed && (
+                      <span className="absolute left-full ml-3 z-20 scale-0 origin-left rounded-lg border border-white/10 bg-[#22332b] px-3 py-1.5 text-xs font-medium text-white shadow-lg transition-all duration-300 group-hover:scale-100 whitespace-nowrap">
+                        {item.name}
+                      </span>
+                    )}
                   </>
                 )}
               </NavLink>
@@ -74,7 +79,7 @@ function SideBar({ isCollapsed, setIsCollapsed }) {
 
         <NavLink
           to="/settings"
-          className={`group-hover:scale-110 mt-auto flex items-center mb-3 px-3 py-2 rounded-md transition-all duration-300 ease-in-out ${
+          className={`hover:scale-110 mt-auto flex items-center mb-3 px-3 py-2 rounded-md transition-all duration-300 ease-in-out ${
             isCollapsed ? "justify-center" : "gap-3"
           }`}
         >
@@ -88,7 +93,7 @@ function SideBar({ isCollapsed, setIsCollapsed }) {
               <span
                 className={`whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out ${
                   isCollapsed ? "max-w-0 opacity-0" : "max-w-40 opacity-100"
-                } ${isActive ? "text-[#049552]" : "text-white"}`}
+                } ${isActive ? "text-[#049552]" : "text-gray-400"}`}
               >
                 Settings
               </span>

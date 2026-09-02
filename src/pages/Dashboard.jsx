@@ -1,106 +1,135 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import SideBar from "@/components/SideBar.jsx";
-import { useState } from "react";
+import AddTransaction from "@/components/AddTransaction";
+import { useOutletContext } from "react-router-dom";
+import { Wallet, TrendingUp, TrendingDown, PiggyBank } from "lucide-react";
 
 function Dashboard() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { transactions } = useOutletContext();
+  const income = transactions
+    .filter((transaction) => transaction.type === "income")
+    .reduce((total, transaction) => total + transaction.amount, 0);
+  const expenses = transactions
+    .filter((transaction) => transaction.type === "expense")
+    .reduce((total, transaction) => total + transaction.amount, 0);
+  const balance = income - expenses;
+  const savings = balance > 0 ? balance : 0;
+  function formatCurrency(amount) {
+    return `₦${amount.toLocaleString("en-NG")}`;
+  }
+  const cards = [
+    {
+      title: "Total Balance",
+      value: formatCurrency(balance),
+      description: "Current available balance",
+      icon: Wallet,
+      color: "text-[#049552]",
+    },
+    {
+      title: "Income",
+      value: formatCurrency(income),
+      description: "Total money received",
+      icon: TrendingUp,
+      color: "text-[#049552]",
+    },
+    {
+      title: "Expenses",
+      value: formatCurrency(expenses),
+      description: "Total money spent",
+      icon: TrendingDown,
+      color: "text-red-400",
+    },
+    {
+      title: "Savings",
+      value: formatCurrency(savings),
+      description: "Current savings",
+      icon: PiggyBank,
+      color: "text-[#049552]",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-[#0f1714]">
-      <h1 className="text-3xl font-bold">Dashboard</h1>
-      <p className="text-sm text-gray-400 mb-10">
-        Here's your financial review.
-      </p>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-        <Card className="rounded-xl border border-white/10 hover:bg-[#049552]/10 transition-colors duration-200 ease-in-out">
-          <CardHeader>
-            <CardTitle>Total Balance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-bold text-[#049552]">₦125,400</p>
-            <p className="text-gray-400 text-xs mt-4">+12% this month</p>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-xl border border-white/10 hover:bg-[#049552]/10 transition-colors duration-200 ease-in-out">
-          <CardHeader>
-            <CardTitle>Income</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-bold text-[#049552]">₦85,000</p>
-            <p className="text-gray-400 text-xs mt-4">+8% this month</p>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-xl border border-white/10 hover:bg-[#049552]/10 transition-colors duration-200 ease-in-out">
-          <CardHeader>
-            <CardTitle>Expenses</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-bold text-red-500">₦32,500</p>
-            <p className="text-gray-400 text-xs mt-4">-8.2% this month</p>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-xl border border-white/10 hover:bg-[#049552]/10 transition-colors duration-200 ease-in-out">
-          <CardHeader>
-            <CardTitle>Savings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-bold text-[#049552]">₦52,500</p>
-            <p className="text-gray-400 text-xs mt-4">+15% this month</p>
-          </CardContent>
-        </Card>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+        <p className="mt-1 text-sm text-gray-400">
+          Here's your financial overview.
+        </p>
+      </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {cards.map((card) => {
+          const Icon = card.icon;
+          return (
+            <Card
+              key={card.title}
+              className="border-white/10 bg-[#22332b]/60 transition-all duration-200 hover:-translate-y-1 hover:border-[#049552]/30 hover:bg-[#049552]/10"
+            >
+              <CardHeader className="flex flex-row items-center justify-between pb-3">
+                <CardTitle className="text-sm font-medium text-gray-400">
+                  {card.title}
+                </CardTitle>
+                <Icon size={20} className={card.color} />
+              </CardHeader>
+              <CardContent>
+                <p className={`text-3xl font-bold ${card.color}`}>
+                  {card.value}
+                </p>
+                <p className="mt-3 text-xs text-gray-500">{card.description}</p>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
-      <section className="mt-8 border border-white/10 p-4 rounded-xl">
-        <div className="flex justify-between items-center p-4">
-          <h2>Recent Transactions</h2>
-          <p className="text-[#049552]">View All </p>
-        </div>
-        <div className="flex justify-between p-4 items-center border-t border-white/10">
-          <div>
-            <p>Groceries</p>
-            <p className="text-gray-400 text-sm">Food and Household</p>
-          </div>
-          <div>
-            <p className="text-red-500">- ₦8,500</p>
-            <p>Today</p>
-          </div>
+      <section className="mt-8 rounded-2xl border border-white/10 bg-[#22332b]/40 p-5">
+        <div className="mb-5">
+          <h2 className="text-lg font-semibold text-white">
+            Recent Transactions
+          </h2>
+          <p className="text-sm text-gray-500">
+            Your latest financial activity
+          </p>
         </div>
 
-        <div className="flex justify-between p-4 items-center border-t border-white/10">
-          <div>
-            <p>Salaries</p>
-            <p className="text-gray-400 text-sm">Personal</p>
-          </div>
-          <div>
-            <p className="text-green-500">+ ₦85,000</p>
-            <p>Today</p>
-          </div>
-        </div>
+        <div className="space-y-3">
+          {transactions.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-white/10 py-10 text-center">
+              <p className="text-sm text-gray-400">No transactions yet.</p>
+              <p className="mt-1 text-xs text-gray-600">
+                Add your first transaction below.
+              </p>
+            </div>
+          ) : (
+            transactions.slice(0, 5).map((transaction) => (
+              <div
+                key={transaction.id}
+                className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.03] p-4 transition hover:bg-white/[0.05]"
+              >
+                <div>
+                  <p className="font-medium text-white">
+                    {transaction.description}
+                  </p>
 
-        <div className="flex justify-between p-4 items-center border-t border-white/10">
-          <div>
-            <p>Transport</p>
-            <p className="text-gray-400 text-sm">Outdoor</p>
-          </div>
-          <div>
-            <p className="text-red-500">- ₦3,200</p>
-            <p>Yesterday</p>
-          </div>
-        </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {transaction.category} · {transaction.date}
+                  </p>
+                </div>
 
-        <div className="flex justify-between p-4 items-center border-t border-white/10">
-          <div>
-            <p>Entertainment</p>
-            <p className="text-gray-400 text-sm">Miscellaneous</p>
-          </div>
-          <div>
-            <p className="text-red-500">- ₦5,000</p>
-            <p>Aug 28</p>
-          </div>
+                <span
+                  className={
+                    transaction.type === "income"
+                      ? "font-semibold text-[#049552]"
+                      : "font-semibold text-red-400"
+                  }
+                >
+                  {transaction.type === "income" ? "+" : "-"}
+                  {formatCurrency(transaction.amount)}
+                </span>
+              </div>
+            ))
+          )}
         </div>
       </section>
+        <AddTransaction />
     </div>
   );
 }
