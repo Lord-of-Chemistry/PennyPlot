@@ -7,7 +7,6 @@ function AddTransaction() {
   console.log("🔥 ADD TRANSACTION IS RUNNING 🔥");
 
   const { setTransactions } = useOutletContext();
-
   const [type, setType] = useState("expense");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
@@ -90,7 +89,7 @@ function AddTransaction() {
   }
 
   return (
-    <section className="mt-10 pt-2">
+    <section className="w-full">
       <div className="mt-10 pt-2 relative z-10 overflow-visible rounded-3xl border-2 border-[#049552]/30 bg-[#1b2922] shadow-2xl shadow-black/30">
         <div className="border-b border-white/10 px-5 py-6 md:px-7">
           <div className="flex items-center gap-4">
