@@ -9,14 +9,10 @@ import {
   X,
   Trash2,
   ChevronDown,
+  Download
 } from "lucide-react";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 function Budgets() {
   const { transactions } = useOutletContext();
@@ -67,10 +63,7 @@ function Budgets() {
   function saveBudgets(updatedBudgets) {
     setBudgets(updatedBudgets);
 
-    localStorage.setItem(
-      "pennyplot-budgets",
-      JSON.stringify(updatedBudgets)
-    );
+    localStorage.setItem("pennyplot-budgets", JSON.stringify(updatedBudgets));
   }
 
   function handleCreateBudget(e) {
@@ -85,15 +78,11 @@ function Budgets() {
     }
 
     const alreadyExists = budgets.some(
-      (budget) =>
-        budget.category === category &&
-        budget.period === period
+      (budget) => budget.category === category && budget.period === period,
     );
 
     if (alreadyExists) {
-      setError(
-        `You already have a ${period} budget for ${category}.`
-      );
+      setError(`You already have a ${period} budget for ${category}.`);
       return;
     }
 
@@ -114,9 +103,7 @@ function Budgets() {
   }
 
   function deleteBudget(id) {
-    const updatedBudgets = budgets.filter(
-      (budget) => budget.id !== id
-    );
+    const updatedBudgets = budgets.filter((budget) => budget.id !== id);
 
     saveBudgets(updatedBudgets);
   }
@@ -132,7 +119,7 @@ function Budgets() {
       .filter(
         (transaction) =>
           transaction.type === "expense" &&
-          transaction.category === budget.category
+          transaction.category === budget.category,
       )
       .filter((transaction) => {
         const transactionDate = new Date(transaction.date);
@@ -144,24 +131,19 @@ function Budgets() {
         if (budget.period === "monthly") {
           return (
             transactionDate.getMonth() === now.getMonth() &&
-            transactionDate.getFullYear() ===
-              now.getFullYear()
+            transactionDate.getFullYear() === now.getFullYear()
           );
         }
 
         if (budget.period === "yearly") {
-          return (
-            transactionDate.getFullYear() ===
-            now.getFullYear()
-          );
+          return transactionDate.getFullYear() === now.getFullYear();
         }
 
         return false;
       })
       .reduce(
-        (total, transaction) =>
-          total + Number(transaction.amount || 0),
-        0
+        (total, transaction) => total + Number(transaction.amount || 0),
+        0,
       );
   }
 
@@ -169,10 +151,7 @@ function Budgets() {
     return budgets.map((budget) => {
       const spent = getBudgetSpent(budget);
 
-      const percentage =
-        budget.amount > 0
-          ? (spent / budget.amount) * 100
-          : 0;
+      const percentage = budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
 
       const remaining = budget.amount - spent;
 
@@ -196,56 +175,112 @@ function Budgets() {
 
   const totalBudget = budgetData.reduce(
     (total, budget) => total + budget.amount,
-    0
+    0,
   );
 
   const totalSpent = budgetData.reduce(
     (total, budget) => total + budget.spent,
-    0
+    0,
   );
 
   const totalRemaining = totalBudget - totalSpent;
 
   const overallPercentage =
-    totalBudget > 0
-      ? (totalSpent / totalBudget) * 100
-      : 0;
+    totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
+  function downloadBudgets() {
+    if (budgetData.length === 0) return;
+
+    const headers = [
+      "Category",
+      "Period",
+      "Budget",
+      "Spent",
+      "Remaining",
+      "Usage",
+      "Status",
+    ];
+
+    const rows = budgetData.map((budget) => [
+      budget.category,
+      budget.period,
+      budget.amount,
+      budget.spent,
+      budget.remaining,
+      `${Math.round(budget.percentage)}%`,
+      budget.status,
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) =>
+        row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(","),
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `pennyplot-budgets-${
+      new Date().toISOString().split("T")[0]
+    }.csv`;
+
+    document.body.appendChild(link);
+    link.click();
+
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
   return (
     <div className="min-h-screen bg-[#0f1714]">
       {/* Header */}
       <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">
-            Budgets
-          </h1>
+          <h1 className="text-3xl font-bold text-white">Budgets</h1>
 
           <p className="mt-1 text-sm text-gray-400">
             Set spending limits and stay in control of your money.
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => {
-            setShowForm((prev) => !prev);
-            setError("");
-          }}
-          className="flex items-center justify-center gap-2 rounded-xl bg-[#049552] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-[#049552]/20 transition hover:bg-[#038448]"
-        >
-          {showForm ? <X size={18} /> : <Plus size={18} />}
+        <div className="flex flex-col gap-3 sm:flex-row">
+          {budgetData.length > 0 && (
+            <button
+              type="button"
+              onClick={downloadBudgets}
+              className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-[#22332b] px-5 py-3 text-sm font-semibold text-gray-300 transition hover:border-[#049552]/30 hover:bg-[#049552]/5 hover:text-white"
+            >
+              <Download size={17} />
+              Download
+            </button>
+          )}
 
-          {showForm ? "Close" : "Create Budget"}
-        </button>
+          <button
+            type="button"
+            onClick={() => {
+              setShowForm((prev) => !prev);
+              setError("");
+            }}
+            className="flex items-center justify-center gap-2 rounded-xl bg-[#049552] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-[#049552]/20 transition hover:bg-[#038448]"
+          >
+            {showForm ? <X size={18} /> : <Plus size={18} />}
+
+            {showForm ? "Close" : "Create Budget"}
+          </button>
+        </div>
       </div>
 
       {/* Summary */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card className="border-white/10 bg-[#22332b]/40">
           <CardContent className="p-5">
-            <p className="text-sm text-gray-500">
-              Total Budget
-            </p>
+            <p className="text-sm text-gray-500">Total Budget</p>
 
             <p className="mt-2 text-2xl font-bold text-white">
               {formatCurrency(totalBudget)}
@@ -255,9 +290,7 @@ function Budgets() {
 
         <Card className="border-white/10 bg-[#22332b]/40">
           <CardContent className="p-5">
-            <p className="text-sm text-gray-500">
-              Total Spent
-            </p>
+            <p className="text-sm text-gray-500">Total Spent</p>
 
             <p className="mt-2 text-2xl font-bold text-red-400">
               {formatCurrency(totalSpent)}
@@ -267,15 +300,11 @@ function Budgets() {
 
         <Card className="border-white/10 bg-[#22332b]/40">
           <CardContent className="p-5">
-            <p className="text-sm text-gray-500">
-              Remaining
-            </p>
+            <p className="text-sm text-gray-500">Remaining</p>
 
             <p
               className={`mt-2 text-2xl font-bold ${
-                totalRemaining >= 0
-                  ? "text-[#049552]"
-                  : "text-red-400"
+                totalRemaining >= 0 ? "text-[#049552]" : "text-red-400"
               }`}
             >
               {formatCurrency(totalRemaining)}
@@ -285,9 +314,7 @@ function Budgets() {
 
         <Card className="border-white/10 bg-[#22332b]/40">
           <CardContent className="p-5">
-            <p className="text-sm text-gray-500">
-              Overall Usage
-            </p>
+            <p className="text-sm text-gray-500">Overall Usage</p>
 
             <p className="mt-2 text-2xl font-bold text-white">
               {Math.min(Math.round(overallPercentage), 999)}%
@@ -323,17 +350,11 @@ function Budgets() {
                 <div className="relative">
                   <select
                     value={category}
-                    onChange={(e) =>
-                      setCategory(e.target.value)
-                    }
+                    onChange={(e) => setCategory(e.target.value)}
                     className="w-full appearance-none rounded-xl border border-white/15 bg-[#0f1714] px-4 py-3 text-sm text-white outline-none transition hover:border-white/25 focus:border-[#049552] focus:ring-2 focus:ring-[#049552]/15"
                   >
                     {categories.map((item) => (
-                      <option
-                        key={item}
-                        value={item}
-                        className="bg-[#17221d]"
-                      >
+                      <option key={item} value={item} className="bg-[#17221d]">
                         {item}
                       </option>
                     ))}
@@ -397,10 +418,7 @@ function Budgets() {
                 <div className="md:col-span-3 flex items-center justify-between rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
                   <span>{error}</span>
 
-                  <button
-                    type="button"
-                    onClick={() => setError("")}
-                  >
+                  <button type="button" onClick={() => setError("")}>
                     <X size={16} />
                   </button>
                 </div>
@@ -433,8 +451,8 @@ function Budgets() {
               </h2>
 
               <p className="mt-2 text-sm leading-6 text-gray-500">
-                Create your first budget to start tracking how
-                much you're spending in each category.
+                Create your first budget to start tracking how much you're
+                spending in each category.
               </p>
 
               <button
@@ -450,10 +468,7 @@ function Budgets() {
         ) : (
           <div className="grid gap-5 md:grid-cols-2">
             {budgetData.map((budget) => (
-              <Card
-                key={budget.id}
-                className="border-white/10 bg-[#22332b]/40"
-              >
+              <Card key={budget.id} className="border-white/10 bg-[#22332b]/40">
                 <CardHeader>
                   <div className="flex items-start justify-between gap-4">
                     <div>
@@ -494,8 +509,8 @@ function Budgets() {
                         budget.status === "exceeded"
                           ? "text-red-400"
                           : budget.status === "warning"
-                          ? "text-yellow-400"
-                          : "text-[#049552]"
+                            ? "text-yellow-400"
+                            : "text-[#049552]"
                       }`}
                     >
                       {Math.round(budget.percentage)}%
@@ -509,14 +524,11 @@ function Budgets() {
                         budget.status === "exceeded"
                           ? "bg-red-500"
                           : budget.status === "warning"
-                          ? "bg-yellow-400"
-                          : "bg-[#049552]"
+                            ? "bg-yellow-400"
+                            : "bg-[#049552]"
                       }`}
                       style={{
-                        width: `${Math.min(
-                          budget.percentage,
-                          100
-                        )}%`,
+                        width: `${Math.min(budget.percentage, 100)}%`,
                       }}
                     />
                   </div>
@@ -525,10 +537,7 @@ function Budgets() {
                   <div className="mt-4 flex items-center gap-2">
                     {budget.status === "safe" && (
                       <>
-                        <CheckCircle2
-                          size={17}
-                          className="text-[#049552]"
-                        />
+                        <CheckCircle2 size={17} className="text-[#049552]" />
 
                         <p className="text-sm text-gray-400">
                           {formatCurrency(budget.remaining)} remaining
@@ -538,10 +547,7 @@ function Budgets() {
 
                     {budget.status === "warning" && (
                       <>
-                        <AlertTriangle
-                          size={17}
-                          className="text-yellow-400"
-                        />
+                        <AlertTriangle size={17} className="text-yellow-400" />
 
                         <p className="text-sm text-yellow-400">
                           You're getting close to your limit
@@ -551,16 +557,11 @@ function Budgets() {
 
                     {budget.status === "exceeded" && (
                       <>
-                        <AlertTriangle
-                          size={17}
-                          className="text-red-400"
-                        />
+                        <AlertTriangle size={17} className="text-red-400" />
 
                         <p className="text-sm text-red-400">
                           Budget exceeded by{" "}
-                          {formatCurrency(
-                            Math.abs(budget.remaining)
-                          )}
+                          {formatCurrency(Math.abs(budget.remaining))}
                         </p>
                       </>
                     )}
@@ -576,20 +577,14 @@ function Budgets() {
       {budgetData.length > 0 && (
         <div className="mt-6 rounded-2xl border border-[#049552]/10 bg-[#049552]/5 p-5">
           <div className="flex items-start gap-3">
-            <TrendingUp
-              size={19}
-              className="mt-0.5 shrink-0 text-[#049552]"
-            />
+            <TrendingUp size={19} className="mt-0.5 shrink-0 text-[#049552]" />
 
             <div>
-              <p className="text-sm font-medium text-white">
-                Budget tip
-              </p>
+              <p className="text-sm font-medium text-white">Budget tip</p>
 
               <p className="mt-1 text-sm leading-6 text-gray-500">
-                Keep an eye on categories approaching 75% of
-                their limit. Small adjustments early can help
-                prevent overspending later.
+                Keep an eye on categories approaching 75% of their limit. Small
+                adjustments early can help prevent overspending later.
               </p>
             </div>
           </div>
