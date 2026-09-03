@@ -3,10 +3,38 @@ import { useOutletContext } from "react-router-dom";
 import { Plus, X, Wallet, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { getCurrencyName, getCurrencySymbol } from "../utils/currency";
+import DatePicker from "../components/DatePicker";
+
+const defaultIncomeCategories = [
+  "Salary",
+  "Freelance",
+  "Business",
+  "Allowance",
+  "Gift",
+  "Investment",
+  "Refund",
+  "Other Income",
+];
+
+const defaultExpenseCategories = [
+  "Food",
+  "Transport",
+  "Airtime",
+  "Data",
+  "Bills",
+  "Shopping",
+  "Entertainment",
+  "Health",
+  "Education",
+  "Subscriptions",
+  "Personal Care",
+  "Rent/Housing",
+  "Other Expense",
+];
 
 function AddTransaction() {
   const { setTransactions } = useOutletContext();
-
+  const { dateFormat } = useOutletContext();
   const [type, setType] = useState("expense");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
@@ -17,18 +45,101 @@ function AddTransaction() {
   const [typeOpen, setTypeOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
 
+  const [customIncomeCategories, setCustomIncomeCategories] = useState(() => {
+    try {
+      return JSON.parse(
+        localStorage.getItem("pennyplot-custom-income-categories") || "[]",
+      );
+    } catch {
+      return [];
+    }
+  });
+
+  const [customExpenseCategories, setCustomExpenseCategories] = useState(() => {
+    try {
+      return JSON.parse(
+        localStorage.getItem("pennyplot-custom-expense-categories") || "[]",
+      );
+    } catch {
+      return [];
+    }
+  });
+
   const dropdownRef = useRef(null);
 
-  const categories = [
-    "Food",
-    "Transport",
-    "Shopping",
-    "Bills",
-    "Entertainment",
-    "Salary",
-    "Freelance",
-    "Other",
-  ];
+  /*
+    Keep custom categories updated when
+    localStorage changes in another tab/window.
+  */
+  useEffect(() => {
+    function handleStorageChange(event) {
+      if (
+        event.key === "pennyplot-custom-income-categories" ||
+        event.key === "pennyplot-custom-expense-categories"
+      ) {
+        try {
+          setCustomIncomeCategories(
+            JSON.parse(
+              localStorage.getItem("pennyplot-custom-income-categories") ||
+                "[]",
+            ),
+          );
+
+          setCustomExpenseCategories(
+            JSON.parse(
+              localStorage.getItem("pennyplot-custom-expense-categories") ||
+                "[]",
+            ),
+          );
+        } catch {
+          setCustomIncomeCategories([]);
+          setCustomExpenseCategories([]);
+        }
+      }
+    }
+
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
+
+  /*
+    Read the latest categories whenever
+    the Add Transaction component becomes active.
+  */
+  useEffect(() => {
+    function refreshCategories() {
+      try {
+        setCustomIncomeCategories(
+          JSON.parse(
+            localStorage.getItem("pennyplot-custom-income-categories") || "[]",
+          ),
+        );
+
+        setCustomExpenseCategories(
+          JSON.parse(
+            localStorage.getItem("pennyplot-custom-expense-categories") || "[]",
+          ),
+        );
+      } catch {
+        setCustomIncomeCategories([]);
+        setCustomExpenseCategories([]);
+      }
+    }
+
+    window.addEventListener("focus", refreshCategories);
+
+    return () => {
+      window.removeEventListener("focus", refreshCategories);
+    };
+  }, []);
+
+  const categories =
+    type === "income"
+      ? [...defaultIncomeCategories, ...customIncomeCategories]
+      : [...defaultExpenseCategories, ...customExpenseCategories];
 
   /*
     Close dropdowns when clicking outside.
@@ -75,6 +186,7 @@ function AddTransaction() {
     const numbersOnly = e.target.value.replace(/\D/g, "");
     setAmount(numbersOnly);
   }
+
   function handleSubmit(e) {
     e.preventDefault();
     setError("");
@@ -128,6 +240,12 @@ function AddTransaction() {
   function selectType(value) {
     setType(value);
     setTypeOpen(false);
+
+    if (value === "income") {
+      setCategory("Salary");
+    } else {
+      setCategory("Food");
+    }
   }
 
   function selectCategory(value) {
@@ -283,11 +401,11 @@ function AddTransaction() {
                   }}
                   className="flex w-full items-center justify-between rounded-xl border border-white/15 bg-[#0f1714] px-4 py-3 text-sm text-white outline-none transition-all duration-200 hover:border-white/25 focus:border-[#049552] focus:ring-2 focus:ring-[#049552]/15"
                 >
-                  <span>{category}</span>
+                  <span className="truncate">{category}</span>
 
                   <ChevronDown
                     size={17}
-                    className={`text-gray-500 transition-transform duration-200 ${
+                    className={`shrink-0 text-gray-500 transition-transform duration-200 ${
                       categoryOpen ? "rotate-180" : ""
                     }`}
                   />
@@ -324,11 +442,10 @@ function AddTransaction() {
                   Date
                 </label>
 
-                <input
-                  type="date"
+                <DatePicker
                   value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="w-full rounded-xl border border-white/15 bg-[#0f1714] px-4 py-3 text-sm text-white outline-none transition-all duration-200 hover:border-white/25 focus:border-[#049552] focus:ring-2 focus:ring-[#049552]/15"
+                  onChange={setDate}
+                  dateFormat={dateFormat}
                 />
               </div>
             </div>

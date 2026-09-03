@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -17,6 +17,8 @@ import {
   Wallet,
   CheckCircle2,
   AlertTriangle,
+  Plus,
+  X,
 } from "lucide-react";
 import {
   createBackup,
@@ -24,19 +26,73 @@ import {
   getLastBackupDate,
 } from "../utils/backup";
 
-function Settings() {
-  const { transactions, setTransactions, currency, setCurrency } =
-    useOutletContext();
+const defaultIncomeCategories = [
+  "Salary",
+  "Freelance",
+  "Business",
+  "Allowance",
+  "Gift",
+  "Investment",
+  "Refund",
+  "Other Income",
+];
 
-  const [dateFormat, setDateFormat] = useState(() => {
-    return localStorage.getItem("pennyplot-date-format") || "DD/MM/YYYY";
-  });
+const defaultExpenseCategories = [
+  "Food",
+  "Transport",
+  "Airtime",
+  "Data",
+  "Bills",
+  "Shopping",
+  "Entertainment",
+  "Health",
+  "Education",
+  "Subscriptions",
+  "Personal Care",
+  "Rent/Housing",
+  "Other Expense",
+];
+
+function Settings() {
+  const {
+    transactions,
+    setTransactions,
+    currency,
+    setCurrency,
+    dateFormat,
+    setDateFormat,
+  } = useOutletContext();
 
   const [dialog, setDialog] = useState(null);
   const [pendingBackup, setPendingBackup] = useState(null);
   const [message, setMessage] = useState("");
-
   const [lastBackup, setLastBackup] = useState(getLastBackupDate());
+
+  /*
+    Custom categories
+  */
+  const [customIncomeCategories, setCustomIncomeCategories] = useState(() => {
+    try {
+      return JSON.parse(
+        localStorage.getItem("pennyplot-custom-income-categories") || "[]",
+      );
+    } catch {
+      return [];
+    }
+  });
+
+  const [customExpenseCategories, setCustomExpenseCategories] = useState(() => {
+    try {
+      return JSON.parse(
+        localStorage.getItem("pennyplot-custom-expense-categories") || "[]",
+      );
+    } catch {
+      return [];
+    }
+  });
+
+  const [newCategory, setNewCategory] = useState("");
+  const [categoryType, setCategoryType] = useState("expense");
 
   function updateCurrency(value) {
     setCurrency(value);
@@ -60,6 +116,96 @@ function Settings() {
     setTimeout(() => {
       setMessage("");
     }, 2500);
+  }
+
+  /*
+    Category helpers
+  */
+  function getAllCategories(type) {
+    if (type === "income") {
+      return [...defaultIncomeCategories, ...customIncomeCategories];
+    }
+
+    return [...defaultExpenseCategories, ...customExpenseCategories];
+  }
+
+  function addCategory() {
+    const cleanedCategory = newCategory.trim();
+
+    if (!cleanedCategory) {
+      showMessage("Please enter a category name.");
+      return;
+    }
+
+    if (cleanedCategory.length > 30) {
+      showMessage("Category names must be 30 characters or less.");
+      return;
+    }
+
+    const allCategories = getAllCategories(categoryType);
+
+    const alreadyExists = allCategories.some(
+      (category) => category.toLowerCase() === cleanedCategory.toLowerCase(),
+    );
+
+    if (alreadyExists) {
+      showMessage("That category already exists.");
+      return;
+    }
+
+    if (categoryType === "income") {
+      const updatedCategories = [...customIncomeCategories, cleanedCategory];
+
+      setCustomIncomeCategories(updatedCategories);
+
+      localStorage.setItem(
+        "pennyplot-custom-income-categories",
+        JSON.stringify(updatedCategories),
+      );
+    } else {
+      const updatedCategories = [...customExpenseCategories, cleanedCategory];
+
+      setCustomExpenseCategories(updatedCategories);
+
+      localStorage.setItem(
+        "pennyplot-custom-expense-categories",
+        JSON.stringify(updatedCategories),
+      );
+    }
+
+    setNewCategory("");
+
+    showMessage(
+      `${categoryType === "income" ? "Income" : "Expense"} category added.`,
+    );
+  }
+
+  function deleteCustomCategory(type, category) {
+    if (type === "income") {
+      const updatedCategories = customIncomeCategories.filter(
+        (item) => item !== category,
+      );
+
+      setCustomIncomeCategories(updatedCategories);
+
+      localStorage.setItem(
+        "pennyplot-custom-income-categories",
+        JSON.stringify(updatedCategories),
+      );
+    } else {
+      const updatedCategories = customExpenseCategories.filter(
+        (item) => item !== category,
+      );
+
+      setCustomExpenseCategories(updatedCategories);
+
+      localStorage.setItem(
+        "pennyplot-custom-expense-categories",
+        JSON.stringify(updatedCategories),
+      );
+    }
+
+    showMessage(`"${category}" removed.`);
   }
 
   function downloadTransactions() {
@@ -197,6 +343,7 @@ function Settings() {
         showMessage("Could not read this backup file.");
       }
     };
+
     reader.readAsText(file);
 
     event.target.value = "";
@@ -205,13 +352,21 @@ function Settings() {
   function restoreBackup() {
     if (!pendingBackup) return;
 
-    const transactions = pendingBackup.data.transactions || [];
+    const restoredTransactions = pendingBackup.data.transactions || [];
+
     const budgets = pendingBackup.data.budgets || [];
+
     const settings = pendingBackup.data.settings || {};
+
+    const restoredCustomIncomeCategories =
+      pendingBackup.data.customCategories?.income || [];
+
+    const restoredCustomExpenseCategories =
+      pendingBackup.data.customCategories?.expense || [];
 
     localStorage.setItem(
       "pennyplot-transactions",
-      JSON.stringify(transactions),
+      JSON.stringify(restoredTransactions),
     );
 
     localStorage.setItem("pennyplot-budgets", JSON.stringify(budgets));
@@ -224,7 +379,17 @@ function Settings() {
       localStorage.setItem("pennyplot-date-format", settings.dateFormat);
     }
 
-    setTransactions(transactions);
+    localStorage.setItem(
+      "pennyplot-custom-income-categories",
+      JSON.stringify(restoredCustomIncomeCategories),
+    );
+
+    localStorage.setItem(
+      "pennyplot-custom-expense-categories",
+      JSON.stringify(restoredCustomExpenseCategories),
+    );
+
+    setTransactions(restoredTransactions);
 
     setDialog(null);
     setPendingBackup(null);
@@ -261,6 +426,8 @@ function Settings() {
     localStorage.removeItem("pennyplot-budgets");
     localStorage.removeItem("pennyplot-currency");
     localStorage.removeItem("pennyplot-date-format");
+    localStorage.removeItem("pennyplot-custom-income-categories");
+    localStorage.removeItem("pennyplot-custom-expense-categories");
 
     setTransactions([]);
 
@@ -272,6 +439,7 @@ function Settings() {
       window.location.reload();
     }, 1000);
   }
+
   return (
     <div className="min-h-screen bg-[#0f1714]">
       {/* Header */}
@@ -349,11 +517,186 @@ function Settings() {
                 className="rounded-xl border border-white/10 bg-[#0f1714] px-4 py-2.5 text-sm text-white outline-none focus:border-[#049552]"
               >
                 <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-
                 <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-
                 <option value="YYYY-MM-DD">YYYY-MM-DD</option>
               </select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Categories */}
+        <Card className="border-white/10 bg-[#22332b]/40">
+          <CardHeader>
+            <CardTitle className="text-lg text-white">Categories</CardTitle>
+
+            <p className="text-sm text-gray-500">
+              Customize the categories available when recording transactions.
+            </p>
+          </CardHeader>
+
+          <CardContent className="space-y-6">
+            {/* Add Category */}
+            <div className="rounded-2xl border border-white/10 bg-[#0f1714]/50 p-4">
+              <div className="mb-4">
+                <p className="text-sm font-medium text-white">
+                  Add custom category
+                </p>
+
+                <p className="mt-1 text-xs text-gray-500">
+                  Custom categories can be removed later.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 md:flex-row">
+                <select
+                  value={categoryType}
+                  onChange={(e) => setCategoryType(e.target.value)}
+                  className="rounded-xl border border-white/10 bg-[#0f1714] px-4 py-3 text-sm text-white outline-none focus:border-[#049552] md:w-40"
+                >
+                  <option value="expense">Expense</option>
+                  <option value="income">Income</option>
+                </select>
+
+                <input
+                  type="text"
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addCategory();
+                    }
+                  }}
+                  maxLength={30}
+                  placeholder={
+                    categoryType === "expense"
+                      ? "e.g. Gaming"
+                      : "e.g. Side Hustle"
+                  }
+                  className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#0f1714] px-4 py-3 text-sm text-white outline-none placeholder:text-gray-600 focus:border-[#049552] focus:ring-2 focus:ring-[#049552]/10"
+                />
+
+                <button
+                  type="button"
+                  onClick={addCategory}
+                  className="flex items-center justify-center gap-2 rounded-xl bg-[#049552] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#038448]"
+                >
+                  <Plus size={17} />
+                  Add Category
+                </button>
+              </div>
+            </div>
+
+            {/* Expense Categories */}
+            <div>
+              <div className="mb-3 flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-semibold text-white">
+                    Expense Categories
+                  </h3>
+
+                  <p className="mt-1 text-xs text-gray-500">
+                    Built-in categories cannot be deleted.
+                  </p>
+                </div>
+
+                <span className="text-xs text-gray-600">
+                  {defaultExpenseCategories.length +
+                    customExpenseCategories.length}{" "}
+                  total
+                </span>
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {defaultExpenseCategories.map((category) => (
+                  <div
+                    key={category}
+                    className="flex items-center justify-between rounded-xl border border-white/5 bg-[#0f1714]/60 px-3 py-2.5"
+                  >
+                    <span className="text-sm text-gray-300">{category}</span>
+
+                    <span className="text-[10px] uppercase tracking-wider text-gray-600">
+                      Built-in
+                    </span>
+                  </div>
+                ))}
+
+                {customExpenseCategories.map((category) => (
+                  <div
+                    key={category}
+                    className="flex items-center justify-between rounded-xl border border-[#049552]/10 bg-[#049552]/5 px-3 py-2.5"
+                  >
+                    <span className="min-w-0 truncate text-sm text-white">
+                      {category}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => deleteCustomCategory("expense", category)}
+                      className="ml-2 shrink-0 rounded-lg p-1 text-gray-500 transition hover:bg-red-500/10 hover:text-red-400"
+                      aria-label={`Delete ${category}`}
+                    >
+                      <X size={15} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Income Categories */}
+            <div>
+              <div className="mb-3 flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-semibold text-white">
+                    Income Categories
+                  </h3>
+
+                  <p className="mt-1 text-xs text-gray-500">
+                    Built-in categories cannot be deleted.
+                  </p>
+                </div>
+
+                <span className="text-xs text-gray-600">
+                  {defaultIncomeCategories.length +
+                    customIncomeCategories.length}{" "}
+                  total
+                </span>
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {defaultIncomeCategories.map((category) => (
+                  <div
+                    key={category}
+                    className="flex items-center justify-between rounded-xl border border-white/5 bg-[#0f1714]/60 px-3 py-2.5"
+                  >
+                    <span className="text-sm text-gray-300">{category}</span>
+
+                    <span className="text-[10px] uppercase tracking-wider text-gray-600">
+                      Built-in
+                    </span>
+                  </div>
+                ))}
+
+                {customIncomeCategories.map((category) => (
+                  <div
+                    key={category}
+                    className="flex items-center justify-between rounded-xl border border-[#049552]/10 bg-[#049552]/5 px-3 py-2.5"
+                  >
+                    <span className="min-w-0 truncate text-sm text-white">
+                      {category}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => deleteCustomCategory("income", category)}
+                      className="ml-2 shrink-0 rounded-lg p-1 text-gray-500 transition hover:bg-red-500/10 hover:text-red-400"
+                      aria-label={`Delete ${category}`}
+                    >
+                      <X size={15} />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -521,8 +864,9 @@ function Settings() {
             </div>
 
             <p className="text-xs leading-5 text-gray-600">
-              Backup files contain your transactions, budgets, currency, and
-              date-format preferences. Keep downloaded backups somewhere safe.
+              Backup files contain your transactions, budgets, categories,
+              currency, and date-format preferences. Keep downloaded backups
+              somewhere safe.
             </p>
           </CardContent>
         </Card>
@@ -570,7 +914,6 @@ function Settings() {
               className="flex w-full items-center justify-between rounded-xl bg-red-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-600"
             >
               <span>Delete all PennyPlot data</span>
-
               <Trash2 size={17} />
             </button>
           </CardContent>
@@ -603,6 +946,7 @@ function Settings() {
         </Card>
       </div>
 
+      {/* Confirmation Dialog */}
       <Dialog
         open={dialog !== null}
         onOpenChange={(open) => {
@@ -615,8 +959,11 @@ function Settings() {
           <DialogHeader>
             <DialogTitle>
               {dialog === "transactions" && "Delete all transactions?"}
+
               {dialog === "budgets" && "Delete all budgets?"}
+
               {dialog === "everything" && "Delete all PennyPlot data?"}
+
               {dialog === "restore" && "Restore this backup?"}
             </DialogTitle>
 
@@ -628,7 +975,7 @@ function Settings() {
                 "This will permanently delete all your saved budgets. This action cannot be undone."}
 
               {dialog === "everything" &&
-                "This will permanently delete your transactions, budgets, currency settings, and date preferences. This action cannot be undone."}
+                "This will permanently delete your transactions, budgets, custom categories, currency settings, and date preferences. This action cannot be undone."}
 
               {dialog === "restore" &&
                 "Restoring this backup will replace your current PennyPlot data. Your existing data will be overwritten."}
@@ -663,7 +1010,11 @@ function Settings() {
                   restoreBackup();
                 }
               }}
-              className="rounded-xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-600"
+              className={`rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition ${
+                dialog === "restore"
+                  ? "bg-[#049552] hover:bg-[#038448]"
+                  : "bg-red-500 hover:bg-red-600"
+              }`}
             >
               {dialog === "restore" ? "Restore" : "Delete"}
             </button>

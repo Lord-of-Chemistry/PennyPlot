@@ -1,6 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AddTransaction from "@/components/AddTransaction";
 import { Link, useOutletContext } from "react-router-dom";
+import { formatCurrency } from "../utils/currency";
+
+import { formatDate } from "../utils/date";
 import {
   Wallet,
   TrendingUp,
@@ -12,10 +15,9 @@ import {
   PieChart,
   Receipt,
 } from "lucide-react";
-import { formatCurrency } from "../utils/currency";
 
 function Dashboard() {
-  const { transactions, currency } = useOutletContext();
+  const { transactions, currency, dateFormat } = useOutletContext();
 
   const income = transactions
     .filter((transaction) => transaction.type === "income")
@@ -415,33 +417,41 @@ function Dashboard() {
               </div>
             ) : (
               <>
-                {transactions.slice(0, 3).map((transaction) => (
-                  <div
-                    key={transaction.id}
-                    className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.03] p-4 transition hover:bg-white/[0.05]"
-                  >
-                    <div>
-                      <p className="font-medium text-white">
-                        {transaction.description}
-                      </p>
-
-                      <p className="mt-1 text-xs text-gray-500">
-                        {transaction.category} · {transaction.date}
-                      </p>
-                    </div>
-
-                    <span
-                      className={
-                        transaction.type === "income"
-                          ? "font-semibold text-[#049552]"
-                          : "font-semibold text-red-400"
-                      }
+                {[...transactions]
+                  .sort(
+                    (a, b) =>
+                      new Date(b.date).getTime() - new Date(a.date).getTime(),
+                  )
+                  .slice(0, 3)
+                  .map((transaction) => (
+                    <div
+                      key={transaction.id}
+                      className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.03] p-4 transition hover:bg-white/[0.05]"
                     >
-                      {transaction.type === "income" ? "+" : "-"}
-                      {formatCurrency(transaction.amount, currency)}
-                    </span>
-                  </div>
-                ))}
+                      <div>
+                        <p className="font-medium text-white">
+                          {transaction.description}
+                        </p>
+
+                        <p className="mt-1 text-xs text-gray-500">
+                          {transaction.category} ·{" "}
+                          {formatDate(transaction.date, dateFormat)}
+                          
+                        </p>
+                      </div>
+
+                      <span
+                        className={
+                          transaction.type === "income"
+                            ? "font-semibold text-[#049552]"
+                            : "font-semibold text-red-400"
+                        }
+                      >
+                        {transaction.type === "income" ? "+" : "-"}
+                        {formatCurrency(transaction.amount, currency)}
+                      </span>
+                    </div>
+                  ))}
 
                 {transactions.length > 3 && (
                   <div className="pt-2 text-center">

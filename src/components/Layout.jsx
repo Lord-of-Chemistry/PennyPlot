@@ -9,9 +9,13 @@ function Layout() {
   // Online / Offline status
   const [isOnline, setIsOnline] = useState(true);
   const [showBackOnline, setShowBackOnline] = useState(false);
-const [currency, setCurrency] = useState(() => {
-  return localStorage.getItem("pennyplot-currency") || "NGN";
-});
+  const [currency, setCurrency] = useState(() => {
+    return localStorage.getItem("pennyplot-currency") || "NGN";
+  });
+  const [dateFormat, setDateFormat] = useState(() => {
+    return localStorage.getItem("pennyplot-date-format") || "DD/MM/YYYY";
+  });
+
   const [transactions, setTransactions] = useState(() => {
     try {
       const savedTransactions = localStorage.getItem("pennyplot-transactions");
@@ -89,8 +93,13 @@ const [currency, setCurrency] = useState(() => {
   }, [transactions]);
 
   useEffect(() => {
-  createBackup();
-}, [transactions]);
+    createBackup();
+  }, [transactions]);
+  
+  // Save date format locally
+  useEffect(() => {
+    localStorage.setItem("pennyplot-date-format", dateFormat);
+  }, [dateFormat]);
 
   return (
     <div className="min-h-screen bg-[#0f1714]">
@@ -117,15 +126,17 @@ const [currency, setCurrency] = useState(() => {
           isCollapsed ? "md:ml-20" : "md:ml-56"
         }`}
       >
-          <Outlet
-            context={{
-              transactions,
-              setTransactions,
-              isOnline,
-              currency, 
-              setCurrency,
-            }}
-          />
+        <Outlet
+          context={{
+            transactions,
+            setTransactions,
+            isOnline,
+            currency,
+            setCurrency,
+            dateFormat,
+            setDateFormat,
+          }}
+        />
       </main>
     </div>
   );

@@ -1,0 +1,20 @@
+Phase A — Dashboard + transaction input
+✅ Type-specific categories
+✅ More default categories
+✅ Custom categories
+✅ Category limit
+
+✅ Proper scrollable category dropdown
+✅ Proper shadcn date picker
+✅ Make Date Format setting actually apply
+
+Phase B — Dashboard layout
+✅ Fix Spending Breakdown height/overflow
+✅ Fix Recent Transactions sorting/old transaction behavior
+Phase C — Analytics
+
+✅ Remove arbitrary 7/8/6/5 period limits
+✅ Generate the complete timeline from available data
+✅ Horizontally scrollable chart
+✅ Keep empty periods where appropriate
+✅ Make Daily/Weekly/Monthly/Yearly behave consistently

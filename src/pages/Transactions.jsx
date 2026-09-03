@@ -5,6 +5,8 @@ import { formatCurrency, getCurrencySymbol } from "../utils/currency";
 import { downloadCSV } from "../utils/exportCsv";
 import { downloadTransactionsPDF } from "../utils/exportPdf";
 import { downloadTransactionsPNG } from "../utils/exportPng";
+import { formatDate } from "../utils/date";
+import DatePicker from "../components/DatePicker";
 import {
   Search,
   ArrowUpDown,
@@ -16,15 +18,52 @@ import {
   Download,
 } from "lucide-react";
 
+const incomeCategories = [
+  "Salary",
+  "Freelance",
+  "Business",
+  "Allowance",
+  "Gift",
+  "Investment",
+  "Refund",
+  "Other Income",
+];
+
+const expenseCategories = [
+  "Food",
+  "Transport",
+  "Airtime",
+  "Data",
+  "Bills",
+  "Shopping",
+  "Entertainment",
+  "Health",
+  "Education",
+  "Subscriptions",
+  "Personal Care",
+  "Rent/Housing",
+  "Other Expense",
+];
+
+const CUSTOM_INCOME_KEY = "pennyplot-custom-income-categories";
+const CUSTOM_EXPENSE_KEY = "pennyplot-custom-expense-categories";
+
+/* =========================
+   CUSTOM DROPDOWN
+========================= */
+
 function CustomDropdown({
   value,
   onChange,
   options,
   icon: Icon,
   className = "",
+  placeholder = "Select option",
 }) {
   const [isOpen, setIsOpen] = useState(false);
+
   const dropdownRef = useRef(null);
+  const optionsRef = useRef(null);
 
   const selectedOption = options.find((option) => option.value === value);
 
@@ -42,6 +81,38 @@ function CustomDropdown({
     };
   }, []);
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    function handleEscape(event) {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || !selectedOption || !optionsRef.current) {
+      return;
+    }
+
+    const selectedElement = optionsRef.current.querySelector(
+      '[data-selected="true"]',
+    );
+
+    if (selectedElement) {
+      selectedElement.scrollIntoView({
+        block: "nearest",
+      });
+    }
+  }, [isOpen, selectedOption]);
+
   function handleSelect(option) {
     onChange(option.value);
     setIsOpen(false);
@@ -49,13 +120,19 @@ function CustomDropdown({
 
   return (
     <div ref={dropdownRef} className={`relative min-w-0 ${className}`}>
+      {/* =========================
+          TRIGGER
+      ========================= */}
+
       <button
         type="button"
         onClick={() => setIsOpen((previous) => !previous)}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
         className={`flex w-full items-center justify-between gap-3 rounded-xl border bg-[#1b2922] px-4 py-3 text-sm text-white outline-none transition-all duration-200 ${
           isOpen
-            ? "border-[#049552] ring-1 ring-[#049552]/30"
-            : "border-white/10 hover:border-white/20"
+            ? "border-[#049552] bg-[#1b2922] ring-1 ring-[#049552]/30"
+            : "border-white/10 hover:border-white/20 hover:bg-[#22332b]"
         }`}
       >
         <span className="flex min-w-0 items-center gap-3">
@@ -68,94 +145,272 @@ function CustomDropdown({
             />
           )}
 
-          <span className="truncate">{selectedOption?.label}</span>
+          <span
+            className={`truncate ${
+              selectedOption ? "text-white" : "text-gray-500"
+            }`}
+          >
+            {selectedOption?.label || placeholder}
+          </span>
         </span>
 
         <ChevronDown
           size={16}
-          className={`shrink-0 text-gray-500 transition-transform duration-200 ${
+          className={`shrink-0 text-gray-500 transition-all duration-200 ${
             isOpen ? "rotate-180 text-[#049552]" : ""
           }`}
         />
       </button>
 
+      {/* =========================
+          DROPDOWN
+      ========================= */}
+
       <div
-        className={`absolute left-0 top-[calc(100%+8px)] z-50 w-full min-w-[180px] origin-top rounded-xl border border-white/10 bg-[#1b2922] p-1.5 shadow-2xl shadow-black/30 transition-all duration-200 ${
+        className={`absolute left-0 top-[calc(100%+8px)] z-[60] w-full min-w-[180px] origin-top rounded-xl border border-white/10 bg-[#1b2922] p-1.5 shadow-2xl shadow-black/40 transition-all duration-200 ${
           isOpen
             ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
             : "pointer-events-none -translate-y-2 scale-95 opacity-0"
         }`}
       >
-        {options.map((option) => {
-          const isSelected = option.value === value;
+        
+        {/* =========================
+            SCROLLABLE OPTIONS
+        ========================= */}
 
-          return (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => handleSelect(option)}
-              className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm transition-all duration-150 ${
-                isSelected
-                  ? "bg-[#049552]/10 text-[#8ff0bc]"
-                  : "text-gray-300 hover:bg-white/[0.06] hover:text-white"
-              }`}
-            >
-              <span>{option.label}</span>
+        <div
+          ref={optionsRef}
+          role="listbox"
+          className="pennyplot-scrollbar max-h-64 overflow-y-auto overscroll-contain pr-1"
+          onWheel={(event) => {
+            event.stopPropagation();
+          }}
+        >
+          {options.length === 0 ? (
+            <div className="px-3 py-3 text-sm text-gray-500">
+              No options available
+            </div>
+          ) : (
+            options.map((option) => {
+              const isSelected = option.value === value;
 
-              {isSelected && <Check size={15} className="text-[#049552]" />}
-            </button>
-          );
-        })}
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  data-selected={isSelected}
+                  onClick={() => handleSelect(option)}
+                  className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-all duration-150 ${
+                    isSelected
+                      ? "bg-[#049552]/10 text-[#8ff0bc]"
+                      : "text-gray-300 hover:bg-white/[0.06] hover:text-white"
+                  }`}
+                >
+                  <span className="min-w-0 truncate">{option.label}</span>
+
+                  {isSelected && (
+                    <Check size={15} className="shrink-0 text-[#049552]" />
+                  )}
+                </button>
+              );
+            })
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
+/* =========================
+   TRANSACTIONS PAGE
+========================= */
+
 function Transactions() {
-  const { transactions, setTransactions, currency } = useOutletContext();
+  const { transactions, setTransactions, currency, dateFormat } =
+    useOutletContext();
+
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
+
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState(null);
+
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
-  const categories = [
-    "Food",
-    "Transport",
-    "Shopping",
-    "Bills",
-    "Entertainment",
-    "Salary",
-    "Freelance",
-    "Other",
-  ];
+
+  /* =========================
+     CUSTOM CATEGORIES
+  ========================= */
+
+  const [customIncomeCategories, setCustomIncomeCategories] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(CUSTOM_INCOME_KEY) || "[]");
+    } catch {
+      return [];
+    }
+  });
+
+  const [customExpenseCategories, setCustomExpenseCategories] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(CUSTOM_EXPENSE_KEY) || "[]");
+    } catch {
+      return [];
+    }
+  });
+
+  function loadCustomCategories() {
+    try {
+      const savedIncome = JSON.parse(
+        localStorage.getItem(CUSTOM_INCOME_KEY) || "[]",
+      );
+
+      const savedExpense = JSON.parse(
+        localStorage.getItem(CUSTOM_EXPENSE_KEY) || "[]",
+      );
+
+      setCustomIncomeCategories(Array.isArray(savedIncome) ? savedIncome : []);
+
+      setCustomExpenseCategories(
+        Array.isArray(savedExpense) ? savedExpense : [],
+      );
+    } catch {
+      setCustomIncomeCategories([]);
+      setCustomExpenseCategories([]);
+    }
+  }
+
+  useEffect(() => {
+    function handleStorageChange(event) {
+      if (event.key === CUSTOM_INCOME_KEY || event.key === CUSTOM_EXPENSE_KEY) {
+        loadCustomCategories();
+      }
+    }
+
+    function handleWindowFocus() {
+      loadCustomCategories();
+    }
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("focus", handleWindowFocus);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("focus", handleWindowFocus);
+    };
+  }, []);
+
+  /* =========================
+     CATEGORY OPTIONS
+  ========================= */
+
+  const allIncomeCategories = useMemo(
+    () => [...incomeCategories, ...customIncomeCategories],
+    [customIncomeCategories],
+  );
+
+  const allExpenseCategories = useMemo(
+    () => [...expenseCategories, ...customExpenseCategories],
+    [customExpenseCategories],
+  );
+
+  function getCategoriesForType(type) {
+    if (type === "income") {
+      return allIncomeCategories;
+    }
+
+    if (type === "expense") {
+      return allExpenseCategories;
+    }
+
+    return [...new Set([...allIncomeCategories, ...allExpenseCategories])];
+  }
+
+  const categoryOptions = useMemo(() => {
+    let categories = [];
+
+    if (typeFilter === "income") {
+      categories = allIncomeCategories;
+    } else if (typeFilter === "expense") {
+      categories = allExpenseCategories;
+    } else {
+      categories = [
+        ...new Set([...allIncomeCategories, ...allExpenseCategories]),
+      ];
+    }
+
+    return [
+      {
+        value: "all",
+        label: "All categories",
+      },
+      ...categories.map((category) => ({
+        value: category,
+        label: category,
+      })),
+    ];
+  }, [typeFilter, allIncomeCategories, allExpenseCategories]);
+
+  /* =========================
+     TYPE OPTIONS
+  ========================= */
 
   const typeOptions = [
-    { value: "all", label: "All types" },
-    { value: "income", label: "Income" },
-    { value: "expense", label: "Expenses" },
+    {
+      value: "all",
+      label: "All types",
+    },
+    {
+      value: "income",
+      label: "Income",
+    },
+    {
+      value: "expense",
+      label: "Expenses",
+    },
   ];
 
-  const categoryOptions = [
-    { value: "all", label: "All categories" },
-    ...categories.map((category) => ({
-      value: category,
-      label: category,
-    })),
-  ];
+  /* =========================
+     SORT OPTIONS
+  ========================= */
 
   const sortOptions = [
-    { value: "newest", label: "Newest first" },
-    { value: "oldest", label: "Oldest first" },
-    { value: "highest", label: "Highest amount" },
-    { value: "lowest", label: "Lowest amount" },
-    { value: "a-z", label: "A → Z" },
-    { value: "z-a", label: "Z → A" },
+    {
+      value: "newest",
+      label: "Newest first",
+    },
+    {
+      value: "oldest",
+      label: "Oldest first",
+    },
+    {
+      value: "highest",
+      label: "Highest amount",
+    },
+    {
+      value: "lowest",
+      label: "Lowest amount",
+    },
+    {
+      value: "a-z",
+      label: "A → Z",
+    },
+    {
+      value: "z-a",
+      label: "Z → A",
+    },
   ];
+
+  /* =========================
+     FILTER + SORT
+  ========================= */
 
   const filteredTransactions = useMemo(() => {
     let result = [...transactions];
+
+    /* Search */
 
     if (search.trim()) {
       const query = search.toLowerCase();
@@ -167,9 +422,13 @@ function Transactions() {
       );
     }
 
+    /* Type filter */
+
     if (typeFilter !== "all") {
       result = result.filter((transaction) => transaction.type === typeFilter);
     }
+
+    /* Category filter */
 
     if (categoryFilter !== "all") {
       result = result.filter(
@@ -177,12 +436,18 @@ function Transactions() {
       );
     }
 
+    /* Sorting */
+
     if (sortBy === "newest") {
-      result.sort((a, b) => new Date(b.date) - new Date(a.date));
+      result.sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      );
     }
 
     if (sortBy === "oldest") {
-      result.sort((a, b) => new Date(a.date) - new Date(b.date));
+      result.sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+      );
     }
 
     if (sortBy === "highest") {
@@ -204,6 +469,10 @@ function Transactions() {
     return result;
   }, [transactions, search, typeFilter, categoryFilter, sortBy]);
 
+  /* =========================
+     DELETE
+  ========================= */
+
   function handleDelete(id) {
     setTransactions((prev) =>
       prev.filter((transaction) => transaction.id !== id),
@@ -211,6 +480,10 @@ function Transactions() {
 
     toast.success("Transaction deleted.");
   }
+
+  /* =========================
+     EDIT
+  ========================= */
 
   function handleEdit(transaction) {
     setEditingId(transaction.id);
@@ -276,6 +549,10 @@ function Transactions() {
     }));
   }
 
+  /* =========================
+     DOWNLOAD CSV
+  ========================= */
+
   function downloadTransactions() {
     if (transactions.length === 0) {
       toast.error("There are no transactions to export.");
@@ -309,6 +586,10 @@ function Transactions() {
     toast.success("Transactions exported successfully.");
   }
 
+  /* =========================
+     DOWNLOAD PNG
+  ========================= */
+
   async function downloadTransactionsAsPNG() {
     if (transactions.length === 0) {
       toast.error("There are no transactions to export.");
@@ -326,9 +607,16 @@ function Transactions() {
     }
   }
 
+  /* =========================
+     RENDER
+  ========================= */
+
   return (
     <div className="min-h-screen bg-[#0f1714] text-white">
-      {/* Header */}
+      {/* =========================
+          HEADER
+      ========================= */}
+
       <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Transactions</h1>
@@ -339,6 +627,7 @@ function Transactions() {
         </div>
 
         {/* Download Menu */}
+
         <div className="relative shrink-0">
           <button
             type="button"
@@ -361,7 +650,8 @@ function Transactions() {
             />
           </button>
 
-          {/* Dropdown */}
+          {/* Download Dropdown */}
+
           <div
             className={`absolute right-0 top-[calc(100%+8px)] z-50 w-64 origin-top-right rounded-xl border border-white/10 bg-[#1b2922] p-1.5 shadow-2xl shadow-black/40 transition-all duration-200 ${
               isDownloadOpen
@@ -370,6 +660,7 @@ function Transactions() {
             }`}
           >
             {/* CSV */}
+
             <button
               type="button"
               onClick={() => {
@@ -390,23 +681,31 @@ function Transactions() {
             </button>
 
             {/* PDF */}
+
             <button
               type="button"
               onClick={() => {
-  try {
-    downloadTransactionsPDF(transactions, currency);
-    toast.success("Transaction report exported successfully.");
-  } catch (error) {
-    console.error("PDF export failed:", error);
-    toast.error("Failed to export transaction report.");
-  }
+                if (transactions.length === 0) {
+                  toast.error("There are no transactions to export.");
+                  setIsDownloadOpen(false);
+                  return;
+                }
 
-  setIsDownloadOpen(false);
-}}
+                try {
+                  downloadTransactionsPDF(transactions, currency);
+
+                  toast.success("Transaction report exported successfully.");
+                } catch (error) {
+                  console.error("PDF export failed:", error);
+
+                  toast.error("Failed to export transaction report.");
+                }
+
+                setIsDownloadOpen(false);
+              }}
               className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-white/[0.06]"
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#049552]/10 text-[#8ff0bc] transition-colors group-hover:bg-[#049552]/15">
-                {" "}
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#049552]/10 text-[#8ff0bc]">
                 <span className="text-[10px] font-bold tracking-wide">PDF</span>
               </div>
 
@@ -420,17 +719,16 @@ function Transactions() {
             </button>
 
             {/* PNG */}
+
             <button
               type="button"
               onClick={() => {
                 downloadTransactionsAsPNG();
-                toast.info("Downloading PNG...");
                 setIsDownloadOpen(false);
               }}
               className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-white/[0.06]"
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#049552]/10 text-[#8ff0bc] transition-colors group-hover:bg-[#049552]/15">
-                {" "}
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#049552]/10 text-[#8ff0bc]">
                 <span className="text-[10px] font-bold tracking-wide">PNG</span>
               </div>
 
@@ -445,10 +743,15 @@ function Transactions() {
           </div>
         </div>
       </div>
-      {/* Filters */}
+
+      {/* =========================
+          FILTERS
+      ========================= */}
+
       <div className="rounded-2xl border border-white/10 bg-[#22332b]/50 p-4">
         <div className="grid gap-3 lg:grid-cols-[1fr_auto_auto_auto]">
           {/* Search */}
+
           <div className="group relative">
             <Search
               size={18}
@@ -464,21 +767,27 @@ function Transactions() {
             />
           </div>
 
-          {/* Type Dropdown */}
+          {/* Type */}
+
           <CustomDropdown
             value={typeFilter}
-            onChange={setTypeFilter}
+            onChange={(value) => {
+              setTypeFilter(value);
+              setCategoryFilter("all");
+            }}
             options={typeOptions}
           />
 
-          {/* Category Dropdown */}
+          {/* Category */}
+
           <CustomDropdown
             value={categoryFilter}
             onChange={setCategoryFilter}
             options={categoryOptions}
           />
 
-          {/* Sort Dropdown */}
+          {/* Sort */}
+
           <CustomDropdown
             value={sortBy}
             onChange={setSortBy}
@@ -488,7 +797,10 @@ function Transactions() {
         </div>
       </div>
 
-      {/* Result Count */}
+      {/* =========================
+          RESULT COUNT
+      ========================= */}
+
       <div className="mt-6 flex items-center justify-between">
         <p className="text-sm text-gray-400">
           Showing{" "}
@@ -513,7 +825,10 @@ function Transactions() {
         )}
       </div>
 
-      {/* Transactions */}
+      {/* =========================
+          TRANSACTIONS
+      ========================= */}
+
       <div className="mt-4 space-y-3">
         {filteredTransactions.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-white/10 bg-[#22332b]/30 px-5 py-16 text-center">
@@ -544,6 +859,7 @@ function Transactions() {
                   <div className="space-y-4">
                     <div className="grid gap-3 md:grid-cols-2">
                       {/* Description */}
+
                       <input
                         type="text"
                         value={editData.description}
@@ -557,6 +873,7 @@ function Transactions() {
                       />
 
                       {/* Amount */}
+
                       <div className="flex overflow-hidden rounded-xl border border-white/10 bg-white/[0.04] transition-all duration-200 focus-within:border-[#049552] focus-within:ring-1 focus-within:ring-[#049552]/30">
                         <span className="flex items-center border-r border-white/10 px-4 text-gray-400">
                           {getCurrencySymbol(currency)}
@@ -571,15 +888,25 @@ function Transactions() {
                         />
                       </div>
 
-                      {/* Edit Type */}
+                      {/* Type */}
+
                       <CustomDropdown
                         value={editData.type}
-                        onChange={(value) =>
+                        onChange={(value) => {
+                          const newCategories = getCategoriesForType(value);
+
+                          const currentCategoryExists = newCategories.includes(
+                            editData.category,
+                          );
+
                           setEditData({
                             ...editData,
                             type: value,
-                          })
-                        }
+                            category: currentCategoryExists
+                              ? editData.category
+                              : newCategories[0],
+                          });
+                        }}
                         options={[
                           {
                             value: "expense",
@@ -592,7 +919,8 @@ function Transactions() {
                         ]}
                       />
 
-                      {/* Edit Category */}
+                      {/* Category */}
+
                       <CustomDropdown
                         value={editData.category}
                         onChange={(value) =>
@@ -601,27 +929,30 @@ function Transactions() {
                             category: value,
                           })
                         }
-                        options={categories.map((category) => ({
-                          value: category,
-                          label: category,
-                        }))}
+                        options={getCategoriesForType(editData.type).map(
+                          (category) => ({
+                            value: category,
+                            label: category,
+                          }),
+                        )}
                       />
 
                       {/* Date */}
-                      <input
-                        type="date"
+
+                      <DatePicker
                         value={editData.date}
-                        onChange={(e) =>
+                        onChange={(value) =>
                           setEditData({
                             ...editData,
-                            date: e.target.value,
+                            date: value,
                           })
                         }
-                        className="rounded-xl border border-white/10 bg-[#1b2922] px-4 py-3 text-sm text-white outline-none transition-all duration-200 focus:border-[#049552] focus:ring-1 focus:ring-[#049552]/30"
+                        dateFormat={dateFormat}
                       />
                     </div>
 
                     {/* Edit Actions */}
+
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleSaveEdit(transaction.id)}
@@ -649,8 +980,11 @@ function Transactions() {
 
                       <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
                         <span>{transaction.category}</span>
+
                         <span>•</span>
-                        <span>{transaction.date}</span>
+
+                        <span>{formatDate(transaction.date, dateFormat)}</span>
+
                         <span>•</span>
 
                         <span
@@ -678,6 +1012,8 @@ function Transactions() {
                       </span>
 
                       <div className="flex items-center gap-1">
+                        {/* Edit */}
+
                         <button
                           onClick={() => handleEdit(transaction)}
                           className="rounded-lg p-2 text-gray-500 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/5 hover:text-white"
@@ -685,6 +1021,8 @@ function Transactions() {
                         >
                           <Pencil size={16} />
                         </button>
+
+                        {/* Delete */}
 
                         <button
                           onClick={() => handleDelete(transaction.id)}

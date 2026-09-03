@@ -1,22 +1,30 @@
 const BACKUP_KEY = "pennyplot-backup";
 
-export function createBackup() {
-  const transactions =
-    JSON.parse(
-      localStorage.getItem("pennyplot-transactions") || "[]",
-    );
+const CUSTOM_INCOME_KEY = "pennyplot-custom-income-categories";
+const CUSTOM_EXPENSE_KEY = "pennyplot-custom-expense-categories";
 
-  const budgets =
-    JSON.parse(
-      localStorage.getItem("pennyplot-budgets") || "[]",
-    );
+export function createBackup() {
+  const transactions = JSON.parse(
+    localStorage.getItem("pennyplot-transactions") || "[]",
+  );
+
+  const budgets = JSON.parse(
+    localStorage.getItem("pennyplot-budgets") || "[]",
+  );
 
   const currency =
     localStorage.getItem("pennyplot-currency") || "NGN";
 
   const dateFormat =
-    localStorage.getItem("pennyplot-date-format") ||
-    "DD/MM/YYYY";
+    localStorage.getItem("pennyplot-date-format") || "DD/MM/YYYY";
+
+  const customIncomeCategories = JSON.parse(
+    localStorage.getItem(CUSTOM_INCOME_KEY) || "[]",
+  );
+
+  const customExpenseCategories = JSON.parse(
+    localStorage.getItem(CUSTOM_EXPENSE_KEY) || "[]",
+  );
 
   const backup = {
     app: "PennyPlot",
@@ -26,34 +34,36 @@ export function createBackup() {
     data: {
       transactions,
       budgets,
+
       settings: {
         currency,
         dateFormat,
       },
+
+      customCategories: {
+        income: Array.isArray(customIncomeCategories)
+          ? customIncomeCategories
+          : [],
+
+        expense: Array.isArray(customExpenseCategories)
+          ? customExpenseCategories
+          : [],
+      },
     },
   };
 
-  localStorage.setItem(
-    BACKUP_KEY,
-    JSON.stringify(backup),
-  );
+  localStorage.setItem(BACKUP_KEY, JSON.stringify(backup));
 
   return backup;
 }
 
 export function getBackup() {
   try {
-    const savedBackup =
-      localStorage.getItem(BACKUP_KEY);
+    const savedBackup = localStorage.getItem(BACKUP_KEY);
 
-    return savedBackup
-      ? JSON.parse(savedBackup)
-      : null;
+    return savedBackup ? JSON.parse(savedBackup) : null;
   } catch (error) {
-    console.error(
-      "Failed to load PennyPlot backup:",
-      error,
-    );
+    console.error("Failed to load PennyPlot backup:", error);
 
     return null;
   }
@@ -80,6 +90,7 @@ export function downloadBackup() {
   const link = document.createElement("a");
 
   link.href = url;
+
   link.download = `pennyplot-backup-${new Date()
     .toISOString()
     .slice(0, 10)}.json`;
