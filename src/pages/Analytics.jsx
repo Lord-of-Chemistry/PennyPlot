@@ -1,5 +1,12 @@
 import { useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
+import { formatCurrency } from "../utils/currency";
+import { toast } from "sonner";
+import { downloadAnalyticsCSV } from "../utils/exportAnalyticsCsv";
+import { downloadAnalyticsPDF } from "../utils/exportAnalyticsPdf";
+import { downloadAnalyticsPNG } from "../utils/exportAnalyticsPng";
 import {
   TrendingUp,
   TrendingDown,
@@ -12,24 +19,19 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Minus,
+  Download,
+  ChevronDown,
 } from "lucide-react";
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
 
-import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
-
-import { formatCurrency } from "../utils/currency";
-
 function Analytics() {
   const { transactions, currency } = useOutletContext();
-
   const [period, setPeriod] = useState("monthly");
+  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
 
   function formatPercent(value) {
     if (!Number.isFinite(value)) {
@@ -393,12 +395,144 @@ function Analytics() {
   return (
     <div className="min-h-screen bg-[#0f1714]">
       {/* HEADER */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">Analytics</h1>
+      <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-white">Analytics</h1>
 
-        <p className="mt-1 text-sm text-gray-400">
-          Understand your financial patterns and spending habits.
-        </p>
+          <p className="mt-1 text-sm text-gray-400">
+            Understand your financial patterns and spending habits.
+          </p>
+        </div>
+
+        {/* DOWNLOAD */}
+        <div className="relative shrink-0">
+          <button
+            type="button"
+            onClick={() => setIsDownloadOpen((previous) => !previous)}
+            className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
+              isDownloadOpen
+                ? "border-[#049552] bg-[#049552]/10 text-[#8ff0bc]"
+                : "border-white/10 bg-[#1b2922] text-gray-300 hover:border-white/20 hover:bg-[#22332b] hover:text-white"
+            }`}
+          >
+            <Download size={16} />
+
+            <span>Download</span>
+
+            <ChevronDown
+              size={15}
+              className={`transition-transform duration-200 ${
+                isDownloadOpen ? "rotate-180 text-[#049552]" : "text-gray-500"
+              }`}
+            />
+          </button>
+
+          <div
+            className={`absolute right-0 top-[calc(100%+8px)] z-50 w-64 origin-top-right rounded-xl border border-white/10 bg-[#1b2922] p-1.5 shadow-2xl shadow-black/40 transition-all duration-200 ${
+              isDownloadOpen
+                ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
+                : "pointer-events-none -translate-y-2 scale-95 opacity-0"
+            }`}
+          >
+            {/* CSV */}
+            <button
+              type="button"
+              onClick={() => {
+                try {
+                  downloadAnalyticsCSV(periodData, currency);
+
+                  toast.success("Analytics exported successfully.");
+                } catch (error) {
+                  console.error("Analytics CSV export failed:", error);
+
+                  toast.error("Failed to export analytics.");
+                }
+
+                setIsDownloadOpen(false);
+              }}
+              className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-white/[0.06]"
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#049552]/10 text-[#8ff0bc] transition-colors group-hover:bg-[#049552]/15">
+                <Download size={16} />
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-white">CSV</p>
+
+                <p className="mt-0.5 text-xs text-gray-500">Analytics data</p>
+              </div>
+            </button>
+
+            {/* PDF */}
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await downloadAnalyticsPDF(
+                    periodData,
+                    spendingBreakdown,
+                    currency,
+                    period,
+                  );
+
+                  toast.success("Analytics report exported successfully.");
+                } catch (error) {
+                  console.error("Analytics PDF export failed:", error);
+
+                  toast.error("Failed to export analytics report.");
+                }
+
+                setIsDownloadOpen(false);
+              }}
+              className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-white/[0.06]"
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#049552]/10 text-[#8ff0bc] transition-colors group-hover:bg-[#049552]/15">
+                <span className="text-[10px] font-bold tracking-wide">PDF</span>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-white">PDF</p>
+
+                <p className="mt-0.5 text-xs text-gray-500">Analytics report</p>
+              </div>
+            </button>
+
+            {/* PNG */}
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await downloadAnalyticsPNG(
+                    periodData,
+                    spendingBreakdown,
+                    currency,
+                    period,
+                  );
+
+                  toast.success("Analytics snapshot exported successfully.");
+                } catch (error) {
+                  console.error("Analytics PNG export failed:", error);
+
+                  toast.error("Failed to export analytics snapshot.");
+                }
+
+                setIsDownloadOpen(false);
+              }}
+              className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-white/[0.06]"
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#049552]/10 text-[#8ff0bc] transition-colors group-hover:bg-[#049552]/15">
+                <span className="text-[10px] font-bold tracking-wide">PNG</span>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-white">PNG</p>
+                <p className="mt-0.5 text-xs text-gray-500">
+                  Analytics snapshot
+                </p>
+              </div>
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* OVERVIEW CARDS */}
