@@ -14,12 +14,7 @@ import {
   Minus,
 } from "lucide-react";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import {
   ChartContainer,
@@ -27,22 +22,14 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
+
+import { formatCurrency } from "../utils/currency";
 
 function Analytics() {
-  const { transactions } = useOutletContext();
+  const { transactions, currency } = useOutletContext();
 
   const [period, setPeriod] = useState("monthly");
-
-  function formatCurrency(amount) {
-    return `₦${Number(amount || 0).toLocaleString("en-NG")}`;
-  }
 
   function formatPercent(value) {
     if (!Number.isFinite(value)) {
@@ -133,25 +120,16 @@ function Analytics() {
         parsedDate: new Date(transaction.date),
         numericAmount: Number(transaction.amount) || 0,
       }))
-      .filter(
-        (transaction) =>
-          !Number.isNaN(transaction.parsedDate.getTime()),
-      );
+      .filter((transaction) => !Number.isNaN(transaction.parsedDate.getTime()));
   }, [transactions]);
 
   const income = validTransactions
     .filter((transaction) => transaction.type === "income")
-    .reduce(
-      (total, transaction) => total + transaction.numericAmount,
-      0,
-    );
+    .reduce((total, transaction) => total + transaction.numericAmount, 0);
 
   const expenses = validTransactions
     .filter((transaction) => transaction.type === "expense")
-    .reduce(
-      (total, transaction) => total + transaction.numericAmount,
-      0,
-    );
+    .reduce((total, transaction) => total + transaction.numericAmount, 0);
 
   const balance = income - expenses;
 
@@ -164,10 +142,7 @@ function Analytics() {
   const periodData = useMemo(() => {
     const today = new Date();
 
-    const currentPeriodStart = getPeriodStart(
-      today,
-      period,
-    );
+    const currentPeriodStart = getPeriodStart(today, period);
 
     const numberOfPeriods =
       period === "daily"
@@ -181,56 +156,27 @@ function Analytics() {
     const periods = [];
 
     for (let i = numberOfPeriods - 1; i >= 0; i--) {
-      const start = movePeriod(
-        currentPeriodStart,
-        period,
-        -i,
+      const start = movePeriod(currentPeriodStart, period, -i);
+
+      const end = movePeriod(start, period, 1);
+
+      const periodTransactions = validTransactions.filter(
+        (transaction) =>
+          transaction.parsedDate >= start && transaction.parsedDate < end,
       );
 
-      const end = movePeriod(
-        start,
-        period,
-        1,
-      );
+      const periodIncome = periodTransactions
+        .filter((transaction) => transaction.type === "income")
+        .reduce((total, transaction) => total + transaction.numericAmount, 0);
 
-      const periodTransactions =
-        validTransactions.filter(
-          (transaction) =>
-            transaction.parsedDate >= start &&
-            transaction.parsedDate < end,
-        );
-
-      const periodIncome =
-        periodTransactions
-          .filter(
-            (transaction) =>
-              transaction.type === "income",
-          )
-          .reduce(
-            (total, transaction) =>
-              total + transaction.numericAmount,
-            0,
-          );
-
-      const periodExpenses =
-        periodTransactions
-          .filter(
-            (transaction) =>
-              transaction.type === "expense",
-          )
-          .reduce(
-            (total, transaction) =>
-              total + transaction.numericAmount,
-            0,
-          );
+      const periodExpenses = periodTransactions
+        .filter((transaction) => transaction.type === "expense")
+        .reduce((total, transaction) => total + transaction.numericAmount, 0);
 
       periods.push({
         key: start.toISOString(),
         date: start,
-        label: formatPeriodLabel(
-          start,
-          period,
-        ),
+        label: formatPeriodLabel(start, period),
         income: periodIncome,
         expenses: periodExpenses,
         net: periodIncome - periodExpenses,
@@ -240,12 +186,11 @@ function Analytics() {
     return periods;
   }, [validTransactions, period]);
 
-  const currentPeriodData =
-    periodData[periodData.length - 1] || {
-      income: 0,
-      expenses: 0,
-      net: 0,
-    };
+  const currentPeriodData = periodData[periodData.length - 1] || {
+    income: 0,
+    expenses: 0,
+    net: 0,
+  };
 
   /*
    * COMPARISON
@@ -259,16 +204,11 @@ function Analytics() {
       };
     }
 
-    const current =
-      periodData[periodData.length - 1];
+    const current = periodData[periodData.length - 1];
 
-    const previous =
-      periodData[periodData.length - 2];
+    const previous = periodData[periodData.length - 2];
 
-    function calculateChange(
-      currentValue,
-      previousValue,
-    ) {
+    function calculateChange(currentValue, previousValue) {
       if (previousValue === 0) {
         if (currentValue === 0) {
           return 0;
@@ -277,28 +217,15 @@ function Analytics() {
         return 100;
       }
 
-      return (
-        ((currentValue - previousValue) /
-          Math.abs(previousValue)) *
-        100
-      );
+      return ((currentValue - previousValue) / Math.abs(previousValue)) * 100;
     }
 
     return {
-      incomeChange: calculateChange(
-        current.income,
-        previous.income,
-      ),
+      incomeChange: calculateChange(current.income, previous.income),
 
-      expenseChange: calculateChange(
-        current.expenses,
-        previous.expenses,
-      ),
+      expenseChange: calculateChange(current.expenses, previous.expenses),
 
-      netChange: calculateChange(
-        current.net,
-        previous.net,
-      ),
+      netChange: calculateChange(current.net, previous.net),
     };
   }, [periodData]);
 
@@ -311,55 +238,37 @@ function Analytics() {
   const spendingBreakdown = useMemo(() => {
     const today = new Date();
 
-    const currentPeriodStart = getPeriodStart(
-      today,
-      period,
-    );
+    const currentPeriodStart = getPeriodStart(today, period);
 
-    const currentPeriodEnd = movePeriod(
-      currentPeriodStart,
-      period,
-      1,
-    );
+    const currentPeriodEnd = movePeriod(currentPeriodStart, period, 1);
 
-    const currentPeriodTransactions =
-      validTransactions.filter(
-        (transaction) =>
-          transaction.parsedDate >=
-            currentPeriodStart &&
-          transaction.parsedDate <
-            currentPeriodEnd &&
-          transaction.type === "expense",
-      );
+    const currentPeriodTransactions = validTransactions.filter(
+      (transaction) =>
+        transaction.parsedDate >= currentPeriodStart &&
+        transaction.parsedDate < currentPeriodEnd &&
+        transaction.type === "expense",
+    );
 
     const categories = {};
 
-    currentPeriodTransactions.forEach(
-      (transaction) => {
-        const category =
-          transaction.category || "Other";
+    currentPeriodTransactions.forEach((transaction) => {
+      const category = transaction.category || "Other";
 
-        categories[category] =
-          (categories[category] || 0) +
-          transaction.numericAmount;
-      },
-    );
+      categories[category] =
+        (categories[category] || 0) + transaction.numericAmount;
+    });
 
     return Object.entries(categories)
       .map(([category, amount]) => ({
         category,
         amount,
       }))
-      .sort(
-        (a, b) => b.amount - a.amount,
-      );
+      .sort((a, b) => b.amount - a.amount);
   }, [validTransactions, period]);
 
-  const currentPeriodExpenses =
-    currentPeriodData.expenses;
+  const currentPeriodExpenses = currentPeriodData.expenses;
 
-  const topCategories =
-    spendingBreakdown.slice(0, 6);
+  const topCategories = spendingBreakdown.slice(0, 6);
 
   /*
    * SAVINGS RATE
@@ -369,9 +278,7 @@ function Analytics() {
    */
   const savingsRate =
     currentPeriodData.income > 0
-      ? (currentPeriodData.net /
-          currentPeriodData.income) *
-        100
+      ? (currentPeriodData.net / currentPeriodData.income) * 100
       : 0;
 
   /*
@@ -380,18 +287,12 @@ function Analytics() {
    * For daily mode this is average daily spending.
    * For weekly mode it's average weekly spending, etc.
    */
-  const periodsWithSpending =
-    periodData.filter(
-      (item) => item.expenses > 0,
-    );
+  const periodsWithSpending = periodData.filter((item) => item.expenses > 0);
 
   const averageSpending =
     periodsWithSpending.length > 0
-      ? periodsWithSpending.reduce(
-          (total, item) =>
-            total + item.expenses,
-          0,
-        ) / periodsWithSpending.length
+      ? periodsWithSpending.reduce((total, item) => total + item.expenses, 0) /
+        periodsWithSpending.length
       : 0;
 
   /*
@@ -399,23 +300,14 @@ function Analytics() {
    */
   const highestSpendingPeriod =
     periodData.length > 0
-      ? [...periodData].sort(
-          (a, b) =>
-            b.expenses - a.expenses,
-        )[0]
+      ? [...periodData].sort((a, b) => b.expenses - a.expenses)[0]
       : null;
 
-  const spendingPeriods =
-    periodData.filter(
-      (item) => item.expenses > 0,
-    );
+  const spendingPeriods = periodData.filter((item) => item.expenses > 0);
 
   const lowestSpendingPeriod =
     spendingPeriods.length > 0
-      ? [...spendingPeriods].sort(
-          (a, b) =>
-            a.expenses - b.expenses,
-        )[0]
+      ? [...spendingPeriods].sort((a, b) => a.expenses - b.expenses)[0]
       : null;
 
   /*
@@ -447,8 +339,7 @@ function Analytics() {
     },
   };
 
-  const currentPeriod =
-    periodNames[period];
+  const currentPeriod = periodNames[period];
 
   /*
    * CHART CONFIG
@@ -472,13 +363,10 @@ function Analytics() {
     return (
       <div className="min-h-screen bg-[#0f1714]">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white">
-            Analytics
-          </h1>
+          <h1 className="text-3xl font-bold text-white">Analytics</h1>
 
           <p className="mt-1 text-sm text-gray-400">
-            Understand your financial patterns
-            and spending habits.
+            Understand your financial patterns and spending habits.
           </p>
         </div>
 
@@ -493,10 +381,8 @@ function Analytics() {
             </h2>
 
             <p className="mt-2 text-sm leading-6 text-gray-500">
-              Add a few income and expense
-              transactions and PennyPlot will
-              start turning your activity into
-              useful financial insights.
+              Add a few income and expense transactions and PennyPlot will start
+              turning your activity into useful financial insights.
             </p>
           </div>
         </div>
@@ -508,13 +394,10 @@ function Analytics() {
     <div className="min-h-screen bg-[#0f1714]">
       {/* HEADER */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">
-          Analytics
-        </h1>
+        <h1 className="text-3xl font-bold text-white">Analytics</h1>
 
         <p className="mt-1 text-sm text-gray-400">
-          Understand your financial patterns
-          and spending habits.
+          Understand your financial patterns and spending habits.
         </p>
       </div>
 
@@ -529,28 +412,20 @@ function Analytics() {
 
             <Wallet
               size={20}
-              className={
-                balance >= 0
-                  ? "text-[#049552]"
-                  : "text-red-400"
-              }
+              className={balance >= 0 ? "text-[#049552]" : "text-red-400"}
             />
           </CardHeader>
 
           <CardContent>
             <p
               className={`text-2xl font-bold ${
-                balance >= 0
-                  ? "text-[#049552]"
-                  : "text-red-400"
+                balance >= 0 ? "text-[#049552]" : "text-red-400"
               }`}
             >
-              {formatCurrency(balance)}
+              {formatCurrency(balance, currency)}
             </p>
 
-            <p className="mt-2 text-xs text-gray-500">
-              Income minus expenses
-            </p>
+            <p className="mt-2 text-xs text-gray-500">Income minus expenses</p>
           </CardContent>
         </Card>
 
@@ -561,20 +436,15 @@ function Analytics() {
               Total Income
             </CardTitle>
 
-            <TrendingUp
-              size={20}
-              className="text-[#049552]"
-            />
+            <TrendingUp size={20} className="text-[#049552]" />
           </CardHeader>
 
           <CardContent>
             <p className="text-2xl font-bold text-[#049552]">
-              {formatCurrency(income)}
+              {formatCurrency(income, currency)}
             </p>
 
-            <p className="mt-2 text-xs text-gray-500">
-              Total money received
-            </p>
+            <p className="mt-2 text-xs text-gray-500">Total money received</p>
           </CardContent>
         </Card>
 
@@ -585,20 +455,15 @@ function Analytics() {
               Total Expenses
             </CardTitle>
 
-            <TrendingDown
-              size={20}
-              className="text-red-400"
-            />
+            <TrendingDown size={20} className="text-red-400" />
           </CardHeader>
 
           <CardContent>
             <p className="text-2xl font-bold text-red-400">
-              {formatCurrency(expenses)}
+              {formatCurrency(expenses, currency)}
             </p>
 
-            <p className="mt-2 text-xs text-gray-500">
-              Total money spent
-            </p>
+            <p className="mt-2 text-xs text-gray-500">Total money spent</p>
           </CardContent>
         </Card>
 
@@ -611,28 +476,20 @@ function Analytics() {
 
             <PiggyBank
               size={20}
-              className={
-                savingsRate >= 0
-                  ? "text-[#049552]"
-                  : "text-red-400"
-              }
+              className={savingsRate >= 0 ? "text-[#049552]" : "text-red-400"}
             />
           </CardHeader>
 
           <CardContent>
             <p
               className={`text-2xl font-bold ${
-                savingsRate >= 0
-                  ? "text-[#049552]"
-                  : "text-red-400"
+                savingsRate >= 0 ? "text-[#049552]" : "text-red-400"
               }`}
             >
               {Math.round(savingsRate)}%
             </p>
 
-            <p className="mt-2 text-xs text-gray-500">
-              {currentPeriod.label}
-            </p>
+            <p className="mt-2 text-xs text-gray-500">{currentPeriod.label}</p>
           </CardContent>
         </Card>
       </div>
@@ -647,8 +504,7 @@ function Analytics() {
               </CardTitle>
 
               <p className="mt-1 text-sm text-gray-500">
-                Compare your financial activity
-                over time.
+                Compare your financial activity over time.
               </p>
             </div>
 
@@ -663,9 +519,7 @@ function Analytics() {
                 <button
                   key={value}
                   type="button"
-                  onClick={() =>
-                    setPeriod(value)
-                  }
+                  onClick={() => setPeriod(value)}
                   className={`rounded-lg px-3 py-2 text-xs font-medium transition-all ${
                     period === value
                       ? "bg-[#049552] text-white shadow-lg shadow-[#049552]/20"
@@ -685,20 +539,13 @@ function Analytics() {
             {/* INCOME */}
             <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
               <div className="flex items-center justify-between">
-                <p className="text-xs text-gray-500">
-                  Income
-                </p>
+                <p className="text-xs text-gray-500">Income</p>
 
-                <ArrowUpRight
-                  size={16}
-                  className="text-[#049552]"
-                />
+                <ArrowUpRight size={16} className="text-[#049552]" />
               </div>
 
               <p className="mt-2 text-xl font-bold text-[#049552]">
-                {formatCurrency(
-                  currentPeriodData.income,
-                )}
+                {formatCurrency(currentPeriodData.income, currency)}
               </p>
 
               <p
@@ -708,30 +555,21 @@ function Analytics() {
                     : "text-red-400"
                 }`}
               >
-                {formatPercent(
-                  comparison.incomeChange,
-                )}{" "}
-                vs {currentPeriod.previous}
+                {formatPercent(comparison.incomeChange)} vs{" "}
+                {currentPeriod.previous}
               </p>
             </div>
 
             {/* EXPENSES */}
             <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
               <div className="flex items-center justify-between">
-                <p className="text-xs text-gray-500">
-                  Expenses
-                </p>
+                <p className="text-xs text-gray-500">Expenses</p>
 
-                <ArrowDownRight
-                  size={16}
-                  className="text-red-400"
-                />
+                <ArrowDownRight size={16} className="text-red-400" />
               </div>
 
               <p className="mt-2 text-xl font-bold text-red-400">
-                {formatCurrency(
-                  currentPeriodData.expenses,
-                )}
+                {formatCurrency(currentPeriodData.expenses, currency)}
               </p>
 
               <p
@@ -741,67 +579,45 @@ function Analytics() {
                     : "text-red-400"
                 }`}
               >
-                {formatPercent(
-                  comparison.expenseChange,
-                )}{" "}
-                vs {currentPeriod.previous}
+                {formatPercent(comparison.expenseChange)} vs{" "}
+                {currentPeriod.previous}
               </p>
             </div>
 
             {/* NET */}
             <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
               <div className="flex items-center justify-between">
-                <p className="text-xs text-gray-500">
-                  Net
-                </p>
+                <p className="text-xs text-gray-500">Net</p>
 
-                {currentPeriodData.net >=
-                0 ? (
-                  <TrendingUp
-                    size={16}
-                    className="text-[#049552]"
-                  />
+                {currentPeriodData.net >= 0 ? (
+                  <TrendingUp size={16} className="text-[#049552]" />
                 ) : (
-                  <TrendingDown
-                    size={16}
-                    className="text-red-400"
-                  />
+                  <TrendingDown size={16} className="text-red-400" />
                 )}
               </div>
 
               <p
                 className={`mt-2 text-xl font-bold ${
-                  currentPeriodData.net >= 0
-                    ? "text-[#049552]"
-                    : "text-red-400"
+                  currentPeriodData.net >= 0 ? "text-[#049552]" : "text-red-400"
                 }`}
               >
-                {formatCurrency(
-                  currentPeriodData.net,
-                )}
+                {formatCurrency(currentPeriodData.net, currency)}
               </p>
 
               <p
                 className={`mt-1 text-xs ${
-                  comparison.netChange >= 0
-                    ? "text-[#049552]"
-                    : "text-red-400"
+                  comparison.netChange >= 0 ? "text-[#049552]" : "text-red-400"
                 }`}
               >
-                {formatPercent(
-                  comparison.netChange,
-                )}{" "}
-                vs {currentPeriod.previous}
+                {formatPercent(comparison.netChange)} vs{" "}
+                {currentPeriod.previous}
               </p>
             </div>
           </div>
 
           {/* CHART */}
           <div className="mt-8">
-            <ChartContainer
-              config={chartConfig}
-              className="h-[300px] w-full"
-            >
+            <ChartContainer config={chartConfig} className="h-[300px] w-full">
               <LineChart
                 data={periodData}
                 margin={{
@@ -830,13 +646,20 @@ function Analytics() {
                   axisLine={false}
                   tickMargin={8}
                   width={55}
-                  tickFormatter={(value) =>
-                    `₦${Number(
+                  tickFormatter={(value) => {
+                    const symbols = {
+                      NGN: "₦",
+                      USD: "$",
+                      GBP: "£",
+                      EUR: "€",
+                    };
+
+                    return `${symbols[currency] || "₦"}${Number(
                       value,
                     ).toLocaleString("en-NG", {
                       notation: "compact",
-                    })}`
-                  }
+                    })}`;
+                  }}
                 />
 
                 <ChartTooltip
@@ -846,9 +669,7 @@ function Analytics() {
                   }}
                   content={
                     <ChartTooltipContent
-                      formatter={(value) =>
-                        formatCurrency(value)
-                      }
+                      formatter={(value) => formatCurrency(value, currency)}
                     />
                   }
                 />
@@ -895,16 +716,12 @@ function Analytics() {
             <div className="mt-4 flex justify-center gap-6">
               <div className="flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-[#049552]" />
-                <span className="text-xs text-gray-500">
-                  Income
-                </span>
+                <span className="text-xs text-gray-500">Income</span>
               </div>
 
               <div className="flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
-                <span className="text-xs text-gray-500">
-                  Expenses
-                </span>
+                <span className="text-xs text-gray-500">Expenses</span>
               </div>
             </div>
           </div>
@@ -927,8 +744,7 @@ function Analytics() {
                 </CardTitle>
 
                 <p className="mt-1 text-sm text-gray-500">
-                  Where your money is going{" "}
-                  {currentPeriod.description}.
+                  Where your money is going {currentPeriod.description}.
                 </p>
               </div>
             </div>
@@ -937,77 +753,59 @@ function Analytics() {
           <CardContent>
             {topCategories.length === 0 ? (
               <div className="rounded-xl border border-dashed border-white/10 px-5 py-10 text-center">
-                <Receipt
-                  size={30}
-                  className="mx-auto mb-3 text-gray-600"
-                />
+                <Receipt size={30} className="mx-auto mb-3 text-gray-600" />
 
                 <p className="text-sm font-medium text-gray-400">
                   No spending in this period
                 </p>
 
                 <p className="mt-1 text-xs text-gray-600">
-                  Expense categories will appear
-                  here when you spend money.
+                  Expense categories will appear here when you spend money.
                 </p>
               </div>
             ) : (
               <div className="space-y-5">
-                {topCategories.map(
-                  ({ category, amount }) => {
-                    const percentage =
-                      currentPeriodExpenses === 0
-                        ? 0
-                        : (amount /
-                            currentPeriodExpenses) *
-                          100;
+                {topCategories.map(({ category, amount }) => {
+                  const percentage =
+                    currentPeriodExpenses === 0
+                      ? 0
+                      : (amount / currentPeriodExpenses) * 100;
 
-                    return (
-                      <div key={category}>
-                        <div className="mb-2 flex items-center justify-between gap-4">
-                          <div className="flex min-w-0 items-center gap-2">
-                            <span className="truncate text-sm text-gray-300">
-                              {category}
-                            </span>
-                          </div>
-
-                          <div className="shrink-0 text-right">
-                            <span className="text-sm font-semibold text-white">
-                              {formatCurrency(
-                                amount,
-                              )}
-                            </span>
-
-                            <span className="ml-2 text-xs text-gray-500">
-                              {Math.round(
-                                percentage,
-                              )}
-                              %
-                            </span>
-                          </div>
+                  return (
+                    <div key={category}>
+                      <div className="mb-2 flex items-center justify-between gap-4">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <span className="truncate text-sm text-gray-300">
+                            {category}
+                          </span>
                         </div>
 
-                        <div className="h-2 overflow-hidden rounded-full bg-white/5">
-                          <div
-                            className="h-full rounded-full bg-[#049552] transition-all duration-700"
-                            style={{
-                              width: `${Math.min(
-                                percentage,
-                                100,
-                              )}%`,
-                            }}
-                          />
+                        <div className="shrink-0 text-right">
+                          <span className="text-sm font-semibold text-white">
+                            {formatCurrency(amount, currency)}
+                          </span>
+
+                          <span className="ml-2 text-xs text-gray-500">
+                            {Math.round(percentage)}%
+                          </span>
                         </div>
                       </div>
-                    );
-                  },
-                )}
 
-                {spendingBreakdown.length >
-                  6 && (
+                      <div className="h-2 overflow-hidden rounded-full bg-white/5">
+                        <div
+                          className="h-full rounded-full bg-[#049552] transition-all duration-700"
+                          style={{
+                            width: `${Math.min(percentage, 100)}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {spendingBreakdown.length > 6 && (
                   <p className="pt-1 text-center text-xs text-gray-600">
-                    Showing your top 6
-                    categories.
+                    Showing your top 6 categories.
                   </p>
                 )}
               </div>
@@ -1029,8 +827,7 @@ function Analytics() {
                 </CardTitle>
 
                 <p className="mt-1 text-sm text-gray-500">
-                  A quick look at your spending
-                  patterns.
+                  A quick look at your spending patterns.
                 </p>
               </div>
             </div>
@@ -1040,18 +837,15 @@ function Analytics() {
             <div className="grid gap-3 sm:grid-cols-2">
               {/* AVERAGE */}
               <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
-                <p className="text-xs text-gray-500">
-                  Average Spending
-                </p>
+                <p className="text-xs text-gray-500">Average Spending</p>
 
                 <p className="mt-2 text-lg font-bold text-white">
-                  {formatCurrency(
-                    averageSpending,
-                  )}
+                  {formatCurrency(averageSpending, currency)}
                 </p>
 
                 <p className="mt-1 text-xs text-gray-600">
-                  Per {period === "daily"
+                  Per{" "}
+                  {period === "daily"
                     ? "day"
                     : period === "weekly"
                       ? "week"
@@ -1063,21 +857,15 @@ function Analytics() {
 
               {/* TOP CATEGORY */}
               <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
-                <p className="text-xs text-gray-500">
-                  Top Category
-                </p>
+                <p className="text-xs text-gray-500">Top Category</p>
 
                 <p className="mt-2 truncate text-lg font-bold text-white">
-                  {topCategories[0]
-                    ?.category || "—"}
+                  {topCategories[0]?.category || "—"}
                 </p>
 
                 <p className="mt-1 text-xs text-gray-600">
                   {topCategories[0]
-                    ? formatCurrency(
-                        topCategories[0]
-                          .amount,
-                      )
+                    ? formatCurrency(topCategories[0].amount, currency)
                     : "No spending"}
                 </p>
               </div>
@@ -1085,21 +873,14 @@ function Analytics() {
               {/* HIGHEST */}
               <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs text-gray-500">
-                    Highest Spending
-                  </p>
+                  <p className="text-xs text-gray-500">Highest Spending</p>
 
-                  <ArrowUpRight
-                    size={15}
-                    className="text-red-400"
-                  />
+                  <ArrowUpRight size={15} className="text-red-400" />
                 </div>
 
                 <p className="mt-2 text-lg font-bold text-red-400">
                   {highestSpendingPeriod
-                    ? formatCurrency(
-                        highestSpendingPeriod.expenses,
-                      )
+                    ? formatCurrency(highestSpendingPeriod.expenses, currency)
                     : "—"}
                 </p>
 
@@ -1113,21 +894,14 @@ function Analytics() {
               {/* LOWEST */}
               <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs text-gray-500">
-                    Lowest Spending
-                  </p>
+                  <p className="text-xs text-gray-500">Lowest Spending</p>
 
-                  <ArrowDownRight
-                    size={15}
-                    className="text-[#049552]"
-                  />
+                  <ArrowDownRight size={15} className="text-[#049552]" />
                 </div>
 
                 <p className="mt-2 text-lg font-bold text-[#049552]">
                   {lowestSpendingPeriod
-                    ? formatCurrency(
-                        lowestSpendingPeriod.expenses,
-                      )
+                    ? formatCurrency(lowestSpendingPeriod.expenses, currency)
                     : "—"}
                 </p>
 
@@ -1143,33 +917,20 @@ function Analytics() {
             <div className="mt-4 rounded-xl border border-[#049552]/10 bg-[#049552]/5 p-4">
               <div className="flex items-start gap-3">
                 <div className="mt-0.5 shrink-0">
-                  {currentPeriodData.net >
-                  0 ? (
-                    <TrendingUp
-                      size={18}
-                      className="text-[#049552]"
-                    />
-                  ) : currentPeriodData.net <
-                    0 ? (
-                    <TrendingDown
-                      size={18}
-                      className="text-red-400"
-                    />
+                  {currentPeriodData.net > 0 ? (
+                    <TrendingUp size={18} className="text-[#049552]" />
+                  ) : currentPeriodData.net < 0 ? (
+                    <TrendingDown size={18} className="text-red-400" />
                   ) : (
-                    <Minus
-                      size={18}
-                      className="text-gray-500"
-                    />
+                    <Minus size={18} className="text-gray-500" />
                   )}
                 </div>
 
                 <div>
                   <p className="text-sm font-medium text-white">
-                    {currentPeriodData.net >
-                    0
+                    {currentPeriodData.net > 0
                       ? "You're spending within your income."
-                      : currentPeriodData.net <
-                          0
+                      : currentPeriodData.net < 0
                         ? "Your expenses are currently higher than your income."
                         : "Your income and expenses are currently balanced."}
                   </p>
@@ -1191,31 +952,21 @@ function Analytics() {
         <CardContent className="p-5">
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
-              <p className="text-xs text-gray-500">
-                {currentPeriod.label}
-              </p>
+              <p className="text-xs text-gray-500">{currentPeriod.label}</p>
 
               <p className="mt-1 text-lg font-semibold text-white">
-                {formatCurrency(
-                  currentPeriodData.net,
-                )}
+                {formatCurrency(currentPeriodData.net, currency)}
               </p>
 
-              <p className="mt-1 text-xs text-gray-600">
-                Net result
-              </p>
+              <p className="mt-1 text-xs text-gray-600">Net result</p>
             </div>
 
             <div>
-              <p className="text-xs text-gray-500">
-                Savings Rate
-              </p>
+              <p className="text-xs text-gray-500">Savings Rate</p>
 
               <p
                 className={`mt-1 text-lg font-semibold ${
-                  savingsRate >= 0
-                    ? "text-[#049552]"
-                    : "text-red-400"
+                  savingsRate >= 0 ? "text-[#049552]" : "text-red-400"
                 }`}
               >
                 {Math.round(savingsRate)}%
@@ -1227,19 +978,13 @@ function Analytics() {
             </div>
 
             <div>
-              <p className="text-xs text-gray-500">
-                Period Spending
-              </p>
+              <p className="text-xs text-gray-500">Period Spending</p>
 
               <p className="mt-1 text-lg font-semibold text-red-400">
-                {formatCurrency(
-                  currentPeriodExpenses,
-                )}
+                {formatCurrency(currentPeriodExpenses, currency)}
               </p>
 
-              <p className="mt-1 text-xs text-gray-600">
-                Total expenses
-              </p>
+              <p className="mt-1 text-xs text-gray-600">Total expenses</p>
             </div>
           </div>
         </CardContent>

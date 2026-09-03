@@ -17,24 +17,15 @@ const currencyMap = {
   },
 };
 
-export function getCurrencySymbol() {
-  const currency =
-    localStorage.getItem("pennyplot-currency") || "NGN";
-
+export function getCurrencySymbol(currency = "NGN") {
   return currencyMap[currency]?.symbol || "₦";
 }
 
-export function getCurrencyName() {
-  const currency =
-    localStorage.getItem("pennyplot-currency") || "NGN";
-
+export function getCurrencyName(currency = "NGN") {
   return currencyMap[currency]?.name || "Nigerian naira";
 }
 
-export function formatCurrency(amount) {
-  const currency =
-    localStorage.getItem("pennyplot-currency") || "NGN";
-
+export function formatCurrency(amount, currency = "NGN") {
   const symbol = currencyMap[currency]?.symbol || "₦";
 
   return `${symbol}${Number(amount || 0).toLocaleString("en-NG")}`;

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { toast } from "sonner";
+import { formatCurrency } from "../utils/currency";
 import {
   Search,
   ArrowUpDown,
@@ -107,7 +108,7 @@ function CustomDropdown({
 }
 
 function Transactions() {
-  const { transactions, setTransactions } = useOutletContext();
+  const { transactions, setTransactions, currency } = useOutletContext();
 
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -150,10 +151,6 @@ function Transactions() {
     { value: "a-z", label: "A → Z" },
     { value: "z-a", label: "Z → A" },
   ];
-
-  function formatCurrency(amount) {
-    return `₦${amount.toLocaleString("en-NG")}`;
-  }
 
   const filteredTransactions = useMemo(() => {
     let result = [...transactions];
@@ -402,7 +399,13 @@ function Transactions() {
                       {/* Amount */}
                       <div className="flex overflow-hidden rounded-xl border border-white/10 bg-white/[0.04] transition-all duration-200 focus-within:border-[#049552] focus-within:ring-1 focus-within:ring-[#049552]/30">
                         <span className="flex items-center border-r border-white/10 px-4 text-gray-400">
-                          ₦
+                          {currency === "NGN"
+                            ? "₦"
+                            : currency === "USD"
+                              ? "$"
+                              : currency === "GBP"
+                                ? "£"
+                                : "€"}
                         </span>
 
                         <input

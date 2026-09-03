@@ -9,7 +9,9 @@ function Layout() {
   // Online / Offline status
   const [isOnline, setIsOnline] = useState(true);
   const [showBackOnline, setShowBackOnline] = useState(false);
-
+const [currency, setCurrency] = useState(() => {
+  return localStorage.getItem("pennyplot-currency") || "NGN";
+});
   const [transactions, setTransactions] = useState(() => {
     try {
       const savedTransactions = localStorage.getItem("pennyplot-transactions");
@@ -120,6 +122,8 @@ function Layout() {
               transactions,
               setTransactions,
               isOnline,
+              currency, 
+              setCurrency,
             }}
           />
       </main>

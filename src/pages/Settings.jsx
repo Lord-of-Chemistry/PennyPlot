@@ -17,10 +17,9 @@ import {
 } from "../utils/backup";
 
 function Settings() {
-  const { transactions, setTransactions } = useOutletContext();
-  const [currency, setCurrency] = useState(() => {
-    return localStorage.getItem("pennyplot-currency") || "NGN";
-  });
+  const { transactions, setTransactions, currency, setCurrency } =
+    useOutletContext();
+
   const [dateFormat, setDateFormat] = useState(() => {
     return localStorage.getItem("pennyplot-date-format") || "DD/MM/YYYY";
   });

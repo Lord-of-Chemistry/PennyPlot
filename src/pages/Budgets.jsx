@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
+import { formatCurrency, getCurrencySymbol } from "../utils/currency";
 import {
   Plus,
   Wallet,
@@ -9,13 +10,13 @@ import {
   X,
   Trash2,
   ChevronDown,
-  Download
+  Download,
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 function Budgets() {
-  const { transactions } = useOutletContext();
+  const { transactions, currency } = useOutletContext();
 
   const [budgets, setBudgets] = useState(() => {
     try {
@@ -29,12 +30,10 @@ function Budgets() {
   });
 
   const [showForm, setShowForm] = useState(false);
-
   const [category, setCategory] = useState("Food");
   const [amount, setAmount] = useState("");
   const [period, setPeriod] = useState("monthly");
   const [error, setError] = useState("");
-
   const categories = [
     "Food",
     "Transport",
@@ -43,10 +42,6 @@ function Budgets() {
     "Entertainment",
     "Other",
   ];
-
-  function formatCurrency(value) {
-    return `₦${Number(value || 0).toLocaleString("en-NG")}`;
-  }
 
   function formatAmount(value) {
     if (!value) return "";
@@ -283,7 +278,7 @@ function Budgets() {
             <p className="text-sm text-gray-500">Total Budget</p>
 
             <p className="mt-2 text-2xl font-bold text-white">
-              {formatCurrency(totalBudget)}
+              {formatCurrency(totalBudget, currency)}
             </p>
           </CardContent>
         </Card>
@@ -293,7 +288,7 @@ function Budgets() {
             <p className="text-sm text-gray-500">Total Spent</p>
 
             <p className="mt-2 text-2xl font-bold text-red-400">
-              {formatCurrency(totalSpent)}
+              {formatCurrency(totalSpent, currency)}
             </p>
           </CardContent>
         </Card>
@@ -307,7 +302,7 @@ function Budgets() {
                 totalRemaining >= 0 ? "text-[#049552]" : "text-red-400"
               }`}
             >
-              {formatCurrency(totalRemaining)}
+              {formatCurrency(totalRemaining, currency)}
             </p>
           </CardContent>
         </Card>
@@ -375,7 +370,7 @@ function Budgets() {
 
                 <div className="flex overflow-hidden rounded-xl border border-white/15 bg-[#0f1714] transition focus-within:border-[#049552] focus-within:ring-2 focus-within:ring-[#049552]/15">
                   <div className="flex items-center border-r border-white/15 px-4 font-bold text-[#049552]">
-                    ₦
+                    {getCurrencySymbol(currency)}
                   </div>
 
                   <input
@@ -496,11 +491,11 @@ function Budgets() {
                   <div className="mb-3 flex items-end justify-between gap-4">
                     <div>
                       <p className="text-2xl font-bold text-white">
-                        {formatCurrency(budget.spent)}
+                        {formatCurrency(budget.spent, currency)}
                       </p>
 
                       <p className="mt-1 text-xs text-gray-500">
-                        of {formatCurrency(budget.amount)}
+                        of {formatCurrency(budget.amount, currency)}
                       </p>
                     </div>
 
@@ -540,7 +535,7 @@ function Budgets() {
                         <CheckCircle2 size={17} className="text-[#049552]" />
 
                         <p className="text-sm text-gray-400">
-                          {formatCurrency(budget.remaining)} remaining
+                          {formatCurrency(budget.remaining, currency)} remaining
                         </p>
                       </>
                     )}
@@ -561,7 +556,7 @@ function Budgets() {
 
                         <p className="text-sm text-red-400">
                           Budget exceeded by{" "}
-                          {formatCurrency(Math.abs(budget.remaining))}
+                          {formatCurrency(Math.abs(budget.remaining), currency)}
                         </p>
                       </>
                     )}
