@@ -1,6 +1,11 @@
 import { useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { formatCurrency, getCurrencySymbol } from "../utils/currency";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
+import { downloadBudgetsCSV } from "../utils/exportBudgetsCsv";
+import { downloadBudgetsPDF } from "../utils/exportBudgetsPdf";
+import { downloadBudgetsPNG } from "../utils/exportBudgetsPng";
 import {
   Plus,
   Wallet,
@@ -12,8 +17,6 @@ import {
   ChevronDown,
   Download,
 } from "lucide-react";
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 function Budgets() {
   const { transactions, currency } = useOutletContext();
@@ -34,6 +37,7 @@ function Budgets() {
   const [amount, setAmount] = useState("");
   const [period, setPeriod] = useState("monthly");
   const [error, setError] = useState("");
+  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const categories = [
     "Food",
     "Transport",
@@ -183,55 +187,6 @@ function Budgets() {
   const overallPercentage =
     totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
-  function downloadBudgets() {
-    if (budgetData.length === 0) return;
-
-    const headers = [
-      "Category",
-      "Period",
-      "Budget",
-      "Spent",
-      "Remaining",
-      "Usage",
-      "Status",
-    ];
-
-    const rows = budgetData.map((budget) => [
-      budget.category,
-      budget.period,
-      budget.amount,
-      budget.spent,
-      budget.remaining,
-      `${Math.round(budget.percentage)}%`,
-      budget.status,
-    ]);
-
-    const csvContent = [
-      headers.join(","),
-      ...rows.map((row) =>
-        row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(","),
-      ),
-    ].join("\n");
-
-    const blob = new Blob([csvContent], {
-      type: "text/csv;charset=utf-8;",
-    });
-
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = `pennyplot-budgets-${
-      new Date().toISOString().split("T")[0]
-    }.csv`;
-
-    document.body.appendChild(link);
-    link.click();
-
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  }
   return (
     <div className="min-h-screen bg-[#0f1714]">
       {/* Header */}
@@ -246,14 +201,124 @@ function Budgets() {
 
         <div className="flex flex-col gap-3 sm:flex-row">
           {budgetData.length > 0 && (
-            <button
-              type="button"
-              onClick={downloadBudgets}
-              className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-[#22332b] px-5 py-3 text-sm font-semibold text-gray-300 transition hover:border-[#049552]/30 hover:bg-[#049552]/5 hover:text-white"
-            >
-              <Download size={17} />
-              Download
-            </button>
+            <div className="relative">
+              {/* Download button */}
+              <button
+                type="button"
+                onClick={() => setIsDownloadOpen((prev) => !prev)}
+                className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-[#22332b] px-5 py-3 text-sm font-semibold text-gray-300 transition hover:border-[#049552]/30 hover:bg-[#049552]/5 hover:text-white"
+              >
+                <Download size={17} />
+                Download
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform duration-200 ${
+                    isDownloadOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {/* Dropdown */}
+              <div
+                className={`absolute right-0 top-[calc(100%+8px)] z-50 w-64 origin-top-right rounded-xl border border-white/10 bg-[#1b2922] p-1.5 shadow-2xl shadow-black/40 transition-all duration-200 ${
+                  isDownloadOpen
+                    ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
+                    : "pointer-events-none -translate-y-2 scale-95 opacity-0"
+                }`}
+              >
+                {/* CSV */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    try {
+                      downloadBudgetsCSV(budgetData, currency);
+
+                      toast.success("Budgets exported successfully.");
+                    } catch (error) {
+                      console.error("Budgets CSV export failed:", error);
+
+                      toast.error("Failed to export budgets.");
+                    }
+
+                    setIsDownloadOpen(false);
+                  }}
+                  className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-white/[0.06]"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#049552]/10 text-[#8ff0bc] transition-colors group-hover:bg-[#049552]/15">
+                    <Download size={16} />
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-medium text-white">CSV</p>
+                    <p className="mt-0.5 text-xs text-gray-500">Budget data</p>
+                  </div>
+                </button>
+
+                {/* PDF */}
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await downloadBudgetsPDF(budgetData, currency);
+
+                      toast.success("Budget report exported successfully.");
+                    } catch (error) {
+                      console.error("Budgets PDF export failed:", error);
+
+                      toast.error("Failed to export budget report.");
+                    }
+
+                    setIsDownloadOpen(false);
+                  }}
+                  className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-white/[0.06]"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#049552]/10 text-[#8ff0bc] transition-colors group-hover:bg-[#049552]/15">
+                    <span className="text-[10px] font-bold tracking-wide">
+                      PDF
+                    </span>
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-medium text-white">PDF</p>
+                    <p className="mt-0.5 text-xs text-gray-500">
+                      Budget report
+                    </p>
+                  </div>
+                </button>
+
+                {/* PNG */}
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await downloadBudgetsPNG(budgetData, currency);
+
+                      toast.success("Budget snapshot exported successfully.");
+                    } catch (error) {
+                      console.error("Budgets PNG export failed:", error);
+
+                      toast.error("Failed to export budget snapshot.");
+                    }
+
+                    setIsDownloadOpen(false);
+                  }}
+                  className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-white/[0.06]"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#049552]/10 text-[#8ff0bc] transition-colors group-hover:bg-[#049552]/15">
+                    <span className="text-[10px] font-bold tracking-wide">
+                      PNG
+                    </span>
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-medium text-white">PNG</p>
+                    <p className="mt-0.5 text-xs text-gray-500">
+                      Budget snapshot
+                    </p>
+                  </div>
+                </button>
+              </div>
+            </div>
           )}
 
           <button

@@ -1,5 +1,14 @@
 import { useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Settings as SettingsIcon,
   Download,
@@ -9,7 +18,6 @@ import {
   CheckCircle2,
   AlertTriangle,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   createBackup,
   downloadBackup,
@@ -24,6 +32,8 @@ function Settings() {
     return localStorage.getItem("pennyplot-date-format") || "DD/MM/YYYY";
   });
 
+  const [dialog, setDialog] = useState(null);
+  const [pendingBackup, setPendingBackup] = useState(null);
   const [message, setMessage] = useState("");
 
   const [lastBackup, setLastBackup] = useState(getLastBackupDate());
@@ -180,73 +190,66 @@ function Settings() {
           return;
         }
 
-        const confirmed = window.confirm(
-          "Restoring this backup will replace your current PennyPlot data. Continue?",
-        );
-
-        if (!confirmed) return;
-
-        const transactions = backup.data.transactions || [];
-
-        const budgets = backup.data.budgets || [];
-
-        const settings = backup.data.settings || {};
-
-        localStorage.setItem(
-          "pennyplot-transactions",
-          JSON.stringify(transactions),
-        );
-
-        localStorage.setItem("pennyplot-budgets", JSON.stringify(budgets));
-
-        if (settings.currency) {
-          localStorage.setItem("pennyplot-currency", settings.currency);
-        }
-
-        if (settings.dateFormat) {
-          localStorage.setItem("pennyplot-date-format", settings.dateFormat);
-        }
-
-        setTransactions(transactions);
-
-        showMessage("Backup restored successfully.");
-
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+        setPendingBackup(backup);
+        setDialog("restore");
       } catch (error) {
         console.error("Failed to restore backup:", error);
         showMessage("Could not read this backup file.");
       }
     };
-
     reader.readAsText(file);
 
     event.target.value = "";
   }
 
-  function clearTransactions() {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete all transactions? This cannot be undone.",
+  function restoreBackup() {
+    if (!pendingBackup) return;
+
+    const transactions = pendingBackup.data.transactions || [];
+    const budgets = pendingBackup.data.budgets || [];
+    const settings = pendingBackup.data.settings || {};
+
+    localStorage.setItem(
+      "pennyplot-transactions",
+      JSON.stringify(transactions),
     );
 
-    if (!confirmed) return;
+    localStorage.setItem("pennyplot-budgets", JSON.stringify(budgets));
 
+    if (settings.currency) {
+      localStorage.setItem("pennyplot-currency", settings.currency);
+    }
+
+    if (settings.dateFormat) {
+      localStorage.setItem("pennyplot-date-format", settings.dateFormat);
+    }
+
+    setTransactions(transactions);
+
+    setDialog(null);
+    setPendingBackup(null);
+
+    showMessage("Backup restored successfully.");
+
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
+  }
+
+  function clearTransactions() {
     setTransactions([]);
 
     localStorage.removeItem("pennyplot-transactions");
+
+    setDialog(null);
 
     showMessage("All transactions have been deleted.");
   }
 
   function clearBudgets() {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete all budgets? This cannot be undone.",
-    );
-
-    if (!confirmed) return;
-
     localStorage.removeItem("pennyplot-budgets");
+
+    setDialog(null);
 
     showMessage("All budgets have been deleted.");
 
@@ -254,12 +257,6 @@ function Settings() {
   }
 
   function clearEverything() {
-    const confirmed = window.confirm(
-      "This will permanently delete ALL PennyPlot data. Are you sure?",
-    );
-
-    if (!confirmed) return;
-
     localStorage.removeItem("pennyplot-transactions");
     localStorage.removeItem("pennyplot-budgets");
     localStorage.removeItem("pennyplot-currency");
@@ -267,13 +264,14 @@ function Settings() {
 
     setTransactions([]);
 
+    setDialog(null);
+
     showMessage("All PennyPlot data has been cleared.");
 
     setTimeout(() => {
       window.location.reload();
     }, 1000);
   }
-
   return (
     <div className="min-h-screen bg-[#0f1714]">
       {/* Header */}
@@ -461,7 +459,7 @@ function Settings() {
             {/* Create Backup */}
             <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-[#0f1714]/50 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-medium text-white">Create backup</p>
+                <p className="text-sm font-medium text-white">Back Up Now</p>
 
                 <p className="mt-1 text-xs text-gray-500">
                   Save your current PennyPlot data locally.
@@ -474,7 +472,7 @@ function Settings() {
                 className="flex items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-sm text-gray-300 transition hover:bg-white/5 hover:text-white"
               >
                 <Database size={16} />
-                Create Backup
+                Back Up Now
               </button>
             </div>
 
@@ -550,27 +548,25 @@ function Settings() {
           <CardContent className="space-y-3">
             <button
               type="button"
-              onClick={clearTransactions}
+              onClick={() => setDialog("transactions")}
               className="flex w-full items-center justify-between rounded-xl border border-red-500/10 bg-red-500/5 px-4 py-3 text-sm text-red-400 transition hover:bg-red-500/10"
             >
               <span>Delete all transactions</span>
-
               <Trash2 size={17} />
             </button>
 
             <button
               type="button"
-              onClick={clearBudgets}
+              onClick={() => setDialog("budgets")}
               className="flex w-full items-center justify-between rounded-xl border border-red-500/10 bg-red-500/5 px-4 py-3 text-sm text-red-400 transition hover:bg-red-500/10"
             >
               <span>Delete all budgets</span>
-
               <Trash2 size={17} />
             </button>
 
             <button
               type="button"
-              onClick={clearEverything}
+              onClick={() => setDialog("everything")}
               className="flex w-full items-center justify-between rounded-xl bg-red-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-600"
             >
               <span>Delete all PennyPlot data</span>
@@ -606,6 +602,74 @@ function Settings() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog
+        open={dialog !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDialog(null);
+          }
+        }}
+      >
+        <DialogContent className="border-white/10 bg-[#1b2922] text-white sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {dialog === "transactions" && "Delete all transactions?"}
+              {dialog === "budgets" && "Delete all budgets?"}
+              {dialog === "everything" && "Delete all PennyPlot data?"}
+              {dialog === "restore" && "Restore this backup?"}
+            </DialogTitle>
+
+            <DialogDescription className="text-gray-400">
+              {dialog === "transactions" &&
+                "This will permanently delete all your saved transactions. This action cannot be undone."}
+
+              {dialog === "budgets" &&
+                "This will permanently delete all your saved budgets. This action cannot be undone."}
+
+              {dialog === "everything" &&
+                "This will permanently delete your transactions, budgets, currency settings, and date preferences. This action cannot be undone."}
+
+              {dialog === "restore" &&
+                "Restoring this backup will replace your current PennyPlot data. Your existing data will be overwritten."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <button
+              type="button"
+              onClick={() => setDialog(null)}
+              className="rounded-xl border border-white/10 px-4 py-2.5 text-sm text-gray-300 transition hover:bg-white/5 hover:text-white"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (dialog === "transactions") {
+                  clearTransactions();
+                }
+
+                if (dialog === "budgets") {
+                  clearBudgets();
+                }
+
+                if (dialog === "everything") {
+                  clearEverything();
+                }
+
+                if (dialog === "restore") {
+                  restoreBackup();
+                }
+              }}
+              className="rounded-xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-600"
+            >
+              {dialog === "restore" ? "Restore" : "Delete"}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
