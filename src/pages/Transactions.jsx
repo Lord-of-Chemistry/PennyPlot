@@ -2,6 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { toast } from "sonner";
 import { formatCurrency, getCurrencySymbol } from "../utils/currency";
+import { downloadCSV } from "../utils/exportCsv";
+import { downloadTransactionsPDF } from "../utils/exportPdf";
+import { downloadTransactionsPNG } from "../utils/exportPng";
 import {
   Search,
   ArrowUpDown,
@@ -10,6 +13,7 @@ import {
   X,
   Check,
   ChevronDown,
+  Download,
 } from "lucide-react";
 
 function CustomDropdown({
@@ -109,15 +113,13 @@ function CustomDropdown({
 
 function Transactions() {
   const { transactions, setTransactions, currency } = useOutletContext();
-
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
-
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState(null);
-
+  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const categories = [
     "Food",
     "Transport",
@@ -274,17 +276,175 @@ function Transactions() {
     }));
   }
 
+  function downloadTransactions() {
+    if (transactions.length === 0) {
+      toast.error("There are no transactions to export.");
+      return;
+    }
+
+    const headers = [
+      "Date",
+      "Description",
+      "Category",
+      "Type",
+      "Amount",
+      "Currency",
+    ];
+
+    const rows = transactions.map((transaction) => [
+      transaction.date,
+      transaction.description,
+      transaction.category,
+      transaction.type,
+      transaction.amount,
+      currency,
+    ]);
+
+    downloadCSV(
+      `pennyplot-transactions-${new Date().toISOString().split("T")[0]}.csv`,
+      headers,
+      rows,
+    );
+
+    toast.success("Transactions exported successfully.");
+  }
+
+  async function downloadTransactionsAsPNG() {
+    if (transactions.length === 0) {
+      toast.error("There are no transactions to export.");
+      return;
+    }
+
+    try {
+      downloadTransactionsPNG(transactions, currency);
+
+      toast.success("Transaction summary exported as PNG.");
+    } catch (error) {
+      console.error("PNG export failed:", error);
+
+      toast.error("Failed to export transaction summary.");
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#0f1714] text-white">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Transactions</h1>
+      <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Transactions</h1>
 
-        <p className="mt-1 text-sm text-gray-400">
-          View and manage all your financial activity.
-        </p>
+          <p className="mt-1 text-sm text-gray-400">
+            View and manage all your financial activity.
+          </p>
+        </div>
+
+        {/* Download Menu */}
+        <div className="relative shrink-0">
+          <button
+            type="button"
+            onClick={() => setIsDownloadOpen((previous) => !previous)}
+            className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
+              isDownloadOpen
+                ? "border-[#049552] bg-[#049552]/10 text-[#8ff0bc]"
+                : "border-white/10 bg-[#1b2922] text-gray-300 hover:border-white/20 hover:bg-[#22332b] hover:text-white"
+            }`}
+          >
+            <Download size={16} />
+
+            <span>Download</span>
+
+            <ChevronDown
+              size={15}
+              className={`transition-transform duration-200 ${
+                isDownloadOpen ? "rotate-180 text-[#049552]" : "text-gray-500"
+              }`}
+            />
+          </button>
+
+          {/* Dropdown */}
+          <div
+            className={`absolute right-0 top-[calc(100%+8px)] z-50 w-64 origin-top-right rounded-xl border border-white/10 bg-[#1b2922] p-1.5 shadow-2xl shadow-black/40 transition-all duration-200 ${
+              isDownloadOpen
+                ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
+                : "pointer-events-none -translate-y-2 scale-95 opacity-0"
+            }`}
+          >
+            {/* CSV */}
+            <button
+              type="button"
+              onClick={() => {
+                downloadTransactions();
+                setIsDownloadOpen(false);
+              }}
+              className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-white/[0.06]"
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#049552]/10 text-[#8ff0bc] transition-colors group-hover:bg-[#049552]/15">
+                <Download size={16} />
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-white">CSV</p>
+
+                <p className="mt-0.5 text-xs text-gray-500">All transactions</p>
+              </div>
+            </button>
+
+            {/* PDF */}
+            <button
+              type="button"
+              onClick={() => {
+  try {
+    downloadTransactionsPDF(transactions, currency);
+    toast.success("Transaction report exported successfully.");
+  } catch (error) {
+    console.error("PDF export failed:", error);
+    toast.error("Failed to export transaction report.");
+  }
+
+  setIsDownloadOpen(false);
+}}
+              className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-white/[0.06]"
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#049552]/10 text-[#8ff0bc] transition-colors group-hover:bg-[#049552]/15">
+                {" "}
+                <span className="text-[10px] font-bold tracking-wide">PDF</span>
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-white">PDF</p>
+
+                <p className="mt-0.5 text-xs text-gray-500">
+                  Transaction report
+                </p>
+              </div>
+            </button>
+
+            {/* PNG */}
+            <button
+              type="button"
+              onClick={() => {
+                downloadTransactionsAsPNG();
+                toast.info("Downloading PNG...");
+                setIsDownloadOpen(false);
+              }}
+              className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-white/[0.06]"
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#049552]/10 text-[#8ff0bc] transition-colors group-hover:bg-[#049552]/15">
+                {" "}
+                <span className="text-[10px] font-bold tracking-wide">PNG</span>
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-white">PNG</p>
+
+                <p className="mt-0.5 text-xs text-gray-500">
+                  Transaction summary
+                </p>
+              </div>
+            </button>
+          </div>
+        </div>
       </div>
-
       {/* Filters */}
       <div className="rounded-2xl border border-white/10 bg-[#22332b]/50 p-4">
         <div className="grid gap-3 lg:grid-cols-[1fr_auto_auto_auto]">
