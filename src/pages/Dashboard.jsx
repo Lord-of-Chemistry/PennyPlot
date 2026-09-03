@@ -15,7 +15,7 @@ import {
 import { formatCurrency } from "../utils/currency";
 
 function Dashboard() {
-  const { transactions } = useOutletContext();
+  const { transactions, currency } = useOutletContext();
 
   const income = transactions
     .filter((transaction) => transaction.type === "income")
@@ -71,28 +71,28 @@ function Dashboard() {
   const cards = [
     {
       title: "Total Balance",
-      value: formatCurrency(balance),
+      value: formatCurrency(balance, currency),
       description: "Current available balance",
       icon: Wallet,
       color: "text-[#049552]",
     },
     {
       title: "Income",
-      value: formatCurrency(income),
+      value: formatCurrency(income, currency),
       description: "Total money received",
       icon: TrendingUp,
       color: "text-[#049552]",
     },
     {
       title: "Expenses",
-      value: formatCurrency(expenses),
+      value: formatCurrency(expenses, currency),
       description: "Total money spent",
       icon: TrendingDown,
       color: "text-red-400",
     },
     {
       title: "Savings",
-      value: formatCurrency(savings),
+      value: formatCurrency(savings, currency),
       description: "Current savings",
       icon: PiggyBank,
       color: "text-[#049552]",
@@ -177,7 +177,7 @@ function Dashboard() {
               </div>
 
               <p className="mt-3 text-2xl font-bold text-[#049552]">
-                {formatCurrency(monthlyIncome)}
+                {formatCurrency(monthlyIncome, currency)}
               </p>
             </div>
 
@@ -190,7 +190,7 @@ function Dashboard() {
               </div>
 
               <p className="mt-3 text-2xl font-bold text-red-400">
-                {formatCurrency(monthlyExpenses)}
+                {formatCurrency(monthlyExpenses, currency)}
               </p>
             </div>
 
@@ -212,7 +212,7 @@ function Dashboard() {
                   monthlyNet >= 0 ? "text-[#049552]" : "text-red-400"
                 }`}
               >
-                {formatCurrency(monthlyNet)}
+                {formatCurrency(monthlyNet, currency)}
               </p>
             </div>
           </div>
@@ -254,7 +254,7 @@ function Dashboard() {
                   <span className="text-sm text-gray-400">Income</span>
 
                   <span className="text-sm font-semibold text-[#049552]">
-                    {formatCurrency(income)}
+                    {formatCurrency(income, currency)}
                   </span>
                 </div>
 
@@ -278,7 +278,7 @@ function Dashboard() {
                   <span className="text-sm text-gray-400">Expenses</span>
 
                   <span className="text-sm font-semibold text-red-400">
-                    {formatCurrency(expenses)}
+                    {formatCurrency(expenses, currency)}
                   </span>
                 </div>
 
@@ -304,7 +304,7 @@ function Dashboard() {
                     balance >= 0 ? "text-[#049552]" : "text-red-400"
                   }`}
                 >
-                  {formatCurrency(balance)}
+                  {formatCurrency(balance, currency)}
                 </p>
               </div>
             </div>
@@ -355,7 +355,7 @@ function Dashboard() {
                       <span className="text-sm text-gray-300">{category}</span>
 
                       <span className="text-sm font-medium text-white">
-                        {formatCurrency(amount)}
+                        {formatCurrency(amount, currency)}
                       </span>
                     </div>
 
@@ -438,7 +438,7 @@ function Dashboard() {
                       }
                     >
                       {transaction.type === "income" ? "+" : "-"}
-                      {formatCurrency(transaction.amount)}
+                      {formatCurrency(transaction.amount, currency)}
                     </span>
                   </div>
                 ))}
