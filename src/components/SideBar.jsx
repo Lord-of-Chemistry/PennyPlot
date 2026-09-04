@@ -8,8 +8,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavLink } from "react-router-dom";
+import ProfileMenu from "./ProfileMenu";
 
-function SideBar({ isCollapsed, setIsCollapsed, isOnline }) {
+function SideBar({ isCollapsed, setIsCollapsed, isOnline, profile }) {
   const menuItems = [
     {
       name: "Dashboard",
@@ -136,44 +137,20 @@ function SideBar({ isCollapsed, setIsCollapsed, isOnline }) {
             )}
           </div>
 
-          {/* Settings */}
-          <NavLink
-            to="/settings"
-            className={`group relative mb-3 flex items-center rounded-md px-3 py-2 transition-all duration-300 ease-in-out hover:scale-[1.02] ${
-              isCollapsed ? "justify-center" : "gap-3"
-            }`}
-          >
-            {({ isActive }) => (
-              <>
-                <Settings
-                  size={22}
-                  className={`shrink-0 transition-all duration-300 ${
-                    isActive ? "text-[#049552]" : "text-gray-400"
-                  }`}
-                />
-
-                <span
-                  className={`overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out ${
-                    isCollapsed ? "max-w-0 opacity-0" : "max-w-40 opacity-100"
-                  } ${isActive ? "text-[#049552]" : "text-gray-400"}`}
-                >
-                  Settings
-                </span>
-
-                {/* Collapsed Tooltip */}
-                {isCollapsed && (
-                  <span className="absolute left-full z-20 ml-3 origin-left scale-0 whitespace-nowrap rounded-lg border border-white/10 bg-[#22332b] px-3 py-1.5 text-xs font-medium text-white shadow-lg transition-all duration-300 group-hover:scale-100">
-                    Settings
-                  </span>
-                )}
-              </>
-            )}
-          </NavLink>
+          {/* Profile */}
+          <div className="mt-4 border-t border-white/10 pt-4">
+            <ProfileMenu profile={profile} isCollapsed={isCollapsed} />
+          </div>
         </div>
       </aside>
 
+      {/* Mobile Profile Button */}
+      <div className="fixed right-4 top-4 z-50 md:hidden">
+        <ProfileMenu profile={profile} mobile />
+      </div>
+
       {/* Mobile Bottom Navigation */}
-      <nav className="fixed inset-x-0 bottom-0 w-full z-50 flex justify-around gap-2 rounded-t-2xl border border-white/10 bg-[#22332b]/90 p-3 shadow-xl backdrop-blur-md md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-50 flex w-full justify-around gap-2 rounded-t-2xl border border-white/10 bg-[#22332b]/90 p-3 shadow-xl backdrop-blur-md md:hidden">
         {menuItems.map((item) => {
           const Icon = item.icon;
 
@@ -206,30 +183,6 @@ function SideBar({ isCollapsed, setIsCollapsed, isOnline }) {
             </NavLink>
           );
         })}
-
-        {/* Mobile Settings */}
-        <NavLink to="/settings" className="group relative cursor-pointer px-2">
-          {({ isActive }) => (
-            <>
-              <div
-                className={`flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-300 ${
-                  isActive
-                    ? "bg-[#049552]/15 text-[#049552]"
-                    : "text-gray-400 hover:bg-[#049552]/10 hover:text-[#049552]"
-                }`}
-              >
-                <Settings
-                  size={20}
-                  className="transition-transform duration-300 group-hover:scale-110"
-                />
-              </div>
-
-              <span className="absolute -top-12 left-1/2 z-20 -translate-x-1/2 origin-bottom scale-0 whitespace-nowrap rounded-lg border border-white/10 bg-[#22332b] px-3 py-1.5 text-xs font-medium text-white shadow-lg transition-all duration-300 ease-in-out group-hover:scale-100">
-                Settings
-              </span>
-            </>
-          )}
-        </NavLink>
 
         {/* Mobile Connection Indicator */}
         <div className="group relative ml-1 flex items-center justify-center border-l border-white/10 pl-2">

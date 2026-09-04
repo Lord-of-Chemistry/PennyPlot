@@ -39,6 +39,7 @@ Phase C — Analytics
  Reusable ProfileAvatar component
  Central profile data utility/localStorage
  Make avatar/name consistent throughout PennyPlot
+
 🎯 2. Better Budgets
  Budget progress bars
  Amount spent
@@ -52,6 +53,7 @@ Phase C — Analytics
  Overall spending limit
  Budget summaries
  Budget-related insights
+
 🔄 3. Recurring Transactions
  Create recurring transaction
  Daily/weekly/monthly/yearly frequency
@@ -62,6 +64,7 @@ Phase C — Analytics
  Upcoming recurring payments section
  Edit recurring transaction
  Pause/delete recurring transaction
+
 🔔 4. Notifications
  Notification center
  Budget warnings
@@ -72,6 +75,7 @@ Phase C — Analytics
  Read/unread notifications
  Clear notifications
  Notification preferences
+
 🧠 5. Smart Analytics
  Spending insights
  Income insights
@@ -87,6 +91,7 @@ Analytics graph improvement
  Keep full historical data
  Start graph scrolled to the newest/rightmost data
  Optional "View all history" / navigation controls
+ 
 💰 6. Savings Goals
  Create savings goal
  Goal name

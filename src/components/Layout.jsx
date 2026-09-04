@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import SideBar from "./SideBar";
 import { createBackup } from "../utils/backup";
+import { getProfile } from "../utils/profile";
+import { getNotifications, saveNotifications } from "../utils/notifications";
+import NotificationCenter from "./NotificationsCenter";
 
 function Layout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -15,17 +18,17 @@ function Layout() {
   const [dateFormat, setDateFormat] = useState(() => {
     return localStorage.getItem("pennyplot-date-format") || "DD/MM/YYYY";
   });
-
+  const [profile, setProfile] = useState(() => getProfile());
   const [transactions, setTransactions] = useState(() => {
     try {
       const savedTransactions = localStorage.getItem("pennyplot-transactions");
-
       return savedTransactions ? JSON.parse(savedTransactions) : [];
     } catch (error) {
       console.error("Failed to load transactions:", error);
       return [];
     }
   });
+  const [notifications, setNotifications] = useState(getNotifications());
 
   // Check if the internet is actually reachable
   async function checkConnection(showNotification = false) {
@@ -95,11 +98,19 @@ function Layout() {
   useEffect(() => {
     createBackup();
   }, [transactions]);
-  
+
   // Save date format locally
   useEffect(() => {
     localStorage.setItem("pennyplot-date-format", dateFormat);
   }, [dateFormat]);
+
+  useEffect(() => {
+    localStorage.setItem("pennyplot-profile", JSON.stringify(profile));
+  }, [profile]);
+
+  useEffect(() => {
+    saveNotifications(notifications);
+  }, [notifications]);
 
   return (
     <div className="min-h-screen bg-[#0f1714]">
@@ -107,8 +118,8 @@ function Layout() {
         isCollapsed={isCollapsed}
         setIsCollapsed={setIsCollapsed}
         isOnline={isOnline}
+        profile={profile}
       />
-
       {/* Back online notification */}
       <div
         className={`fixed right-4 top-4 z-[100] flex items-center gap-2 rounded-xl border border-[#049552]/30 bg-[#1b2922] px-4 py-3 text-sm text-white shadow-2xl transition-all duration-300 ${
@@ -120,7 +131,12 @@ function Layout() {
         <span className="h-2.5 w-2.5 rounded-full bg-[#049552]" />
         Back online
       </div>
-
+      {/* Notification center */}
+      <NotificationCenter
+        notifications={notifications}
+        setNotifications={setNotifications}
+      />
+      ``{" "}
       <main
         className={`bg-[#0f1714] p-4 pb-24 text-white transition-[margin] duration-300 ease-in-out md:pb-4 ${
           isCollapsed ? "md:ml-20" : "md:ml-56"
@@ -135,6 +151,10 @@ function Layout() {
             setCurrency,
             dateFormat,
             setDateFormat,
+            profile,
+            setProfile,
+            notifications,
+            setNotifications,
           }}
         />
       </main>
