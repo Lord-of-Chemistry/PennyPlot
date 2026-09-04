@@ -3,7 +3,6 @@ Phase A — Dashboard + transaction input
 ✅ More default categories
 ✅ Custom categories
 ✅ Category limit
-
 ✅ Proper scrollable category dropdown
 ✅ Proper shadcn date picker
 ✅ Make Date Format setting actually apply
@@ -11,10 +10,280 @@ Phase A — Dashboard + transaction input
 Phase B — Dashboard layout
 ✅ Fix Spending Breakdown height/overflow
 ✅ Fix Recent Transactions sorting/old transaction behavior
-Phase C — Analytics
 
+Phase C — Analytics
 ✅ Remove arbitrary 7/8/6/5 period limits
 ✅ Generate the complete timeline from available data
 ✅ Horizontally scrollable chart
 ✅ Keep empty periods where appropriate
 ✅ Make Daily/Weekly/Monthly/Yearly behave consistently
+
+
+💰 PennyPlot — Master Feature Roadmap
+👤 1. Profile System
+ Profile section in sidebar/navbar
+ User avatar/profile picture
+ Upload profile picture
+ Image preview/crop before saving
+ Remove profile picture
+ Initials fallback when no picture exists
+ Display name
+ Email
+ Short bio/tagline
+ Profile popover/menu
+ Dedicated /profile page
+ Edit profile
+ Save profile changes
+ Profile activity statistics
+ Financial activity snapshot
+ Reusable ProfileAvatar component
+ Central profile data utility/localStorage
+ Make avatar/name consistent throughout PennyPlot
+🎯 2. Better Budgets
+ Budget progress bars
+ Amount spent
+ Amount remaining
+ Percentage used
+ Under-budget state
+ Near-limit warning
+ Over-budget state
+ Budget period selection
+ Category-specific budgets
+ Overall spending limit
+ Budget summaries
+ Budget-related insights
+🔄 3. Recurring Transactions
+ Create recurring transaction
+ Daily/weekly/monthly/yearly frequency
+ Start date
+ Optional end date
+ Automatic transaction generation
+ Recurring transaction management
+ Upcoming recurring payments section
+ Edit recurring transaction
+ Pause/delete recurring transaction
+🔔 4. Notifications
+ Notification center
+ Budget warnings
+ Recurring-payment reminders
+ Spending alerts
+ New-period summaries
+ "Back online" notification improvements
+ Read/unread notifications
+ Clear notifications
+ Notification preferences
+🧠 5. Smart Analytics
+ Spending insights
+ Income insights
+ Month-to-month comparisons
+ Category spending trends
+ Highest-spending category
+ Largest transaction
+ Average spending
+ Spending patterns
+ Saving trends
+ Automatically generated observations
+Analytics graph improvement
+ Keep full historical data
+ Start graph scrolled to the newest/rightmost data
+ Optional "View all history" / navigation controls
+💰 6. Savings Goals
+ Create savings goal
+ Goal name
+ Target amount
+ Current amount
+ Progress bar
+ Percentage complete
+ Amount remaining
+ Target date
+ Add money to goal
+ Edit goal
+ Delete goal
+ Completed-goal state
+
+Example:
+
+New Laptop
+
+₦180,000 / ₦300,000
+
+████████████░░░░ 60%
+
+₦120,000 remaining
+📅 7. Financial Calendar
+ Monthly calendar
+ Show transaction days
+ Click a date
+ Show that day's transactions
+ Daily income/expense total
+ Calendar respects selected date format
+ Current-day indicator
+ Navigate months
+ Empty-day handling
+🔎 8. Advanced Transactions
+ Search
+ Filtering
+ Sorting
+ Editing
+ Deleting
+ CSV/PDF/PNG export
+ Advanced search
+ Search by amount
+ Search by date
+ Search by category
+ Search by transaction type
+ Transaction detail view
+ Notes
+ Payment method
+ Optional transaction attachments
+ Better transaction grouping
+📥 9. Import Transactions
+ Import CSV
+ Column mapping
+ Preview imported transactions
+ Validate data
+ Detect invalid rows
+ Duplicate detection
+ Confirm import
+ Import success summary
+📊 10. Dashboard Improvements
+ More useful financial summary
+ Better spending overview
+ Quick insights
+ Budget snapshot
+ Savings-goal snapshot
+ Upcoming recurring transactions
+ Recent activity improvements
+ Dashboard PDF export
+ Dashboard PNG export
+🎨 11. UI / UX Polish
+ Consistent animations
+ Loading states
+ Skeleton states
+ Empty states
+ Error states
+ Confirmation dialogs
+ Better tooltips
+ Keyboard accessibility
+ Mobile responsiveness
+ Desktop responsiveness
+ Consistent dropdowns
+ Consistent scrollbars
+ Consistent hover/focus states
+ Smooth page transitions where appropriate
+ General visual polish pass
+🌙 12. Appearance
+ Dark mode
+ Light mode
+ System theme
+ Accent-color options
+ Persist appearance preferences
+📱 13. PWA / Installable App
+ Web app manifest
+ App icons
+ Install prompt
+ Standalone app mode
+ Offline caching
+ Service worker
+ Offline app shell
+ Better offline experience
+☁️ 14. Accounts & Cloud Sync
+
+Later — don't build this yet.
+
+ Authentication
+ Sign up
+ Log in
+ Log out
+ Password reset
+ User-specific data
+ Cloud database
+ Cloud profile pictures
+ Cross-device synchronization
+ Sync conflict handling
+ Backup/sync status
+🔐 15. Security & Data Protection
+ Protect account data
+ Secure authentication
+ Session management
+ Data validation
+ Safer storage architecture
+ Account deletion
+ Data export
+ Data deletion confirmation
+ Privacy information
+📈 16. Advanced Finance Features
+
+These are later-stage features:
+
+ Net worth tracking
+ Multiple accounts/wallets
+ Savings accounts
+ Investments
+ Debts
+ Loans
+ Financial goals
+ Asset tracking
+ Liability tracking
+ Net-worth history
+🧾 17. Receipts & Attachments
+ Attach receipt to transaction
+ Image preview
+ Remove attachment
+ View attachment from transaction details
+ Eventually cloud storage
+🏆 18. Subtle Gamification
+
+Not necessary, but potentially nice:
+
+ Tracking streak
+ Budget streak
+ Savings milestones
+ Monthly achievements
+ Financial consistency indicators
+
+Keep this subtle so PennyPlot still feels like a serious finance app, not a game.
+
+🛠️ 19. Technical / Product Finish
+ Clean up unused code
+ Component organization
+ Utility organization
+ Error handling
+ Performance optimization
+ Accessibility audit
+ Responsive testing
+ Browser testing
+ LocalStorage edge cases
+ Backup/restore testing
+ GitHub repository cleanup
+ Production build testing
+ Vercel deployment
+ Custom domain eventually
+🚀 The order I'd actually build them
+
+
+PHASE 1 — Finish the core
+👤 Profile System ← WE ARE HERE
+🎯 Better Budgets
+🔄 Recurring Transactions
+🔔 Notifications
+🧠 Smart Analytics
+💰 Savings Goals
+PHASE 2 — Make it richer
+📅 Financial Calendar
+🔎 Advanced Transaction Details
+📥 CSV Import
+📊 Dashboard improvements
+PHASE 3 — Polish
+🎨 UI/UX polish
+🌙 Theme system
+📱 PWA/installability
+PHASE 4 — Turn it into a real service
+👤 Authentication
+☁️ Cloud sync
+🔐 Security/data protection
+PHASE 5 — Advanced
+🧾 Receipts
+📈 Net worth
+🏆 Subtle gamification
+Other advanced financial features

@@ -66,7 +66,7 @@ function Dashboard() {
 
   const spendingBreakdown = Object.entries(spendingByCategory)
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
+    .slice(0, 3);
 
   const totalCategorySpending = expenses;
 
@@ -344,7 +344,7 @@ function Dashboard() {
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="max-h-51 space-y-4 overflow-y-auto overscroll-contain pr-2 [scrollbar-color:#049552_transparent] [scrollbar-width:thin]">
               {spendingBreakdown.map(([category, amount]) => {
                 const percentage =
                   totalCategorySpending === 0
@@ -418,10 +418,16 @@ function Dashboard() {
             ) : (
               <>
                 {[...transactions]
-                  .sort(
-                    (a, b) =>
-                      new Date(b.date).getTime() - new Date(a.date).getTime(),
-                  )
+                  .sort((a, b) => {
+                    const dateDifference =
+                      new Date(b.date).getTime() - new Date(a.date).getTime();
+
+                    if (dateDifference !== 0) {
+                      return dateDifference;
+                    }
+
+                    return b.id - a.id;
+                  })
                   .slice(0, 3)
                   .map((transaction) => (
                     <div
@@ -436,7 +442,6 @@ function Dashboard() {
                         <p className="mt-1 text-xs text-gray-500">
                           {transaction.category} ·{" "}
                           {formatDate(transaction.date, dateFormat)}
-                          
                         </p>
                       </div>
 

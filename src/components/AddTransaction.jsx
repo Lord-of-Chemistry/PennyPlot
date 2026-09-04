@@ -412,28 +412,30 @@ function AddTransaction() {
                 </button>
 
                 {/* Category Dropdown */}
-                <div
-                  className={`absolute bottom-full left-0 right-0 z-50 mb-2 max-h-60 origin-bottom overflow-y-auto rounded-xl border border-white/15 bg-[#17221d] p-1.5 shadow-2xl shadow-black/50 ring-1 ring-black/20 transition-all duration-200 ease-out md:top-full md:bottom-auto md:mt-2 md:mb-0 md:origin-top ${
-                    categoryOpen
-                      ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
-                      : "pointer-events-none translate-y-1 scale-95 opacity-0"
-                  }`}
-                >
-                  {categories.map((item) => (
-                    <button
-                      key={item}
-                      type="button"
-                      onClick={() => selectCategory(item)}
-                      className={`flex w-full rounded-lg px-3 py-2.5 text-left text-sm transition-all duration-150 ${
-                        category === item
-                          ? "bg-[#049552]/10 text-[#049552]"
-                          : "text-gray-300 hover:bg-white/5 hover:text-white"
-                      }`}
-                    >
-                      {item}
-                    </button>
-                  ))}
-                </div>
+<div
+  className={`absolute bottom-full left-0 right-0 z-50 mb-2 origin-bottom rounded-xl border border-white/15 bg-[#17221d] shadow-2xl shadow-black/50 ring-1 ring-black/20 transition-all duration-200 ease-out md:top-full md:bottom-auto md:mt-2 md:mb-0 md:origin-top ${
+    categoryOpen
+      ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
+      : "pointer-events-none translate-y-1 scale-95 opacity-0"
+  }`}
+>
+  <div className="max-h-60 overflow-y-auto overscroll-contain p-1.5 [scrollbar-width:thin] [scrollbar-color:#049552_transparent]">
+    {categories.map((item) => (
+      <button
+        key={item}
+        type="button"
+        onClick={() => selectCategory(item)}
+        className={`flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm transition-all duration-150 ${
+          category === item
+            ? "bg-[#049552]/10 text-[#049552]"
+            : "text-gray-300 hover:bg-white/5 hover:text-white"
+        }`}
+      >
+        <span className="truncate">{item}</span>
+      </button>
+    ))}
+  </div>
+</div>
               </div>
 
               {/* Date */}

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useOutletContext } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
@@ -15,7 +15,6 @@ import {
   BarChart3,
   PieChart,
   PiggyBank,
-  CalendarDays,
   ArrowUpRight,
   ArrowDownRight,
   Minus,
@@ -32,6 +31,7 @@ function Analytics() {
   const { transactions, currency } = useOutletContext();
   const [period, setPeriod] = useState("monthly");
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+  const chartScrollRef = useRef(null);
 
   function formatPercent(value) {
     if (!Number.isFinite(value)) {
@@ -96,6 +96,7 @@ function Analytics() {
       return date.toLocaleDateString("en-US", {
         weekday: "short",
         day: "numeric",
+        month: "short",
       });
     }
 
@@ -109,6 +110,7 @@ function Analytics() {
     if (selectedPeriod === "monthly") {
       return date.toLocaleDateString("en-US", {
         month: "short",
+        year: "numeric",
       });
     }
 
@@ -136,30 +138,51 @@ function Analytics() {
   const balance = income - expenses;
 
   /*
-   * PERIOD DATA
+   * COMPLETE PERIOD TIMELINE
    *
-   * Builds the chart and all period-based analytics
-   * around the current date.
+   * Starts at the earliest transaction period
+   * and continues through the current period.
+   *
+   * Empty periods are intentionally preserved.
    */
   const periodData = useMemo(() => {
+    if (validTransactions.length === 0) {
+      return [];
+    }
+
     const today = new Date();
+
+    const earliestTransaction = validTransactions.reduce(
+      (earliest, transaction) =>
+        transaction.parsedDate < earliest ? transaction.parsedDate : earliest,
+      validTransactions[0].parsedDate,
+    );
+
+    const latestTransaction = validTransactions.reduce(
+      (latest, transaction) =>
+        transaction.parsedDate > latest ? transaction.parsedDate : latest,
+      validTransactions[0].parsedDate,
+    );
+
+    const firstPeriodStart = getPeriodStart(earliestTransaction, period);
 
     const currentPeriodStart = getPeriodStart(today, period);
 
-    const numberOfPeriods =
-      period === "daily"
-        ? 7
-        : period === "weekly"
-          ? 8
-          : period === "monthly"
-            ? 6
-            : 5;
+    const latestTransactionPeriodStart = getPeriodStart(
+      latestTransaction,
+      period,
+    );
+
+    const lastPeriodStart =
+      latestTransactionPeriodStart > currentPeriodStart
+        ? latestTransactionPeriodStart
+        : currentPeriodStart;
 
     const periods = [];
+    let current = new Date(firstPeriodStart);
 
-    for (let i = numberOfPeriods - 1; i >= 0; i--) {
-      const start = movePeriod(currentPeriodStart, period, -i);
-
+    while (current <= lastPeriodStart) {
+      const start = new Date(current);
       const end = movePeriod(start, period, 1);
 
       const periodTransactions = validTransactions.filter(
@@ -176,13 +199,15 @@ function Analytics() {
         .reduce((total, transaction) => total + transaction.numericAmount, 0);
 
       periods.push({
-        key: start.toISOString(),
+        key: start.getTime(),
         date: start,
         label: formatPeriodLabel(start, period),
         income: periodIncome,
         expenses: periodExpenses,
         net: periodIncome - periodExpenses,
       });
+
+      current = end;
     }
 
     return periods;
@@ -207,7 +232,6 @@ function Analytics() {
     }
 
     const current = periodData[periodData.length - 1];
-
     const previous = periodData[periodData.length - 2];
 
     function calculateChange(currentValue, previousValue) {
@@ -224,24 +248,18 @@ function Analytics() {
 
     return {
       incomeChange: calculateChange(current.income, previous.income),
-
       expenseChange: calculateChange(current.expenses, previous.expenses),
-
       netChange: calculateChange(current.net, previous.net),
     };
   }, [periodData]);
 
   /*
    * PERIOD-AWARE SPENDING BREAKDOWN
-   *
-   * This is now based on the selected period
-   * instead of all-time spending.
    */
   const spendingBreakdown = useMemo(() => {
     const today = new Date();
 
     const currentPeriodStart = getPeriodStart(today, period);
-
     const currentPeriodEnd = movePeriod(currentPeriodStart, period, 1);
 
     const currentPeriodTransactions = validTransactions.filter(
@@ -274,9 +292,6 @@ function Analytics() {
 
   /*
    * SAVINGS RATE
-   *
-   * How much of the selected period's income
-   * remains after expenses.
    */
   const savingsRate =
     currentPeriodData.income > 0
@@ -286,15 +301,13 @@ function Analytics() {
   /*
    * AVERAGE SPENDING
    *
-   * For daily mode this is average daily spending.
-   * For weekly mode it's average weekly spending, etc.
+   * Includes empty periods so the average represents
+   * the complete timeline.
    */
-  const periodsWithSpending = periodData.filter((item) => item.expenses > 0);
-
   const averageSpending =
-    periodsWithSpending.length > 0
-      ? periodsWithSpending.reduce((total, item) => total + item.expenses, 0) /
-        periodsWithSpending.length
+    periodData.length > 0
+      ? periodData.reduce((total, item) => total + item.expenses, 0) /
+        periodData.length
       : 0;
 
   /*
@@ -359,6 +372,14 @@ function Analytics() {
   };
 
   /*
+   * DYNAMIC CHART WIDTH
+   *
+   * The chart grows with the number of periods.
+   * The outer container handles horizontal scrolling.
+   */
+  const chartWidth = Math.max(700, periodData.length * 90);
+
+  /*
    * EMPTY STATE
    */
   if (transactions.length === 0) {
@@ -391,6 +412,16 @@ function Analytics() {
       </div>
     );
   }
+
+  useEffect(() => {
+    const container = chartScrollRef.current;
+
+    if (!container) return;
+
+    requestAnimationFrame(() => {
+      container.scrollLeft = container.scrollWidth;
+    });
+  }, [period, periodData]);
 
   return (
     <div className="min-h-screen bg-[#0f1714]">
@@ -440,11 +471,9 @@ function Analytics() {
               onClick={() => {
                 try {
                   downloadAnalyticsCSV(periodData, currency);
-
                   toast.success("Analytics exported successfully.");
                 } catch (error) {
                   console.error("Analytics CSV export failed:", error);
-
                   toast.error("Failed to export analytics.");
                 }
 
@@ -478,7 +507,6 @@ function Analytics() {
                   toast.success("Analytics report exported successfully.");
                 } catch (error) {
                   console.error("Analytics PDF export failed:", error);
-
                   toast.error("Failed to export analytics report.");
                 }
 
@@ -512,7 +540,6 @@ function Analytics() {
                   toast.success("Analytics snapshot exported successfully.");
                 } catch (error) {
                   console.error("Analytics PNG export failed:", error);
-
                   toast.error("Failed to export analytics snapshot.");
                 }
 
@@ -520,12 +547,13 @@ function Analytics() {
               }}
               className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-white/[0.06]"
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#049552]/10 text-[#8ff0bc] transition-colors group-hover:bg-[#049552]/15">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#049552]/10 text-[#8ff0bc]">
                 <span className="text-[10px] font-bold tracking-wide">PNG</span>
               </div>
 
               <div>
                 <p className="text-sm font-medium text-white">PNG</p>
+
                 <p className="mt-0.5 text-xs text-gray-500">
                   Analytics snapshot
                 </p>
@@ -537,7 +565,6 @@ function Analytics() {
 
       {/* OVERVIEW CARDS */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {/* BALANCE */}
         <Card className="border-white/10 bg-[#22332b]/60 transition-all duration-200 hover:-translate-y-1 hover:border-[#049552]/30">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-sm font-medium text-gray-400">
@@ -563,7 +590,6 @@ function Analytics() {
           </CardContent>
         </Card>
 
-        {/* INCOME */}
         <Card className="border-white/10 bg-[#22332b]/60 transition-all duration-200 hover:-translate-y-1 hover:border-[#049552]/30">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-sm font-medium text-gray-400">
@@ -582,7 +608,6 @@ function Analytics() {
           </CardContent>
         </Card>
 
-        {/* EXPENSES */}
         <Card className="border-white/10 bg-[#22332b]/60 transition-all duration-200 hover:-translate-y-1 hover:border-red-400/30">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-sm font-medium text-gray-400">
@@ -601,7 +626,6 @@ function Analytics() {
           </CardContent>
         </Card>
 
-        {/* SAVINGS RATE */}
         <Card className="border-white/10 bg-[#22332b]/60 transition-all duration-200 hover:-translate-y-1 hover:border-[#049552]/30">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-sm font-medium text-gray-400">
@@ -642,7 +666,6 @@ function Analytics() {
               </p>
             </div>
 
-            {/* PERIOD SELECTOR */}
             <div className="flex flex-wrap rounded-xl border border-white/10 bg-white/[0.03] p-1">
               {[
                 ["daily", "Daily"],
@@ -670,11 +693,9 @@ function Analytics() {
         <CardContent>
           {/* COMPARISON CARDS */}
           <div className="grid gap-3 sm:grid-cols-3">
-            {/* INCOME */}
             <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
               <div className="flex items-center justify-between">
                 <p className="text-xs text-gray-500">Income</p>
-
                 <ArrowUpRight size={16} className="text-[#049552]" />
               </div>
 
@@ -694,11 +715,9 @@ function Analytics() {
               </p>
             </div>
 
-            {/* EXPENSES */}
             <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
               <div className="flex items-center justify-between">
                 <p className="text-xs text-gray-500">Expenses</p>
-
                 <ArrowDownRight size={16} className="text-red-400" />
               </div>
 
@@ -718,7 +737,6 @@ function Analytics() {
               </p>
             </div>
 
-            {/* NET */}
             <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
               <div className="flex items-center justify-between">
                 <p className="text-xs text-gray-500">Net</p>
@@ -750,101 +768,117 @@ function Analytics() {
           </div>
 
           {/* CHART */}
-          <div className="mt-8">
-            <ChartContainer config={chartConfig} className="h-[300px] w-full">
-              <LineChart
-                data={periodData}
-                margin={{
-                  top: 10,
-                  right: 10,
-                  left: 0,
-                  bottom: 0,
+          <div className="mt-8 overflow-hidden rounded-xl">
+            <div
+              ref={chartScrollRef}
+              className=" overflow-x-auto pb-2 [scrollbar-color:#049552_transparent] [scrollbar-width:thin]"
+            >
+              <div
+                style={{
+                  width: `${chartWidth}px`,
+                  minWidth: "100%",
                 }}
               >
-                <CartesianGrid
-                  vertical={false}
-                  strokeDasharray="3 3"
-                  className="stroke-white/5"
-                />
-
-                <XAxis
-                  dataKey="label"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={10}
-                  className="text-xs"
-                />
-
-                <YAxis
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  width={55}
-                  tickFormatter={(value) => {
-                    const symbols = {
-                      NGN: "₦",
-                      USD: "$",
-                      GBP: "£",
-                      EUR: "€",
-                    };
-
-                    return `${symbols[currency] || "₦"}${Number(
-                      value,
-                    ).toLocaleString("en-NG", {
-                      notation: "compact",
-                    })}`;
-                  }}
-                />
-
-                <ChartTooltip
-                  cursor={{
-                    stroke: "#ffffff",
-                    strokeOpacity: 0.1,
-                  }}
-                  content={
-                    <ChartTooltipContent
-                      formatter={(value) => formatCurrency(value, currency)}
+                <ChartContainer
+                  config={chartConfig}
+                  className="h-[300px] w-full"
+                >
+                  <LineChart
+                    data={periodData}
+                    margin={{
+                      top: 10,
+                      right: 20,
+                      left: 0,
+                      bottom: 0,
+                    }}
+                  >
+                    <CartesianGrid
+                      vertical={false}
+                      strokeDasharray="3 3"
+                      className="stroke-white/5"
                     />
-                  }
-                />
 
-                <Line
-                  type="monotone"
-                  dataKey="income"
-                  name="Income"
-                  stroke="var(--color-income)"
-                  strokeWidth={3}
-                  dot={{
-                    r: 4,
-                    fill: "#049552",
-                    strokeWidth: 0,
-                  }}
-                  activeDot={{
-                    r: 6,
-                    strokeWidth: 3,
-                    stroke: "#049552",
-                  }}
-                />
+                    <XAxis
+                      dataKey="label"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={10}
+                      interval={0}
+                      className="text-xs"
+                    />
 
-                <Line
-                  type="monotone"
-                  dataKey="expenses"
-                  name="Expenses"
-                  stroke="var(--color-expenses)"
-                  strokeWidth={3}
-                  dot={{
-                    r: 4,
-                    fill: "#f87171",
-                    strokeWidth: 0,
-                  }}
-                  activeDot={{
-                    r: 6,
-                    strokeWidth: 3,
-                    stroke: "#f87171",
-                  }}
-                />
-              </LineChart>
-            </ChartContainer>
+                    <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={8}
+                      width={60}
+                      tickFormatter={(value) => {
+                        const symbols = {
+                          NGN: "₦",
+                          USD: "$",
+                          GBP: "£",
+                          EUR: "€",
+                        };
+
+                        return `${symbols[currency] || "₦"}${Number(
+                          value,
+                        ).toLocaleString("en-NG", {
+                          notation: "compact",
+                        })}`;
+                      }}
+                    />
+
+                    <ChartTooltip
+                      cursor={{
+                        stroke: "#ffffff",
+                        strokeOpacity: 0.1,
+                      }}
+                      content={
+                        <ChartTooltipContent
+                          formatter={(value) => formatCurrency(value, currency)}
+                        />
+                      }
+                    />
+
+                    <Line
+                      type="monotone"
+                      dataKey="income"
+                      name="Income"
+                      stroke="var(--color-income)"
+                      strokeWidth={3}
+                      dot={{
+                        r: 4,
+                        fill: "#049552",
+                        strokeWidth: 0,
+                      }}
+                      activeDot={{
+                        r: 6,
+                        strokeWidth: 3,
+                        stroke: "#049552",
+                      }}
+                    />
+
+                    <Line
+                      type="monotone"
+                      dataKey="expenses"
+                      name="Expenses"
+                      stroke="var(--color-expenses)"
+                      strokeWidth={3}
+                      dot={{
+                        r: 4,
+                        fill: "#f87171",
+                        strokeWidth: 0,
+                      }}
+                      activeDot={{
+                        r: 6,
+                        strokeWidth: 3,
+                        stroke: "#f87171",
+                      }}
+                    />
+                  </LineChart>
+                </ChartContainer>
+              </div>
+            </div>
 
             {/* LEGEND */}
             <div className="mt-4 flex justify-center gap-6">
