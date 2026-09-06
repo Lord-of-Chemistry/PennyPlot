@@ -872,7 +872,7 @@ function Settings() {
         </Card>
 
         {/* Danger Zone */}
-        <Card className="border-red-500/15 bg-red-500/[0.02]">
+        <Card className="border-red-500/15 bg-red-500/0.02">
           <CardHeader>
             <div className="flex items-center gap-3">
               <AlertTriangle size={20} className="text-red-400" />
@@ -939,7 +939,7 @@ function Settings() {
             <div className="mt-5 border-t border-white/10 pt-4">
               <p className="text-xs leading-5 text-gray-600">
                 Your current data is stored locally on this device. Cloud
-                synchronization can be added later.
+                synchronization will be added soon.
               </p>
             </div>
           </CardContent>

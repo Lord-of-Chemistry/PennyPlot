@@ -8,19 +8,16 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-import { ScrollArea } from "@/components/ui/scroll-area";
-
-import { Button } from "@/components/ui/button";
-
-import { Badge } from "@/components/ui/badge";
-
-import { Separator } from "@/components/ui/separator";
-
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 import {
   markNotificationAsRead,
@@ -69,9 +66,7 @@ function NotificationCenter({ notifications = [], setNotifications }) {
 
     const difference = Math.floor((now - date) / 1000);
 
-    if (difference < 60) {
-      return "Just now";
-    }
+    if (difference < 60) return "Just now";
 
     if (difference < 3600) {
       return `${Math.floor(difference / 60)}m ago`;
@@ -114,22 +109,24 @@ function NotificationCenter({ notifications = [], setNotifications }) {
     <Popover>
       <Tooltip>
         <TooltipTrigger asChild>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative h-10 w-10 rounded-xl text-gray-300 hover:bg-white/[0.06] hover:text-white"
-              aria-label="Notifications"
-            >
-              <Bell size={19} />
+          <div>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative h-10 w-10 rounded-xl text-gray-300 hover:bg-white/[0.06] hover:text-white"
+                aria-label="Notifications"
+              >
+                <Bell size={19} />
 
-              {unreadCount > 0 && (
-                <Badge className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-[#0f1714] bg-[#049552] px-1 text-[10px] font-bold text-white">
-                  {unreadCount > 99 ? "99+" : unreadCount}
-                </Badge>
-              )}
-            </Button>
-          </PopoverTrigger>
+                {unreadCount > 0 && (
+                  <Badge className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-[#0f1714] bg-[#049552] px-1 text-[10px] font-bold text-white">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+          </div>
         </TooltipTrigger>
 
         <TooltipContent>Notifications</TooltipContent>
@@ -179,7 +176,7 @@ function NotificationCenter({ notifications = [], setNotifications }) {
 
         <Separator className="bg-white/10" />
 
-        {/* Notifications */}
+        {/* Empty state */}
         {notifications.length === 0 ? (
           <div className="flex min-h-[240px] flex-col items-center justify-center px-6 text-center">
             <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#049552]/10">
@@ -265,6 +262,7 @@ function NotificationCenter({ notifications = [], setNotifications }) {
 
             <Separator className="bg-white/10" />
 
+            {/* Footer */}
             <div className="flex items-center justify-between px-4 py-3">
               <Button
                 variant="ghost"
