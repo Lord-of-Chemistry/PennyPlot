@@ -37,7 +37,7 @@ function LandingPage() {
             {/* Description */}
             <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
               Track your spending, manage budgets, and understand where your
-              money goes — all in one simple place.
+              money goes, all in one simple place.
             </p>
 
             {/* Buttons */}
