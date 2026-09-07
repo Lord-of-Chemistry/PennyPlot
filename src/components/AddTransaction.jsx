@@ -2,7 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { Plus, X, Wallet, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
-import { getCurrencyName, getCurrencySymbol } from "../utils/currency";
+import {
+  getCurrencyName,
+  getCurrencySymbol,
+} from "../utils/currency";
 import DatePicker from "../components/DatePicker";
 
 const defaultIncomeCategories = [
@@ -35,35 +38,50 @@ const defaultExpenseCategories = [
 function AddTransaction() {
   const { setTransactions } = useOutletContext();
   const { dateFormat } = useOutletContext();
+
   const [type, setType] = useState("expense");
-  const [description, setDescription] = useState("");
-  const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState("Food");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-  const [error, setError] = useState("");
+  const [description, setDescription] =
+    useState("");
+  const [amount, setAmount] =
+    useState("");
+  const [category, setCategory] =
+    useState("Food");
+  const [date, setDate] = useState(
+    new Date().toISOString().split("T")[0],
+  );
+  const [error, setError] =
+    useState("");
 
-  const [typeOpen, setTypeOpen] = useState(false);
-  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [typeOpen, setTypeOpen] =
+    useState(false);
+  const [categoryOpen, setCategoryOpen] =
+    useState(false);
 
-  const [customIncomeCategories, setCustomIncomeCategories] = useState(() => {
-    try {
-      return JSON.parse(
-        localStorage.getItem("pennyplot-custom-income-categories") || "[]",
-      );
-    } catch {
-      return [];
-    }
-  });
+  const [customIncomeCategories, setCustomIncomeCategories] =
+    useState(() => {
+      try {
+        return JSON.parse(
+          localStorage.getItem(
+            "pennyplot-custom-income-categories",
+          ) || "[]",
+        );
+      } catch {
+        return [];
+      }
+    });
 
-  const [customExpenseCategories, setCustomExpenseCategories] = useState(() => {
-    try {
-      return JSON.parse(
-        localStorage.getItem("pennyplot-custom-expense-categories") || "[]",
-      );
-    } catch {
-      return [];
-    }
-  });
+  const [customExpenseCategories, setCustomExpenseCategories] =
+    useState(() => {
+      try {
+        return JSON.parse(
+          localStorage.getItem(
+            "pennyplot-custom-expense-categories",
+          ) || "[]",
+        );
+      } catch {
+        return [];
+      }
+    });
 
   const dropdownRef = useRef(null);
 
@@ -74,21 +92,25 @@ function AddTransaction() {
   useEffect(() => {
     function handleStorageChange(event) {
       if (
-        event.key === "pennyplot-custom-income-categories" ||
-        event.key === "pennyplot-custom-expense-categories"
+        event.key ===
+          "pennyplot-custom-income-categories" ||
+        event.key ===
+          "pennyplot-custom-expense-categories"
       ) {
         try {
           setCustomIncomeCategories(
             JSON.parse(
-              localStorage.getItem("pennyplot-custom-income-categories") ||
-                "[]",
+              localStorage.getItem(
+                "pennyplot-custom-income-categories",
+              ) || "[]",
             ),
           );
 
           setCustomExpenseCategories(
             JSON.parse(
-              localStorage.getItem("pennyplot-custom-expense-categories") ||
-                "[]",
+              localStorage.getItem(
+                "pennyplot-custom-expense-categories",
+              ) || "[]",
             ),
           );
         } catch {
@@ -98,10 +120,16 @@ function AddTransaction() {
       }
     }
 
-    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener(
+      "storage",
+      handleStorageChange,
+    );
 
     return () => {
-      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener(
+        "storage",
+        handleStorageChange,
+      );
     };
   }, []);
 
@@ -114,13 +142,17 @@ function AddTransaction() {
       try {
         setCustomIncomeCategories(
           JSON.parse(
-            localStorage.getItem("pennyplot-custom-income-categories") || "[]",
+            localStorage.getItem(
+              "pennyplot-custom-income-categories",
+            ) || "[]",
           ),
         );
 
         setCustomExpenseCategories(
           JSON.parse(
-            localStorage.getItem("pennyplot-custom-expense-categories") || "[]",
+            localStorage.getItem(
+              "pennyplot-custom-expense-categories",
+            ) || "[]",
           ),
         );
       } catch {
@@ -129,33 +161,56 @@ function AddTransaction() {
       }
     }
 
-    window.addEventListener("focus", refreshCategories);
+    window.addEventListener(
+      "focus",
+      refreshCategories,
+    );
 
     return () => {
-      window.removeEventListener("focus", refreshCategories);
+      window.removeEventListener(
+        "focus",
+        refreshCategories,
+      );
     };
   }, []);
 
   const categories =
     type === "income"
-      ? [...defaultIncomeCategories, ...customIncomeCategories]
-      : [...defaultExpenseCategories, ...customExpenseCategories];
+      ? [
+          ...defaultIncomeCategories,
+          ...customIncomeCategories,
+        ]
+      : [
+          ...defaultExpenseCategories,
+          ...customExpenseCategories,
+        ];
 
   /*
     Close dropdowns when clicking outside.
   */
   useEffect(() => {
     function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(
+          event.target,
+        )
+      ) {
         setTypeOpen(false);
         setCategoryOpen(false);
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener(
+      "mousedown",
+      handleClickOutside,
+    );
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside,
+      );
     };
   }, []);
 
@@ -170,20 +225,31 @@ function AddTransaction() {
       }
     }
 
-    document.addEventListener("keydown", handleEscape);
+    document.addEventListener(
+      "keydown",
+      handleEscape,
+    );
 
     return () => {
-      document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener(
+        "keydown",
+        handleEscape,
+      );
     };
   }, []);
 
   function formatAmount(value) {
     if (!value) return "";
-    return Number(value).toLocaleString("en-NG");
+
+    return Number(value).toLocaleString(
+      "en-NG",
+    );
   }
 
   function handleAmountChange(e) {
-    const numbersOnly = e.target.value.replace(/\D/g, "");
+    const numbersOnly =
+      e.target.value.replace(/\D/g, "");
+
     setAmount(numbersOnly);
   }
 
@@ -192,45 +258,78 @@ function AddTransaction() {
     setError("");
 
     if (!description.trim()) {
-      setError("Please enter a description.");
-      toast.error("Please enter a description.");
+      setError(
+        "Please enter a description.",
+      );
+
+      toast.error(
+        "Please enter a description.",
+      );
+
       return;
     }
 
     const numericAmount = Number(amount);
 
-    if (!numericAmount || numericAmount <= 0) {
-      setError("Please enter a valid amount.");
-      toast.error("Please enter a valid amount.");
+    if (
+      !numericAmount ||
+      numericAmount <= 0
+    ) {
+      setError(
+        "Please enter a valid amount.",
+      );
+
+      toast.error(
+        "Please enter a valid amount.",
+      );
+
       return;
     }
 
     if (!date) {
-      setError("Please select a date.");
-      toast.error("Please select a date.");
+      setError(
+        "Please select a date.",
+      );
+
+      toast.error(
+        "Please select a date.",
+      );
+
       return;
     }
 
     const newTransaction = {
       id: Date.now(),
       type,
-      description: description.trim(),
+      description:
+        description.trim(),
       amount: numericAmount,
       category,
       date,
     };
 
-    setTransactions((prev) => [newTransaction, ...prev]);
+    setTransactions((prev) => [
+      newTransaction,
+      ...prev,
+    ]);
 
     toast.success(
-      `${type === "income" ? "Income" : "Expense"} added successfully.`,
+      `${
+        type === "income"
+          ? "Income"
+          : "Expense"
+      } added successfully.`,
     );
 
     setDescription("");
     setAmount("");
     setType("expense");
     setCategory("Food");
-    setDate(new Date().toISOString().split("T")[0]);
+    setDate(
+      new Date()
+        .toISOString()
+        .split("T")[0],
+    );
     setError("");
 
     setTypeOpen(false);
@@ -255,20 +354,20 @@ function AddTransaction() {
 
   return (
     <section className="w-full">
-      <div className="relative z-10 overflow-visible rounded-3xl border-2 border-[#049552]/30 bg-[#1b2922] pt-2 shadow-2xl shadow-black/30">
+      <div className="relative z-10 overflow-visible rounded-3xl border-2 border-primary/30 bg-card pt-2 shadow-2xl shadow-black/30">
         {/* Header */}
-        <div className="border-b border-white/10 px-5 py-6 md:px-7">
+        <div className="border-b border-border px-5 py-6 md:px-7">
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#049552]/15 text-[#049552] ring-1 ring-[#049552]/20">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/15 text-primary ring-1 ring-primary/20">
               <Wallet size={21} />
             </div>
 
             <div>
-              <h2 className="text-xl font-semibold text-white">
+              <h2 className="text-xl font-semibold text-foreground">
                 Add Transaction
               </h2>
 
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Record a new income or expense
               </p>
             </div>
@@ -277,85 +376,112 @@ function AddTransaction() {
 
         {/* Form */}
         <div className="p-5 md:p-7">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6"
+          >
             {/* Description */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-300">
+              <label className="mb-2 block text-sm font-medium text-muted-foreground">
                 Description
               </label>
 
               <input
                 type="text"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) =>
+                  setDescription(
+                    e.target.value,
+                  )
+                }
                 placeholder="e.g. Lunch, Salary, Transport"
-                className="w-full rounded-xl border border-white/15 bg-[#0f1714] px-4 py-3 text-sm text-white outline-none transition-all duration-200 placeholder:text-gray-600 hover:border-white/25 focus:border-[#049552] focus:ring-2 focus:ring-[#049552]/15"
+                className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition-all duration-200 placeholder:text-muted-foreground/50 hover:border-border/80 focus:border-primary focus:ring-2 focus:ring-primary/15"
               />
             </div>
 
             {/* Amount */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-300">
+              <label className="mb-2 block text-sm font-medium text-muted-foreground">
                 Amount
               </label>
 
-              <div className="flex overflow-hidden rounded-xl border border-white/15 bg-[#0f1714] transition-all duration-200 hover:border-white/25 focus-within:border-[#049552] focus-within:ring-2 focus-within:ring-[#049552]/15">
-                <div className="flex items-center border-r border-white/15 bg-white/[0.02] px-4 text-base font-bold text-[#049552]">
+              <div className="flex overflow-hidden rounded-xl border border-border bg-background transition-all duration-200 hover:border-border/80 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15">
+                <div className="flex items-center border-r border-border bg-foreground/[0.02] px-4 text-base font-bold text-primary">
                   {getCurrencySymbol()}
                 </div>
 
                 <input
                   type="text"
                   inputMode="numeric"
-                  value={formatAmount(amount)}
-                  onChange={handleAmountChange}
+                  value={formatAmount(
+                    amount,
+                  )}
+                  onChange={
+                    handleAmountChange
+                  }
                   placeholder="0"
-                  className="w-full bg-transparent px-4 py-3 text-sm text-white outline-none placeholder:text-gray-600"
+                  className="w-full bg-transparent px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/50"
                 />
               </div>
 
-              <p className="mt-2 text-xs text-gray-600 transition-all duration-200">
+              <p className="mt-2 text-xs text-muted-foreground/60 transition-all duration-200">
                 {amount
-                  ? `${getCurrencySymbol()}${formatAmount(amount)}`
+                  ? `${getCurrencySymbol()}${formatAmount(
+                      amount,
+                    )}`
                   : `Enter amount in ${getCurrencyName()}`}
               </p>
             </div>
 
             {/* Type / Category / Date */}
-            <div ref={dropdownRef} className="grid gap-5 md:grid-cols-3">
+            <div
+              ref={dropdownRef}
+              className="grid gap-5 md:grid-cols-3"
+            >
               {/* Type */}
               <div className="relative z-50">
-                <label className="mb-2 block text-sm font-medium text-gray-300">
+                <label className="mb-2 block text-sm font-medium text-muted-foreground">
                   Type
                 </label>
 
                 <button
                   type="button"
                   onClick={() => {
-                    setTypeOpen((prev) => !prev);
-                    setCategoryOpen(false);
+                    setTypeOpen(
+                      (prev) => !prev,
+                    );
+
+                    setCategoryOpen(
+                      false,
+                    );
                   }}
-                  className="flex w-full items-center justify-between rounded-xl border border-white/15 bg-[#0f1714] px-4 py-3 text-sm text-white outline-none transition-all duration-200 hover:border-white/25 focus:border-[#049552] focus:ring-2 focus:ring-[#049552]/15"
+                  className="flex w-full items-center justify-between rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition-all duration-200 hover:border-border/80 focus:border-primary focus:ring-2 focus:ring-primary/15"
                 >
                   <span
                     className={
-                      type === "income" ? "text-[#049552]" : "text-red-400"
+                      type === "income"
+                        ? "text-primary"
+                        : "text-red-400"
                     }
                   >
-                    {type === "expense" ? "Expense" : "Income"}
+                    {type === "expense"
+                      ? "Expense"
+                      : "Income"}
                   </span>
 
                   <ChevronDown
                     size={17}
-                    className={`text-gray-500 transition-transform duration-200 ${
-                      typeOpen ? "rotate-180" : ""
+                    className={`text-muted-foreground transition-transform duration-200 ${
+                      typeOpen
+                        ? "rotate-180"
+                        : ""
                     }`}
                   />
                 </button>
 
                 {/* Type Dropdown */}
                 <div
-                  className={`absolute bottom-full left-0 right-0 z-50 mb-2 origin-bottom rounded-xl border border-white/15 bg-[#17221d] p-1.5 shadow-2xl shadow-black/50 ring-1 ring-black/20 transition-all duration-200 ease-out md:top-full md:bottom-auto md:mt-2 md:mb-0 md:origin-top ${
+                  className={`absolute bottom-full left-0 right-0 z-50 mb-2 origin-bottom rounded-xl border border-border bg-popover p-1.5 shadow-2xl shadow-black/50 ring-1 ring-black/20 transition-all duration-200 ease-out md:top-full md:bottom-auto md:mt-2 md:mb-0 md:origin-top ${
                     typeOpen
                       ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
                       : "pointer-events-none translate-y-1 scale-95 opacity-0"
@@ -363,11 +489,15 @@ function AddTransaction() {
                 >
                   <button
                     type="button"
-                    onClick={() => selectType("expense")}
+                    onClick={() =>
+                      selectType(
+                        "expense",
+                      )
+                    }
                     className={`flex w-full rounded-lg px-3 py-2.5 text-left text-sm transition-all duration-150 ${
                       type === "expense"
                         ? "bg-red-500/10 text-red-400"
-                        : "text-gray-300 hover:bg-white/5 hover:text-white"
+                        : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
                     }`}
                   >
                     Expense
@@ -375,11 +505,15 @@ function AddTransaction() {
 
                   <button
                     type="button"
-                    onClick={() => selectType("income")}
+                    onClick={() =>
+                      selectType(
+                        "income",
+                      )
+                    }
                     className={`mt-1 flex w-full rounded-lg px-3 py-2.5 text-left text-sm transition-all duration-150 ${
                       type === "income"
-                        ? "bg-[#049552]/10 text-[#049552]"
-                        : "text-gray-300 hover:bg-white/5 hover:text-white"
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
                     }`}
                   >
                     Income
@@ -389,58 +523,74 @@ function AddTransaction() {
 
               {/* Category */}
               <div className="relative z-50">
-                <label className="mb-2 block text-sm font-medium text-gray-300">
+                <label className="mb-2 block text-sm font-medium text-muted-foreground">
                   Category
                 </label>
 
                 <button
                   type="button"
                   onClick={() => {
-                    setCategoryOpen((prev) => !prev);
+                    setCategoryOpen(
+                      (prev) => !prev,
+                    );
+
                     setTypeOpen(false);
                   }}
-                  className="flex w-full items-center justify-between rounded-xl border border-white/15 bg-[#0f1714] px-4 py-3 text-sm text-white outline-none transition-all duration-200 hover:border-white/25 focus:border-[#049552] focus:ring-2 focus:ring-[#049552]/15"
+                  className="flex w-full items-center justify-between rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition-all duration-200 hover:border-border/80 focus:border-primary focus:ring-2 focus:ring-primary/15"
                 >
-                  <span className="truncate">{category}</span>
+                  <span className="truncate">
+                    {category}
+                  </span>
 
                   <ChevronDown
                     size={17}
-                    className={`shrink-0 text-gray-500 transition-transform duration-200 ${
-                      categoryOpen ? "rotate-180" : ""
+                    className={`shrink-0 text-muted-foreground transition-transform duration-200 ${
+                      categoryOpen
+                        ? "rotate-180"
+                        : ""
                     }`}
                   />
                 </button>
 
                 {/* Category Dropdown */}
-<div
-  className={`absolute bottom-full left-0 right-0 z-50 mb-2 origin-bottom rounded-xl border border-white/15 bg-[#17221d] shadow-2xl shadow-black/50 ring-1 ring-black/20 transition-all duration-200 ease-out md:top-full md:bottom-auto md:mt-2 md:mb-0 md:origin-top ${
-    categoryOpen
-      ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
-      : "pointer-events-none translate-y-1 scale-95 opacity-0"
-  }`}
->
-  <div className="max-h-60 overflow-y-auto overscroll-contain p-1.5 [scrollbar-width:thin] [scrollbar-color:#049552_transparent]">
-    {categories.map((item) => (
-      <button
-        key={item}
-        type="button"
-        onClick={() => selectCategory(item)}
-        className={`flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm transition-all duration-150 ${
-          category === item
-            ? "bg-[#049552]/10 text-[#049552]"
-            : "text-gray-300 hover:bg-white/5 hover:text-white"
-        }`}
-      >
-        <span className="truncate">{item}</span>
-      </button>
-    ))}
-  </div>
-</div>
+                <div
+                  className={`absolute bottom-full left-0 right-0 z-50 mb-2 origin-bottom rounded-xl border border-border bg-popover shadow-2xl shadow-black/50 ring-1 ring-black/20 transition-all duration-200 ease-out md:top-full md:bottom-auto md:mt-2 md:mb-0 md:origin-top md:mr-5 ${
+                    categoryOpen
+                      ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
+                      : "pointer-events-none translate-y-1 scale-95 opacity-0"
+                  }`}
+                >
+                  <div className="max-h-60 overflow-y-auto overscroll-contain p-1.5 scrollbar-width:thin [scrollbar-color:var(--primary)_transparent]">
+                    {categories.map(
+                      (item) => (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() =>
+                            selectCategory(
+                              item,
+                            )
+                          }
+                          className={`flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm transition-all duration-150 ${
+                            category ===
+                            item
+                              ? "bg-primary/10 text-primary"
+                              : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
+                          }`}
+                        >
+                          <span className="truncate">
+                            {item}
+                          </span>
+                        </button>
+                      ),
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Date */}
               <div className="relative z-10">
-                <label className="mb-2 block text-sm font-medium text-gray-300">
+                <label className="mb-2 block text-sm font-medium text-muted-foreground">
                   Date
                 </label>
 
@@ -466,7 +616,9 @@ function AddTransaction() {
 
                   <button
                     type="button"
-                    onClick={() => setError("")}
+                    onClick={() =>
+                      setError("")
+                    }
                     className="transition-colors duration-150 hover:text-red-300"
                   >
                     <X size={16} />
@@ -478,9 +630,12 @@ function AddTransaction() {
             {/* Submit */}
             <button
               type="submit"
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#049552] px-4 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#049552]/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#038448] hover:shadow-[#049552]/30 active:translate-y-0 active:scale-[0.99]"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-primary/30 active:translate-y-0 active:scale-[0.99]"
             >
-              <Plus size={18} className="transition-transform duration-200" />
+              <Plus
+                size={18}
+                className="transition-transform duration-200"
+              />
               Add Transaction
             </button>
           </form>

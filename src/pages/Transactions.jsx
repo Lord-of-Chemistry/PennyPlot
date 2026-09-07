@@ -69,7 +69,10 @@ function CustomDropdown({
 
   useEffect(() => {
     function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
         setIsOpen(false);
       }
     }
@@ -129,10 +132,10 @@ function CustomDropdown({
         onClick={() => setIsOpen((previous) => !previous)}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        className={`flex w-full items-center justify-between gap-3 rounded-xl border bg-[#1b2922] px-4 py-3 text-sm text-white outline-none transition-all duration-200 ${
+        className={`flex w-full items-center justify-between gap-3 rounded-xl border bg-accent px-4 py-3 text-sm text-foreground outline-none transition-all duration-200 ${
           isOpen
-            ? "border-[#049552] bg-[#1b2922] ring-1 ring-[#049552]/30"
-            : "border-white/10 hover:border-white/20 hover:bg-[#22332b]"
+            ? "border-primary bg-accent ring-1 ring-primary/30"
+            : "border-border hover:border-border/80 hover:bg-secondary"
         }`}
       >
         <span className="flex min-w-0 items-center gap-3">
@@ -140,14 +143,16 @@ function CustomDropdown({
             <Icon
               size={16}
               className={`shrink-0 transition-colors duration-200 ${
-                isOpen ? "text-[#049552]" : "text-gray-500"
+                isOpen ? "text-primary" : "text-muted-foreground"
               }`}
             />
           )}
 
           <span
             className={`truncate ${
-              selectedOption ? "text-white" : "text-gray-500"
+              selectedOption
+                ? "text-foreground"
+                : "text-muted-foreground"
             }`}
           >
             {selectedOption?.label || placeholder}
@@ -156,8 +161,8 @@ function CustomDropdown({
 
         <ChevronDown
           size={16}
-          className={`shrink-0 text-gray-500 transition-all duration-200 ${
-            isOpen ? "rotate-180 text-[#049552]" : ""
+          className={`shrink-0 text-muted-foreground transition-all duration-200 ${
+            isOpen ? "rotate-180 text-primary" : ""
           }`}
         />
       </button>
@@ -167,13 +172,12 @@ function CustomDropdown({
       ========================= */}
 
       <div
-        className={`absolute left-0 top-[calc(100%+8px)] z-[60] w-full min-w-[180px] origin-top rounded-xl border border-white/10 bg-[#1b2922] p-1.5 shadow-2xl shadow-black/40 transition-all duration-200 ${
+        className={`absolute left-0 top-[calc(100%+8px)] z-[60] w-full min-w-[180px] origin-top rounded-xl border border-border bg-popover p-1.5 shadow-2xl shadow-black/40 transition-all duration-200 ${
           isOpen
             ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
             : "pointer-events-none -translate-y-2 scale-95 opacity-0"
         }`}
       >
-        
         {/* =========================
             SCROLLABLE OPTIONS
         ========================= */}
@@ -187,7 +191,7 @@ function CustomDropdown({
           }}
         >
           {options.length === 0 ? (
-            <div className="px-3 py-3 text-sm text-gray-500">
+            <div className="px-3 py-3 text-sm text-muted-foreground">
               No options available
             </div>
           ) : (
@@ -204,14 +208,14 @@ function CustomDropdown({
                   onClick={() => handleSelect(option)}
                   className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-all duration-150 ${
                     isSelected
-                      ? "bg-[#049552]/10 text-[#8ff0bc]"
-                      : "text-gray-300 hover:bg-white/[0.06] hover:text-white"
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground"
                   }`}
                 >
                   <span className="min-w-0 truncate">{option.label}</span>
 
                   {isSelected && (
-                    <Check size={15} className="shrink-0 text-[#049552]" />
+                    <Check size={15} className="shrink-0 text-primary" />
                   )}
                 </button>
               );
@@ -253,13 +257,15 @@ function Transactions() {
     }
   });
 
-  const [customExpenseCategories, setCustomExpenseCategories] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem(CUSTOM_EXPENSE_KEY) || "[]");
-    } catch {
-      return [];
-    }
-  });
+  const [customExpenseCategories, setCustomExpenseCategories] = useState(
+    () => {
+      try {
+        return JSON.parse(localStorage.getItem(CUSTOM_EXPENSE_KEY) || "[]");
+      } catch {
+        return [];
+      }
+    },
+  );
 
   function loadCustomCategories() {
     try {
@@ -271,7 +277,9 @@ function Transactions() {
         localStorage.getItem(CUSTOM_EXPENSE_KEY) || "[]",
       );
 
-      setCustomIncomeCategories(Array.isArray(savedIncome) ? savedIncome : []);
+      setCustomIncomeCategories(
+        Array.isArray(savedIncome) ? savedIncome : [],
+      );
 
       setCustomExpenseCategories(
         Array.isArray(savedExpense) ? savedExpense : [],
@@ -284,7 +292,10 @@ function Transactions() {
 
   useEffect(() => {
     function handleStorageChange(event) {
-      if (event.key === CUSTOM_INCOME_KEY || event.key === CUSTOM_EXPENSE_KEY) {
+      if (
+        event.key === CUSTOM_INCOME_KEY ||
+        event.key === CUSTOM_EXPENSE_KEY
+      ) {
         loadCustomCategories();
       }
     }
@@ -612,16 +623,16 @@ function Transactions() {
   ========================= */
 
   return (
-    <div className="min-h-screen bg-[#0f1714] text-white">
+    <div className="min-h-screen bg-background text-foreground">
       {/* =========================
           HEADER
       ========================= */}
 
       <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Transactions</h1>
+          <h1 className="text-3xl font-bold text-foreground">Transactions</h1>
 
-          <p className="mt-1 text-sm text-gray-400">
+          <p className="mt-1 text-sm text-muted-foreground">
             View and manage all your financial activity.
           </p>
         </div>
@@ -634,8 +645,8 @@ function Transactions() {
             onClick={() => setIsDownloadOpen((previous) => !previous)}
             className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
               isDownloadOpen
-                ? "border-[#049552] bg-[#049552]/10 text-[#8ff0bc]"
-                : "border-white/10 bg-[#1b2922] text-gray-300 hover:border-white/20 hover:bg-[#22332b] hover:text-white"
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border bg-accent text-muted-foreground hover:border-border/80 hover:bg-secondary hover:text-foreground"
             }`}
           >
             <Download size={16} />
@@ -645,7 +656,9 @@ function Transactions() {
             <ChevronDown
               size={15}
               className={`transition-transform duration-200 ${
-                isDownloadOpen ? "rotate-180 text-[#049552]" : "text-gray-500"
+                isDownloadOpen
+                  ? "rotate-180 text-primary"
+                  : "text-muted-foreground"
               }`}
             />
           </button>
@@ -653,7 +666,7 @@ function Transactions() {
           {/* Download Dropdown */}
 
           <div
-            className={`absolute right-0 top-[calc(100%+8px)] z-50 w-64 origin-top-right rounded-xl border border-white/10 bg-[#1b2922] p-1.5 shadow-2xl shadow-black/40 transition-all duration-200 ${
+            className={`absolute right-0 top-[calc(100%+8px)] z-50 w-64 origin-top-right rounded-xl border border-border bg-popover p-1.5 shadow-2xl shadow-black/40 transition-all duration-200 ${
               isDownloadOpen
                 ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
                 : "pointer-events-none -translate-y-2 scale-95 opacity-0"
@@ -667,16 +680,18 @@ function Transactions() {
                 downloadTransactions();
                 setIsDownloadOpen(false);
               }}
-              className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-white/[0.06]"
+              className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-foreground/[0.06]"
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#049552]/10 text-[#8ff0bc] transition-colors group-hover:bg-[#049552]/15">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary/15">
                 <Download size={16} />
               </div>
 
               <div className="min-w-0">
-                <p className="text-sm font-medium text-white">CSV</p>
+                <p className="text-sm font-medium text-foreground">CSV</p>
 
-                <p className="mt-0.5 text-xs text-gray-500">All transactions</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  All transactions
+                </p>
               </div>
             </button>
 
@@ -694,7 +709,9 @@ function Transactions() {
                 try {
                   downloadTransactionsPDF(transactions, currency);
 
-                  toast.success("Transaction report exported successfully.");
+                  toast.success(
+                    "Transaction report exported successfully.",
+                  );
                 } catch (error) {
                   console.error("PDF export failed:", error);
 
@@ -703,16 +720,18 @@ function Transactions() {
 
                 setIsDownloadOpen(false);
               }}
-              className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-white/[0.06]"
+              className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-foreground/[0.06]"
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#049552]/10 text-[#8ff0bc]">
-                <span className="text-[10px] font-bold tracking-wide">PDF</span>
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <span className="text-[10px] font-bold tracking-wide">
+                  PDF
+                </span>
               </div>
 
               <div className="min-w-0">
-                <p className="text-sm font-medium text-white">PDF</p>
+                <p className="text-sm font-medium text-foreground">PDF</p>
 
-                <p className="mt-0.5 text-xs text-gray-500">
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   Transaction report
                 </p>
               </div>
@@ -726,16 +745,18 @@ function Transactions() {
                 downloadTransactionsAsPNG();
                 setIsDownloadOpen(false);
               }}
-              className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-white/[0.06]"
+              className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-foreground/[0.06]"
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#049552]/10 text-[#8ff0bc]">
-                <span className="text-[10px] font-bold tracking-wide">PNG</span>
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <span className="text-[10px] font-bold tracking-wide">
+                  PNG
+                </span>
               </div>
 
               <div className="min-w-0">
-                <p className="text-sm font-medium text-white">PNG</p>
+                <p className="text-sm font-medium text-foreground">PNG</p>
 
-                <p className="mt-0.5 text-xs text-gray-500">
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   Transaction summary
                 </p>
               </div>
@@ -748,14 +769,14 @@ function Transactions() {
           FILTERS
       ========================= */}
 
-      <div className="rounded-2xl border border-white/10 bg-[#22332b]/50 p-4">
+      <div className="rounded-2xl border border-border bg-card/50 p-4">
         <div className="grid gap-3 lg:grid-cols-[1fr_auto_auto_auto]">
           {/* Search */}
 
           <div className="group relative">
             <Search
               size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 transition-colors duration-200 group-focus-within:text-[#049552]"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors duration-200 group-focus-within:text-primary"
             />
 
             <input
@@ -763,7 +784,7 @@ function Transactions() {
               placeholder="Search transactions..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-3 pl-11 pr-4 text-sm text-white outline-none transition-all duration-200 placeholder:text-gray-600 focus:border-[#049552] focus:ring-1 focus:ring-[#049552]/30"
+              className="w-full rounded-xl border border-border bg-foreground/[0.04] py-3 pl-11 pr-4 text-sm text-foreground outline-none transition-all duration-200 placeholder:text-muted-foreground/60 focus:border-primary focus:ring-1 focus:ring-primary/30"
             />
           </div>
 
@@ -802,12 +823,14 @@ function Transactions() {
       ========================= */}
 
       <div className="mt-6 flex items-center justify-between">
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-muted-foreground">
           Showing{" "}
-          <span className="font-medium text-white">
+          <span className="font-medium text-foreground">
             {filteredTransactions.length}
           </span>{" "}
-          {filteredTransactions.length === 1 ? "transaction" : "transactions"}
+          {filteredTransactions.length === 1
+            ? "transaction"
+            : "transactions"}
         </p>
 
         {(search || typeFilter !== "all" || categoryFilter !== "all") && (
@@ -817,7 +840,7 @@ function Transactions() {
               setTypeFilter("all");
               setCategoryFilter("all");
             }}
-            className="flex items-center gap-1 text-xs text-gray-400 transition-all duration-200 hover:-translate-y-0.5 hover:text-white"
+            className="flex items-center gap-1 text-xs text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 hover:text-foreground"
           >
             <X size={14} />
             Clear filters
@@ -831,16 +854,16 @@ function Transactions() {
 
       <div className="mt-4 space-y-3">
         {filteredTransactions.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-white/10 bg-[#22332b]/30 px-5 py-16 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-gray-500">
+          <div className="rounded-2xl border border-dashed border-border bg-card/30 px-5 py-16 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-foreground/5 text-muted-foreground">
               <Search size={20} />
             </div>
 
-            <h2 className="mt-4 font-semibold text-white">
+            <h2 className="mt-4 font-semibold text-foreground">
               No transactions found
             </h2>
 
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-muted-foreground">
               {transactions.length === 0
                 ? "You haven't added any transactions yet."
                 : "Try changing your search or filters."}
@@ -853,7 +876,7 @@ function Transactions() {
             return (
               <div
                 key={transaction.id}
-                className="transaction-item rounded-2xl border border-white/10 bg-[#22332b]/40 p-4 transition hover:border-white/15"
+                className="transaction-item rounded-2xl border border-border bg-card/40 p-4 transition hover:border-border/80"
               >
                 {isEditing ? (
                   <div className="space-y-4">
@@ -869,13 +892,13 @@ function Transactions() {
                             description: e.target.value,
                           })
                         }
-                        className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition-all duration-200 focus:border-[#049552] focus:ring-1 focus:ring-[#049552]/30"
+                        className="rounded-xl border border-border bg-foreground/[0.04] px-4 py-3 text-sm text-foreground outline-none transition-all duration-200 focus:border-primary focus:ring-1 focus:ring-primary/30"
                       />
 
                       {/* Amount */}
 
-                      <div className="flex overflow-hidden rounded-xl border border-white/10 bg-white/[0.04] transition-all duration-200 focus-within:border-[#049552] focus-within:ring-1 focus-within:ring-[#049552]/30">
-                        <span className="flex items-center border-r border-white/10 px-4 text-gray-400">
+                      <div className="flex overflow-hidden rounded-xl border border-border bg-foreground/[0.04] transition-all duration-200 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/30">
+                        <span className="flex items-center border-r border-border px-4 text-muted-foreground">
                           {getCurrencySymbol(currency)}
                         </span>
 
@@ -883,8 +906,10 @@ function Transactions() {
                           type="text"
                           inputMode="numeric"
                           value={editData.amount}
-                          onChange={(e) => handleEditAmount(e.target.value)}
-                          className="w-full bg-transparent px-4 py-3 text-sm text-white outline-none"
+                          onChange={(e) =>
+                            handleEditAmount(e.target.value)
+                          }
+                          className="w-full bg-transparent px-4 py-3 text-sm text-foreground outline-none"
                         />
                       </div>
 
@@ -895,9 +920,8 @@ function Transactions() {
                         onChange={(value) => {
                           const newCategories = getCategoriesForType(value);
 
-                          const currentCategoryExists = newCategories.includes(
-                            editData.category,
-                          );
+                          const currentCategoryExists =
+                            newCategories.includes(editData.category);
 
                           setEditData({
                             ...editData,
@@ -956,7 +980,7 @@ function Transactions() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleSaveEdit(transaction.id)}
-                        className="flex items-center gap-2 rounded-xl bg-[#049552] px-4 py-2 text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#038448]"
+                        className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90"
                       >
                         <Check size={16} />
                         Save
@@ -964,7 +988,7 @@ function Transactions() {
 
                       <button
                         onClick={handleCancelEdit}
-                        className="flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2 text-sm text-gray-300 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/5"
+                        className="flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-foreground/5 hover:text-foreground"
                       >
                         <X size={16} />
                         Cancel
@@ -974,27 +998,31 @@ function Transactions() {
                 ) : (
                   <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div className="min-w-0">
-                      <p className="truncate font-medium text-white">
+                      <p className="truncate font-medium text-foreground">
                         {transaction.description}
                       </p>
 
-                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                         <span>{transaction.category}</span>
 
                         <span>•</span>
 
-                        <span>{formatDate(transaction.date, dateFormat)}</span>
+                        <span>
+                          {formatDate(transaction.date, dateFormat)}
+                        </span>
 
                         <span>•</span>
 
                         <span
                           className={
                             transaction.type === "income"
-                              ? "text-[#049552]"
+                              ? "text-primary"
                               : "text-red-400"
                           }
                         >
-                          {transaction.type === "income" ? "Income" : "Expense"}
+                          {transaction.type === "income"
+                            ? "Income"
+                            : "Expense"}
                         </span>
                       </div>
                     </div>
@@ -1003,7 +1031,7 @@ function Transactions() {
                       <span
                         className={
                           transaction.type === "income"
-                            ? "font-semibold text-[#049552]"
+                            ? "font-semibold text-primary"
                             : "font-semibold text-red-400"
                         }
                       >
@@ -1016,7 +1044,7 @@ function Transactions() {
 
                         <button
                           onClick={() => handleEdit(transaction)}
-                          className="rounded-lg p-2 text-gray-500 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/5 hover:text-white"
+                          className="rounded-lg p-2 text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-foreground/5 hover:text-foreground"
                           title="Edit transaction"
                         >
                           <Pencil size={16} />
@@ -1026,7 +1054,7 @@ function Transactions() {
 
                         <button
                           onClick={() => handleDelete(transaction.id)}
-                          className="rounded-lg p-2 text-gray-500 transition-all duration-200 hover:-translate-y-0.5 hover:bg-red-500/10 hover:text-red-400"
+                          className="rounded-lg p-2 text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-red-500/10 hover:text-red-400"
                           title="Delete transaction"
                         >
                           <Trash2 size={16} />

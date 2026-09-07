@@ -7,17 +7,19 @@ import Budgets from "./pages/Budgets";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import { Toaster } from "@/components/ui/sonner";
+import RecurringTransactions from "./pages/RecurringTransactions";
 
 function App() {
   return (
     <BrowserRouter>
-    <Toaster />
-    
+      <Toaster />
+
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<Navigate to="/dashboard" />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/transactions" element={<Transactions />} />
+          <Route path="/recurring" element={<RecurringTransactions />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/budgets" element={<Budgets />} />
           <Route path="/profile" element={<Profile />} />
