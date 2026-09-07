@@ -7,7 +7,6 @@ import {
   Wallet,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-
 import LandingNavbar from "../components/landing/LandingNavbar";
 
 function LandingPage() {
