@@ -424,28 +424,47 @@ function Layout() {
           isCollapsed ? "md:ml-20" : "md:ml-56"
         }`}
       >
-        {/* Sticky global header */}
-        <header className="sticky top-0 z-[100] border-b border-border/60 bg-background/95 px-4 py-3 backdrop-blur-md">
-          <div className="flex items-center justify-end gap-2">
-            <NotificationCenter
-              notifications={notifications}
-              setNotifications={setNotifications}
-            />
+      
+{/* Sticky global header */}
+<header className="sticky top-0 z-[100] border-b border-border/60 bg-background/95 px-4 py-3 backdrop-blur-md">
+  <div className="flex items-center justify-between gap-4">
+    {/* PennyPlot branding */}
+    <div className="flex items-center gap-2">
+      <img
+        src="/favicon.svg"
+        alt="PennyPlot"
+        className="h-8 w-8"
+      />
 
-            <div className="md:hidden">
-              <ProfileMenu profile={profile} mobile />
-            </div>
+      <span className="text-lg font-bold tracking-tight text-foreground">
+        Penny<span className="text-primary">Plot</span>
+      </span>
+    </div>
 
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-secondary-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <LogOut size={16} />
-              <span className="hidden sm:inline">Sign out</span>
-            </button>
-          </div>
-        </header>
+    {/* Header actions */}
+    <div className="ml-auto flex items-center gap-2">
+      <NotificationCenter
+        notifications={notifications}
+        setNotifications={setNotifications}
+      />
+
+      <div className="md:hidden">
+        <ProfileMenu profile={profile} mobile />
+      </div>
+
+      <button
+        type="button"
+        onClick={handleSignOut}
+        aria-label="Sign out"
+        title="Sign out"
+        className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-secondary-foreground transition-colors hover:bg-accent hover:text-foreground"
+      >
+        <LogOut size={16} />
+        <span className="hidden sm:inline">Sign out</span>
+      </button>
+    </div>
+  </div>
+</header>
 
         {/* Back online notification */}
         <div

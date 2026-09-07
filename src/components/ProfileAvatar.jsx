@@ -14,7 +14,9 @@ function ProfileAvatar({
 
   return (
     <div
-      className={`relative shrink-0 overflow-hidden rounded-full border border-white/10 bg-[#049552]/10 ${sizeClasses[size] || sizeClasses.md} ${className}`}
+      className={`relative shrink-0 overflow-hidden rounded-full border border-border bg-primary/10 ${
+        sizeClasses[size] || sizeClasses.md
+      } ${className}`}
     >
       {profile?.avatar ? (
         <img
@@ -23,7 +25,7 @@ function ProfileAvatar({
           className="h-full w-full object-cover"
         />
       ) : (
-        <div className="flex h-full w-full items-center justify-center font-semibold text-[#049552]">
+        <div className="flex h-full w-full items-center justify-center font-semibold text-primary">
           {getInitials(profile?.name)}
         </div>
       )}

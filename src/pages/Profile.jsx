@@ -52,11 +52,9 @@ function createCroppedImage(
       const sourceSize = cropSize / scale;
 
       let sourceX = (imageWidth - sourceSize) / 2 - position.x / scale;
-
       let sourceY = (imageHeight - sourceSize) / 2 - position.y / scale;
 
       sourceX = Math.max(0, Math.min(imageWidth - sourceSize, sourceX));
-
       sourceY = Math.max(0, Math.min(imageHeight - sourceSize, sourceY));
 
       context.drawImage(
@@ -81,24 +79,33 @@ function createCroppedImage(
 
 function Profile() {
   const { profile, setProfile, transactions, currency } = useOutletContext();
+
   const [isEditing, setIsEditing] = useState(false);
+
   const [formData, setFormData] = useState({
     name: profile?.name || "",
     email: profile?.email || "",
     bio: profile?.bio || "",
   });
+
   const [previewAvatar, setPreviewAvatar] = useState(profile?.avatar || "");
+
   const fileInputRef = useRef(null);
+
   const [cropImage, setCropImage] = useState(null);
+
   const [cropImageSize, setCropImageSize] = useState({
     width: 0,
     height: 0,
   });
+
   const [zoom, setZoom] = useState(1);
+
   const [position, setPosition] = useState({
     x: 0,
     y: 0,
   });
+
   const [isDragging, setIsDragging] = useState(false);
 
   const dragStartRef = useRef({
@@ -160,11 +167,11 @@ function Profile() {
   const thisMonthNet = thisMonthIncome - thisMonthExpenses;
 
   const thisMonthTransactionCount = thisMonthTransactions.length;
+
   const displayedWidth = baseWidth * zoom;
   const displayedHeight = baseHeight * zoom;
 
   const maxX = Math.max(0, (displayedWidth - CROP_SIZE) / 2);
-
   const maxY = Math.max(0, (displayedHeight - CROP_SIZE) / 2);
 
   function handleChange(event) {
@@ -219,7 +226,9 @@ function Profile() {
         });
 
         setCropImage(reader.result);
+
         setZoom(1);
+
         setPosition({
           x: 0,
           y: 0,
@@ -257,7 +266,6 @@ function Profile() {
     if (!isDragging) return;
 
     const deltaX = event.clientX - dragStartRef.current.pointerX;
-
     const deltaY = event.clientY - dragStartRef.current.pointerY;
 
     const newX = Math.max(
@@ -301,6 +309,7 @@ function Profile() {
       setCropImage(null);
 
       setZoom(1);
+
       setPosition({
         x: 0,
         y: 0,
@@ -315,15 +324,17 @@ function Profile() {
     <section className="mx-auto max-w-5xl">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="mt-1 text-3xl font-bold text-white">Your profile</h1>
+        <h1 className="mt-1 text-3xl font-bold text-foreground">
+          Your profile
+        </h1>
 
-        <p className="mt-2 text-sm text-gray-400">
+        <p className="mt-2 text-sm text-muted-foreground">
           Manage your personal information and profile details.
         </p>
       </div>
 
       {/* Profile Card */}
-      <div className="rounded-2xl border border-white/10 bg-[#1b2922] p-6 shadow-xl">
+      <div className="rounded-2xl border border-border bg-card p-6 shadow-xl shadow-black/10">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
           <ProfileAvatar
             profile={{
@@ -332,11 +343,13 @@ function Profile() {
             }}
             size="xl"
           />
+
           <div className="min-w-0 flex-1">
             {isEditing ? (
               <div className="space-y-4">
+                {/* Profile photo */}
                 <div>
-                  <p className="mb-2 text-sm font-medium text-gray-300">
+                  <p className="mb-2 text-sm font-medium text-secondary-foreground">
                     Profile photo
                   </p>
 
@@ -344,7 +357,7 @@ function Profile() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm font-medium text-gray-300 transition-colors hover:bg-white/[0.06] hover:text-white"
+                      className="rounded-xl border border-border bg-background/60 px-4 py-2.5 text-sm font-medium text-secondary-foreground transition-colors hover:bg-accent hover:text-foreground"
                     >
                       {previewAvatar ? "Change photo" : "Upload photo"}
                     </button>
@@ -353,7 +366,7 @@ function Profile() {
                       <button
                         type="button"
                         onClick={handleRemoveAvatar}
-                        className="rounded-xl border border-red-400/20 bg-red-400/5 px-4 py-2.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-400/10"
+                        className="rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
                       >
                         Remove photo
                       </button>
@@ -368,8 +381,10 @@ function Profile() {
                     />
                   </div>
                 </div>
+
+                {/* Name */}
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-300">
+                  <label className="mb-1.5 block text-sm font-medium text-secondary-foreground">
                     Name
                   </label>
 
@@ -379,12 +394,13 @@ function Profile() {
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="Your name"
-                    className="w-full rounded-xl border border-white/10 bg-[#0f1714] px-4 py-2.5 text-sm text-white outline-none transition-colors placeholder:text-gray-600 focus:border-[#049552]"
+                    className="w-full rounded-xl border border-border bg-background/60 px-4 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/10"
                   />
                 </div>
 
+                {/* Email */}
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-300">
+                  <label className="mb-1.5 block text-sm font-medium text-secondary-foreground">
                     Email
                   </label>
 
@@ -394,12 +410,13 @@ function Profile() {
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="you@example.com"
-                    className="w-full rounded-xl border border-white/10 bg-[#0f1714] px-4 py-2.5 text-sm text-white outline-none transition-colors placeholder:text-gray-600 focus:border-[#049552]"
+                    className="w-full rounded-xl border border-border bg-background/60 px-4 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/10"
                   />
                 </div>
 
+                {/* Bio */}
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-300">
+                  <label className="mb-1.5 block text-sm font-medium text-secondary-foreground">
                     Bio
                   </label>
 
@@ -409,15 +426,16 @@ function Profile() {
                     onChange={handleChange}
                     placeholder="Tell us a little about yourself..."
                     rows={4}
-                    className="w-full resize-none rounded-xl border border-white/10 bg-[#0f1714] px-4 py-2.5 text-sm leading-6 text-white outline-none transition-colors placeholder:text-gray-600 focus:border-[#049552]"
+                    className="w-full resize-none rounded-xl border border-border bg-background/60 px-4 py-2.5 text-sm leading-6 text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/10"
                   />
                 </div>
 
+                {/* Actions */}
                 <div className="flex flex-wrap gap-3 pt-1">
                   <button
                     type="button"
                     onClick={handleSave}
-                    className="rounded-xl bg-[#049552] px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-[#038447]"
+                    className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-all duration-200 hover:bg-primary/90"
                   >
                     Save changes
                   </button>
@@ -425,7 +443,7 @@ function Profile() {
                   <button
                     type="button"
                     onClick={handleCancel}
-                    className="rounded-xl border border-white/10 bg-white/[0.03] px-5 py-2.5 text-sm font-medium text-gray-300 transition-colors hover:bg-white/[0.06] hover:text-white"
+                    className="rounded-xl border border-border bg-background/60 px-5 py-2.5 text-sm font-medium text-secondary-foreground transition-colors hover:bg-accent hover:text-foreground"
                   >
                     Cancel
                   </button>
@@ -433,15 +451,15 @@ function Profile() {
               </div>
             ) : (
               <>
-                <h2 className="truncate text-2xl font-semibold text-white">
+                <h2 className="truncate text-2xl font-semibold text-foreground">
                   {profile?.name || "PennyPlot User"}
                 </h2>
 
-                <p className="mt-1 text-sm text-gray-400">
+                <p className="mt-1 text-sm text-muted-foreground">
                   {profile?.email || "No email added"}
                 </p>
 
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-300">
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-secondary-foreground">
                   {profile?.bio || "No bio added yet."}
                 </p>
               </>
@@ -452,7 +470,7 @@ function Profile() {
             <button
               type="button"
               onClick={() => setIsEditing(true)}
-              className="rounded-xl bg-[#049552] px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-[#038447] hover:shadow-lg hover:shadow-[#049552]/20"
+              className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-all duration-200 hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20"
             >
               Edit profile
             </button>
@@ -463,108 +481,121 @@ function Profile() {
       {/* All Time Activity */}
       <div className="mt-8">
         <div className="mb-4">
-          <h2 className="text-xl font-semibold text-white">
+          <h2 className="text-xl font-semibold text-foreground">
             All Time Activity
           </h2>
 
-          <p className="mt-1 text-sm text-gray-400">
+          <p className="mt-1 text-sm text-muted-foreground">
             Your complete financial activity in PennyPlot.
           </p>
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {/* Current Balance */}
-          <div className="rounded-2xl border border-white/10 bg-[#1b2922] p-5">
+          <div className="rounded-2xl border border-border bg-card p-5">
             <div className="mb-4 flex items-center justify-between">
-              <div className="rounded-xl bg-[#049552]/10 p-2.5">
-                <Wallet size={18} className="text-[#049552]" />
+              <div className="rounded-xl bg-primary/10 p-2.5">
+                <Wallet size={18} className="text-primary" />
               </div>
             </div>
 
-            <p className="text-sm text-gray-400">Current balance</p>
+            <p className="text-sm text-muted-foreground">
+              Current balance
+            </p>
 
-            <p className="mt-1 text-2xl font-semibold text-white">
+            <p className="mt-1 text-2xl font-semibold text-foreground">
               {formatCurrency(currentBalance, currency)}
             </p>
           </div>
 
           {/* Total Income */}
-          <div className="rounded-2xl border border-white/10 bg-[#1b2922] p-5">
+          <div className="rounded-2xl border border-border bg-card p-5">
             <div className="mb-4 flex items-center justify-between">
-              <div className="rounded-xl bg-emerald-400/10 p-2.5">
-                <ArrowDownLeft size={18} className="text-emerald-400" />
+              <div className="rounded-xl bg-primary/10 p-2.5">
+                <ArrowDownLeft size={18} className="text-primary" />
               </div>
             </div>
 
-            <p className="text-sm text-gray-400">Total income</p>
+            <p className="text-sm text-muted-foreground">
+              Total income
+            </p>
 
-            <p className="mt-1 text-2xl font-semibold text-white">
+            <p className="mt-1 text-2xl font-semibold text-foreground">
               {formatCurrency(totalIncome, currency)}
             </p>
           </div>
 
           {/* Total Expenses */}
-          <div className="rounded-2xl border border-white/10 bg-[#1b2922] p-5">
+          <div className="rounded-2xl border border-border bg-card p-5">
             <div className="mb-4 flex items-center justify-between">
-              <div className="rounded-xl bg-red-400/10 p-2.5">
-                <ArrowUpRight size={18} className="text-red-400" />
+              <div className="rounded-xl bg-destructive/10 p-2.5">
+                <ArrowUpRight size={18} className="text-destructive" />
               </div>
             </div>
 
-            <p className="text-sm text-gray-400">Total expenses</p>
+            <p className="text-sm text-muted-foreground">
+              Total expenses
+            </p>
 
-            <p className="mt-1 text-2xl font-semibold text-white">
+            <p className="mt-1 text-2xl font-semibold text-foreground">
               {formatCurrency(totalExpenses, currency)}
             </p>
           </div>
 
           {/* Total Transactions */}
-          <div className="rounded-2xl border border-white/10 bg-[#1b2922] p-5">
+          <div className="rounded-2xl border border-border bg-card p-5">
             <div className="mb-4 flex items-center justify-between">
-              <div className="rounded-xl bg-blue-400/10 p-2.5">
-                <Receipt size={18} className="text-blue-400" />
+              <div className="rounded-xl bg-primary/10 p-2.5">
+                <Receipt size={18} className="text-primary" />
               </div>
             </div>
 
-            <p className="text-sm text-gray-400">Total transactions</p>
+            <p className="text-sm text-muted-foreground">
+              Total transactions
+            </p>
 
-            <p className="mt-1 text-2xl font-semibold text-white">
+            <p className="mt-1 text-2xl font-semibold text-foreground">
               {totalTransactions}
             </p>
           </div>
 
           {/* Income Transactions */}
-          <div className="rounded-2xl border border-white/10 bg-[#1b2922] p-5">
+          <div className="rounded-2xl border border-border bg-card p-5">
             <div className="mb-4 flex items-center justify-between">
-              <div className="rounded-xl bg-emerald-400/10 p-2.5">
-                <ArrowDownLeft size={18} className="text-emerald-400" />
+              <div className="rounded-xl bg-primary/10 p-2.5">
+                <ArrowDownLeft size={18} className="text-primary" />
               </div>
             </div>
 
-            <p className="text-sm text-gray-400">Income transactions</p>
+            <p className="text-sm text-muted-foreground">
+              Income transactions
+            </p>
 
-            <p className="mt-1 text-2xl font-semibold text-white">
+            <p className="mt-1 text-2xl font-semibold text-foreground">
               {incomeTransactions}
             </p>
           </div>
 
           {/* Expense Transactions */}
-          <div className="rounded-2xl border border-white/10 bg-[#1b2922] p-5">
+          <div className="rounded-2xl border border-border bg-card p-5">
             <div className="mb-4 flex items-center justify-between">
-              <div className="rounded-xl bg-red-400/10 p-2.5">
-                <ArrowUpRight size={18} className="text-red-400" />
+              <div className="rounded-xl bg-destructive/10 p-2.5">
+                <ArrowUpRight size={18} className="text-destructive" />
               </div>
             </div>
 
-            <p className="text-sm text-gray-400">Expense transactions</p>
+            <p className="text-sm text-muted-foreground">
+              Expense transactions
+            </p>
 
-            <p className="mt-1 text-2xl font-semibold text-white">
+            <p className="mt-1 text-2xl font-semibold text-foreground">
               {expenseTransactions}
             </p>
           </div>
         </div>
       </div>
 
+      {/* Photo Crop Dialog */}
       <Dialog
         open={Boolean(cropImage)}
         onOpenChange={(open) => {
@@ -573,11 +604,13 @@ function Profile() {
           }
         }}
       >
-        <DialogContent className="max-w-lg border-white/10 bg-[#1b2922] text-white">
+        <DialogContent className="max-w-lg border-border bg-popover text-popover-foreground">
           <DialogHeader>
-            <DialogTitle className="text-xl">Adjust your photo</DialogTitle>
+            <DialogTitle className="text-xl text-foreground">
+              Adjust your photo
+            </DialogTitle>
 
-            <DialogDescription className="text-gray-400">
+            <DialogDescription className="text-muted-foreground">
               Position and zoom your photo until it looks right.
             </DialogDescription>
           </DialogHeader>
@@ -589,7 +622,7 @@ function Profile() {
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
               onPointerCancel={handlePointerUp}
-              className={`relative h-72 w-72 overflow-hidden rounded-full border-2 border-[#049552]/40 bg-[#0f1714] touch-none select-none ${
+              className={`relative h-72 w-72 overflow-hidden rounded-full border-2 border-primary/40 bg-background touch-none select-none ${
                 isDragging ? "cursor-grabbing" : "cursor-grab"
               }`}
             >
@@ -602,23 +635,28 @@ function Profile() {
                     width: `${displayedWidth}px`,
                     height: `${displayedHeight}px`,
                     transform: `
-            translate(-50%, -50%)
-            translate(${position.x}px, ${position.y}px)
-          `,
+                      translate(-50%, -50%)
+                      translate(${position.x}px, ${position.y}px)
+                    `,
                   }}
                   draggable={false}
                 />
               )}
-              <div className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-white/20" />
+
+              <div className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-border" />
             </div>
           </div>
 
           {/* Zoom */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-gray-300">Zoom</label>
+              <label className="text-sm font-medium text-secondary-foreground">
+                Zoom
+              </label>
 
-              <span className="text-xs text-gray-500">{zoom.toFixed(1)}x</span>
+              <span className="text-xs text-muted-foreground">
+                {zoom.toFixed(1)}x
+              </span>
             </div>
 
             <input
@@ -634,23 +672,35 @@ function Profile() {
 
                 setPosition((previous) => ({
                   x: Math.max(
-                    -Math.max(0, (baseWidth * newZoom - CROP_SIZE) / 2),
+                    -Math.max(
+                      0,
+                      (baseWidth * newZoom - CROP_SIZE) / 2,
+                    ),
                     Math.min(
-                      Math.max(0, (baseWidth * newZoom - CROP_SIZE) / 2),
+                      Math.max(
+                        0,
+                        (baseWidth * newZoom - CROP_SIZE) / 2,
+                      ),
                       previous.x,
                     ),
                   ),
 
                   y: Math.max(
-                    -Math.max(0, (baseHeight * newZoom - CROP_SIZE) / 2),
+                    -Math.max(
+                      0,
+                      (baseHeight * newZoom - CROP_SIZE) / 2,
+                    ),
                     Math.min(
-                      Math.max(0, (baseHeight * newZoom - CROP_SIZE) / 2),
+                      Math.max(
+                        0,
+                        (baseHeight * newZoom - CROP_SIZE) / 2,
+                      ),
                       previous.y,
                     ),
                   ),
                 }));
               }}
-              className="w-full accent-[#049552]"
+              className="w-full accent-[var(--primary)]"
             />
           </div>
 
@@ -658,11 +708,11 @@ function Profile() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-gray-300">
+                <label className="text-sm font-medium text-secondary-foreground">
                   Horizontal
                 </label>
 
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-muted-foreground">
                   {Math.round(position.x)}px
                 </span>
               </div>
@@ -680,17 +730,17 @@ function Profile() {
                     x: Number(event.target.value),
                   }));
                 }}
-                className="w-full accent-[#049552] disabled:opacity-30"
+                className="w-full accent-[var(--primary)] disabled:opacity-30"
               />
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-gray-300">
+                <label className="text-sm font-medium text-secondary-foreground">
                   Vertical
                 </label>
 
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-muted-foreground">
                   {Math.round(position.y)}px
                 </span>
               </div>
@@ -708,22 +758,24 @@ function Profile() {
                     y: Number(event.target.value),
                   }));
                 }}
-                className="w-full accent-[#049552] disabled:opacity-30"
+                className="w-full accent-[var(--primary)] disabled:opacity-30"
               />
             </div>
           </div>
+
           {/* Actions */}
           <div className="flex justify-between gap-3 pt-2">
             <button
               type="button"
               onClick={() => {
                 setZoom(1);
+
                 setPosition({
                   x: 0,
                   y: 0,
                 });
               }}
-              className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm font-medium text-gray-300 transition-colors hover:bg-white/[0.06] hover:text-white"
+              className="rounded-xl border border-border bg-background/60 px-4 py-2.5 text-sm font-medium text-secondary-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               Reset
             </button>
@@ -732,7 +784,7 @@ function Profile() {
               <button
                 type="button"
                 onClick={() => setCropImage(null)}
-                className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-gray-300 transition-colors hover:bg-white/[0.06] hover:text-white"
+                className="rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-secondary-foreground transition-colors hover:bg-accent hover:text-foreground"
               >
                 Cancel
               </button>
@@ -740,7 +792,7 @@ function Profile() {
               <button
                 type="button"
                 onClick={handleUsePhoto}
-                className="rounded-xl bg-[#049552] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#038447]"
+                className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
               >
                 Use photo
               </button>
