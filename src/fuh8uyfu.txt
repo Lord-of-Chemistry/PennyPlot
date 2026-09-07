@@ -161,6 +161,8 @@ New Laptop
  Recent activity improvements
  Dashboard PDF export
  Dashboard PNG export
+
+
 🎨 11. UI / UX Polish
  Consistent animations
  Loading states
@@ -177,12 +179,8 @@ New Laptop
  Consistent hover/focus states
  Smooth page transitions where appropriate
  General visual polish pass
-🌙 12. Appearance
- Dark mode
- Light mode
- System theme
- Accent-color options
- Persist appearance preferences
+
+
 📱 13. PWA / Installable App
  Web app manifest
  App icons

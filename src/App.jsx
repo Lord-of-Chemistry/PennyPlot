@@ -9,11 +9,13 @@ import Budgets from "./pages/Budgets";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import { Toaster } from "@/components/ui/sonner";
+import InstallPrompt from "./components/InstallPrompt";
 
 function App() {
   return (
     <BrowserRouter>
       <Toaster />
+      <InstallPrompt />
 
       <Routes>
         {/* Landing page — NO Layout / NO Sidebar */}

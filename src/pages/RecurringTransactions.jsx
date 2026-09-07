@@ -4,29 +4,20 @@ import { toast } from "sonner";
 import {
   CalendarDays,
   Check,
-  Clock3,
   Pause,
-  Pencil,
   Play,
   Plus,
   Repeat2,
   Trash2,
   X,
 } from "lucide-react";
-
 import {
-  calculateNextOccurrence,
   createRecurringTransaction,
   deleteRecurringTransaction,
   getRecurringTransactions,
   toggleRecurringTransaction,
 } from "../utils/recurringTransactions";
-
-import {
-  formatCurrency,
-  getCurrencySymbol,
-} from "../utils/currency";
-
+import { formatCurrency, getCurrencySymbol } from "../utils/currency";
 import { formatDate } from "../utils/date";
 
 const incomeCategories = [
@@ -39,7 +30,6 @@ const incomeCategories = [
   "Refund",
   "Other Income",
 ];
-
 const expenseCategories = [
   "Food",
   "Transport",
@@ -55,7 +45,6 @@ const expenseCategories = [
   "Rent/Housing",
   "Other Expense",
 ];
-
 const frequencyOptions = [
   {
     value: "daily",
@@ -85,8 +74,9 @@ function RecurringTransactions() {
     setNotifications,
   } = useOutletContext();
 
-  const [recurringTransactions, setRecurringTransactions] =
-    useState(() => getRecurringTransactions());
+  const [recurringTransactions, setRecurringTransactions] = useState(() =>
+    getRecurringTransactions(),
+  );
 
   const [showForm, setShowForm] = useState(false);
 
@@ -96,15 +86,11 @@ function RecurringTransactions() {
     type: "expense",
     category: expenseCategories[0],
     frequency: "monthly",
-    startDate: new Date()
-      .toISOString()
-      .split("T")[0],
+    startDate: new Date().toISOString().split("T")[0],
   });
 
   const categories = useMemo(() => {
-    return form.type === "income"
-      ? incomeCategories
-      : expenseCategories;
+    return form.type === "income" ? incomeCategories : expenseCategories;
   }, [form.type]);
 
   useEffect(() => {
@@ -126,9 +112,7 @@ function RecurringTransactions() {
       return;
     }
 
-    const numericAmount = Number(
-      form.amount.replace(/,/g, ""),
-    );
+    const numericAmount = Number(form.amount.replace(/,/g, ""));
 
     if (!numericAmount || numericAmount <= 0) {
       toast.error("Please enter a valid amount.");
@@ -140,16 +124,12 @@ function RecurringTransactions() {
       return;
     }
 
-    const recurring =
-      createRecurringTransaction({
-        ...form,
-        amount: numericAmount,
-      });
+    const recurring = createRecurringTransaction({
+      ...form,
+      amount: numericAmount,
+    });
 
-    setRecurringTransactions((previous) => [
-      recurring,
-      ...previous,
-    ]);
+    setRecurringTransactions((previous) => [recurring, ...previous]);
 
     setForm({
       description: "",
@@ -157,41 +137,30 @@ function RecurringTransactions() {
       type: "expense",
       category: expenseCategories[0],
       frequency: "monthly",
-      startDate: new Date()
-        .toISOString()
-        .split("T")[0],
+      startDate: new Date().toISOString().split("T")[0],
     });
 
     setShowForm(false);
 
-    toast.success(
-      "Recurring transaction created.",
-    );
+    toast.success("Recurring transaction created.");
   }
 
   function handleDelete(id) {
     deleteRecurringTransaction(id);
 
     setRecurringTransactions((previous) =>
-      previous.filter(
-        (transaction) => transaction.id !== id,
-      ),
+      previous.filter((transaction) => transaction.id !== id),
     );
 
-    toast.success(
-      "Recurring transaction deleted.",
-    );
+    toast.success("Recurring transaction deleted.");
   }
 
   function handleToggle(id) {
-    const updated =
-      toggleRecurringTransaction(id);
+    const updated = toggleRecurringTransaction(id);
 
     setRecurringTransactions(updated);
 
-    const item = updated.find(
-      (transaction) => transaction.id === id,
-    );
+    const item = updated.find((transaction) => transaction.id === id);
 
     toast.success(
       item?.active
@@ -205,59 +174,44 @@ function RecurringTransactions() {
 
     setForm((previous) => ({
       ...previous,
-      amount: numbersOnly
-        ? Number(numbersOnly).toLocaleString(
-            "en-NG",
-          )
-        : "",
+      amount: numbersOnly ? Number(numbersOnly).toLocaleString("en-NG") : "",
     }));
   }
 
   return (
-    <div className="min-h-screen bg-[#0f1714] text-white">
+    <div className="min-h-screen bg-background text-foreground">
       {/* HEADER */}
 
       <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">
-            Recurring Transactions
-          </h1>
+          <h1 className="text-3xl font-bold">Recurring Transactions</h1>
 
-          <p className="mt-1 text-sm text-gray-400">
-            Automatically keep track of regular
-            income and expenses.
+          <p className="mt-1 text-sm text-muted-foreground">
+            Automatically keep track of regular income and expenses.
           </p>
         </div>
 
         <button
           type="button"
           onClick={() => setShowForm((previous) => !previous)}
-          className="flex items-center justify-center gap-2 rounded-xl bg-[#049552] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-[#049552]/20 transition hover:bg-[#038448]"
+          className="flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90"
         >
-          {showForm ? (
-            <X size={17} />
-          ) : (
-            <Plus size={17} />
-          )}
+          {showForm ? <X size={17} /> : <Plus size={17} />}
 
-          {showForm
-            ? "Cancel"
-            : "Add recurring"}
+          {showForm ? "Cancel" : "Add recurring"}
         </button>
       </div>
 
       {/* CREATE FORM */}
 
       {showForm && (
-        <div className="mb-8 rounded-2xl border border-white/10 bg-[#22332b]/50 p-5">
+        <div className="mb-8 rounded-2xl border border-border bg-card/70 p-5">
           <div className="mb-5">
-            <h2 className="text-lg font-semibold">
-              New recurring transaction
-            </h2>
+            <h2 className="text-lg font-semibold">New recurring transaction</h2>
 
-            <p className="mt-1 text-sm text-gray-500">
-              PennyPlot will automatically add it
-              to your transactions when it is due.
+            <p className="mt-1 text-sm text-muted-foreground">
+              PennyPlot will automatically add it to your transactions when it
+              is due.
             </p>
           </div>
 
@@ -265,7 +219,7 @@ function RecurringTransactions() {
             {/* DESCRIPTION */}
 
             <div>
-              <label className="mb-2 block text-sm text-gray-400">
+              <label className="mb-2 block text-sm text-muted-foreground">
                 Description
               </label>
 
@@ -276,23 +230,22 @@ function RecurringTransactions() {
                 onChange={(event) =>
                   setForm((previous) => ({
                     ...previous,
-                    description:
-                      event.target.value,
+                    description: event.target.value,
                   }))
                 }
-                className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition focus:border-[#049552] focus:ring-1 focus:ring-[#049552]/30"
+                className="w-full rounded-xl border border-border bg-background/60 px-4 py-3 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-primary focus:ring-1 focus:ring-primary/30"
               />
             </div>
 
             {/* AMOUNT */}
 
             <div>
-              <label className="mb-2 block text-sm text-gray-400">
+              <label className="mb-2 block text-sm text-muted-foreground">
                 Amount
               </label>
 
-              <div className="flex overflow-hidden rounded-xl border border-white/10 bg-white/[0.04] focus-within:border-[#049552] focus-within:ring-1 focus-within:ring-[#049552]/30">
-                <span className="flex items-center border-r border-white/10 px-4 text-gray-400">
+              <div className="flex overflow-hidden rounded-xl border border-border bg-background/60 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/30">
+                <span className="flex items-center border-r border-border px-4 text-muted-foreground">
                   {getCurrencySymbol(currency)}
                 </span>
 
@@ -301,12 +254,8 @@ function RecurringTransactions() {
                   inputMode="numeric"
                   placeholder="0"
                   value={form.amount}
-                  onChange={(event) =>
-                    handleAmountChange(
-                      event.target.value,
-                    )
-                  }
-                  className="w-full bg-transparent px-4 py-3 text-sm text-white outline-none"
+                  onChange={(event) => handleAmountChange(event.target.value)}
+                  className="w-full bg-transparent px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/60"
                 />
               </div>
             </div>
@@ -314,7 +263,7 @@ function RecurringTransactions() {
             {/* TYPE */}
 
             <div>
-              <label className="mb-2 block text-sm text-gray-400">
+              <label className="mb-2 block text-sm text-muted-foreground">
                 Type
               </label>
 
@@ -326,22 +275,18 @@ function RecurringTransactions() {
                     type: event.target.value,
                   }))
                 }
-                className="w-full rounded-xl border border-white/10 bg-[#1b2922] px-4 py-3 text-sm text-white outline-none focus:border-[#049552]"
+                className="w-full rounded-xl border border-border bg-popover px-4 py-3 text-sm text-foreground outline-none focus:border-primary"
               >
-                <option value="expense">
-                  Expense
-                </option>
+                <option value="expense">Expense</option>
 
-                <option value="income">
-                  Income
-                </option>
+                <option value="income">Income</option>
               </select>
             </div>
 
             {/* CATEGORY */}
 
             <div>
-              <label className="mb-2 block text-sm text-gray-400">
+              <label className="mb-2 block text-sm text-muted-foreground">
                 Category
               </label>
 
@@ -350,17 +295,13 @@ function RecurringTransactions() {
                 onChange={(event) =>
                   setForm((previous) => ({
                     ...previous,
-                    category:
-                      event.target.value,
+                    category: event.target.value,
                   }))
                 }
-                className="w-full rounded-xl border border-white/10 bg-[#1b2922] px-4 py-3 text-sm text-white outline-none focus:border-[#049552]"
+                className="w-full rounded-xl border border-border bg-popover px-4 py-3 text-sm text-foreground outline-none focus:border-primary"
               >
                 {categories.map((category) => (
-                  <option
-                    key={category}
-                    value={category}
-                  >
+                  <option key={category} value={category}>
                     {category}
                   </option>
                 ))}
@@ -370,7 +311,7 @@ function RecurringTransactions() {
             {/* FREQUENCY */}
 
             <div>
-              <label className="mb-2 block text-sm text-gray-400">
+              <label className="mb-2 block text-sm text-muted-foreground">
                 Frequency
               </label>
 
@@ -379,29 +320,23 @@ function RecurringTransactions() {
                 onChange={(event) =>
                   setForm((previous) => ({
                     ...previous,
-                    frequency:
-                      event.target.value,
+                    frequency: event.target.value,
                   }))
                 }
-                className="w-full rounded-xl border border-white/10 bg-[#1b2922] px-4 py-3 text-sm text-white outline-none focus:border-[#049552]"
+                className="w-full rounded-xl border border-border bg-popover px-4 py-3 text-sm text-foreground outline-none focus:border-primary"
               >
-                {frequencyOptions.map(
-                  (option) => (
-                    <option
-                      key={option.value}
-                      value={option.value}
-                    >
-                      {option.label}
-                    </option>
-                  ),
-                )}
+                {frequencyOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </div>
 
             {/* START DATE */}
 
             <div>
-              <label className="mb-2 block text-sm text-gray-400">
+              <label className="mb-2 block text-sm text-muted-foreground">
                 Start date
               </label>
 
@@ -411,11 +346,10 @@ function RecurringTransactions() {
                 onChange={(event) =>
                   setForm((previous) => ({
                     ...previous,
-                    startDate:
-                      event.target.value,
+                    startDate: event.target.value,
                   }))
                 }
-                className="w-full rounded-xl border border-white/10 bg-[#1b2922] px-4 py-3 text-sm text-white outline-none focus:border-[#049552]"
+                className="w-full rounded-xl border border-border bg-popover px-4 py-3 text-sm text-foreground outline-none focus:border-primary"
               />
             </div>
           </div>
@@ -424,7 +358,7 @@ function RecurringTransactions() {
             <button
               type="button"
               onClick={handleCreate}
-              className="flex items-center gap-2 rounded-xl bg-[#049552] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#038448]"
+              className="flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
             >
               <Check size={17} />
               Create recurring transaction
@@ -436,137 +370,104 @@ function RecurringTransactions() {
       {/* EMPTY STATE */}
 
       {recurringTransactions.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-white/10 bg-[#22332b]/30 px-5 py-20 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white/5 text-gray-500">
+        <div className="rounded-2xl border border-dashed border-border bg-card/40 px-5 py-20 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-muted text-muted-foreground">
             <Repeat2 size={24} />
           </div>
 
-          <h2 className="mt-4 font-semibold text-white">
+          <h2 className="mt-4 font-semibold text-foreground">
             No recurring transactions
           </h2>
 
-          <p className="mx-auto mt-1 max-w-md text-sm text-gray-500">
-            Add recurring income or expenses so
-            PennyPlot can keep them up to date
-            automatically.
+          <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
+            Add recurring income or expenses so PennyPlot can keep them up to
+            date automatically.
           </p>
         </div>
       ) : (
         <div className="space-y-3">
-          {recurringTransactions.map(
-            (recurring) => (
-              <div
-                key={recurring.id}
-                className={`rounded-2xl border p-4 transition ${
-                  recurring.active
-                    ? "border-white/10 bg-[#22332b]/40 hover:border-white/15"
-                    : "border-white/[0.06] bg-[#22332b]/20 opacity-60"
-                }`}
-              >
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium text-white">
-                        {recurring.description}
-                      </p>
+          {recurringTransactions.map((recurring) => (
+            <div
+              key={recurring.id}
+              className={`rounded-2xl border p-4 transition ${
+                recurring.active
+                  ? "border-border bg-card/70 hover:border-primary/20"
+                  : "border-border/60 bg-card/40 opacity-60"
+              }`}
+            >
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-medium text-foreground">
+                      {recurring.description}
+                    </p>
 
-                      {!recurring.active && (
-                        <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-500">
-                          Paused
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
-                      <span>
-                        {recurring.category}
+                    {!recurring.active && (
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                        Paused
                       </span>
-
-                      <span>•</span>
-
-                      <span className="capitalize">
-                        {recurring.frequency}
-                      </span>
-
-                      <span>•</span>
-
-                      <span className="flex items-center gap-1">
-                        <CalendarDays
-                          size={13}
-                        />
-
-                        Next:{" "}
-                        {formatDate(
-                          recurring.nextOccurrence,
-                          dateFormat,
-                        )}
-                      </span>
-                    </div>
+                    )}
                   </div>
 
-                  <div className="flex items-center justify-between gap-5 md:justify-end">
-                    <span
-                      className={
-                        recurring.type ===
-                        "income"
-                          ? "font-semibold text-[#049552]"
-                          : "font-semibold text-red-400"
-                      }
-                    >
-                      {recurring.type ===
-                      "income"
-                        ? "+"
-                        : "-"}
-                      {formatCurrency(
-                        recurring.amount,
-                        currency,
-                      )}
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <span>{recurring.category}</span>
+
+                    <span>•</span>
+
+                    <span className="capitalize">{recurring.frequency}</span>
+
+                    <span>•</span>
+
+                    <span className="flex items-center gap-1">
+                      <CalendarDays size={13} />
+                      Next: {formatDate(recurring.nextOccurrence, dateFormat)}
                     </span>
+                  </div>
+                </div>
 
-                    <div className="flex items-center gap-1">
-                      {/* PAUSE / RESUME */}
+                <div className="flex items-center justify-between gap-5 md:justify-end">
+                  <span
+                    className={
+                      recurring.type === "income"
+                        ? "font-semibold text-primary"
+                        : "font-semibold text-destructive"
+                    }
+                  >
+                    {recurring.type === "income" ? "+" : "-"}
+                    {formatCurrency(recurring.amount, currency)}
+                  </span>
 
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleToggle(
-                            recurring.id,
-                          )
-                        }
-                        title={
-                          recurring.active
-                            ? "Pause"
-                            : "Resume"
-                        }
-                        className="rounded-lg p-2 text-gray-500 transition hover:-translate-y-0.5 hover:bg-white/5 hover:text-white"
-                      >
-                        {recurring.active ? (
-                          <Pause size={16} />
-                        ) : (
-                          <Play size={16} />
-                        )}
-                      </button>
+                  <div className="flex items-center gap-1">
+                    {/* PAUSE / RESUME */}
 
-                      {/* DELETE */}
+                    <button
+                      type="button"
+                      onClick={() => handleToggle(recurring.id)}
+                      title={recurring.active ? "Pause" : "Resume"}
+                      className="rounded-lg p-2 text-muted-foreground transition hover:-translate-y-0.5 hover:bg-accent hover:text-foreground"
+                    >
+                      {recurring.active ? (
+                        <Pause size={16} />
+                      ) : (
+                        <Play size={16} />
+                      )}
+                    </button>
 
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleDelete(
-                            recurring.id,
-                          )
-                        }
-                        title="Delete"
-                        className="rounded-lg p-2 text-gray-500 transition hover:-translate-y-0.5 hover:bg-red-500/10 hover:text-red-400"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
+                    {/* DELETE */}
+
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(recurring.id)}
+                      title="Delete"
+                      className="rounded-lg p-2 text-muted-foreground transition hover:-translate-y-0.5 hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
                 </div>
               </div>
-            ),
-          )}
+            </div>
+          ))}
         </div>
       )}
     </div>

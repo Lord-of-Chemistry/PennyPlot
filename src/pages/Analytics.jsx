@@ -139,11 +139,6 @@ function Analytics() {
 
   /*
    * COMPLETE PERIOD TIMELINE
-   *
-   * Starts at the earliest transaction period
-   * and continues through the current period.
-   *
-   * Empty periods are intentionally preserved.
    */
   const periodData = useMemo(() => {
     if (validTransactions.length === 0) {
@@ -260,6 +255,7 @@ function Analytics() {
     const today = new Date();
 
     const currentPeriodStart = getPeriodStart(today, period);
+
     const currentPeriodEnd = movePeriod(currentPeriodStart, period, 1);
 
     const currentPeriodTransactions = validTransactions.filter(
@@ -300,9 +296,6 @@ function Analytics() {
 
   /*
    * AVERAGE SPENDING
-   *
-   * Includes empty periods so the average represents
-   * the complete timeline.
    */
   const averageSpending =
     periodData.length > 0
@@ -362,20 +355,17 @@ function Analytics() {
   const chartConfig = {
     income: {
       label: "Income",
-      color: "#049552",
+      color: "#4FAF7B",
     },
 
     expenses: {
       label: "Expenses",
-      color: "#f87171",
+      color: "#D66B6B",
     },
   };
 
   /*
    * DYNAMIC CHART WIDTH
-   *
-   * The chart grows with the number of periods.
-   * The outer container handles horizontal scrolling.
    */
   const chartWidth = Math.max(700, periodData.length * 90);
 
@@ -384,26 +374,26 @@ function Analytics() {
    */
   if (transactions.length === 0) {
     return (
-      <div className="min-h-screen bg-[#0f1714]">
+      <div className="min-h-screen bg-background">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white">Analytics</h1>
+          <h1 className="text-3xl font-bold text-foreground">Analytics</h1>
 
-          <p className="mt-1 text-sm text-gray-400">
+          <p className="mt-1 text-sm text-muted-foreground">
             Understand your financial patterns and spending habits.
           </p>
         </div>
 
-        <div className="flex min-h-[500px] items-center justify-center rounded-3xl border border-white/10 bg-[#22332b]/40">
+        <div className="flex min-h-[500px] items-center justify-center rounded-3xl border border-border bg-card/40">
           <div className="max-w-md px-6 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#049552]/10 text-[#049552]">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
               <BarChart3 size={30} />
             </div>
 
-            <h2 className="mt-5 text-xl font-semibold text-white">
+            <h2 className="mt-5 text-xl font-semibold text-foreground">
               Your analytics are waiting
             </h2>
 
-            <p className="mt-2 text-sm leading-6 text-gray-500">
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
               Add a few income and expense transactions and PennyPlot will start
               turning your activity into useful financial insights.
             </p>
@@ -424,13 +414,13 @@ function Analytics() {
   }, [period, periodData]);
 
   return (
-    <div className="min-h-screen bg-[#0f1714]">
+    <div className="min-h-screen bg-background">
       {/* HEADER */}
       <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Analytics</h1>
+          <h1 className="text-3xl font-bold text-foreground">Analytics</h1>
 
-          <p className="mt-1 text-sm text-gray-400">
+          <p className="mt-1 text-sm text-muted-foreground">
             Understand your financial patterns and spending habits.
           </p>
         </div>
@@ -442,8 +432,8 @@ function Analytics() {
             onClick={() => setIsDownloadOpen((previous) => !previous)}
             className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
               isDownloadOpen
-                ? "border-[#049552] bg-[#049552]/10 text-[#8ff0bc]"
-                : "border-white/10 bg-[#1b2922] text-gray-300 hover:border-white/20 hover:bg-[#22332b] hover:text-white"
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border bg-card text-muted-foreground hover:border-primary/30 hover:bg-accent hover:text-foreground"
             }`}
           >
             <Download size={16} />
@@ -453,13 +443,15 @@ function Analytics() {
             <ChevronDown
               size={15}
               className={`transition-transform duration-200 ${
-                isDownloadOpen ? "rotate-180 text-[#049552]" : "text-gray-500"
+                isDownloadOpen
+                  ? "rotate-180 text-primary"
+                  : "text-muted-foreground"
               }`}
             />
           </button>
 
           <div
-            className={`absolute right-0 top-[calc(100%+8px)] z-50 w-64 origin-top-right rounded-xl border border-white/10 bg-[#1b2922] p-1.5 shadow-2xl shadow-black/40 transition-all duration-200 ${
+            className={`absolute right-0 top-[calc(100%+8px)] z-50 w-64 origin-top-right rounded-xl border border-border bg-popover p-1.5 shadow-2xl shadow-black/40 transition-all duration-200 ${
               isDownloadOpen
                 ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
                 : "pointer-events-none -translate-y-2 scale-95 opacity-0"
@@ -471,24 +463,28 @@ function Analytics() {
               onClick={() => {
                 try {
                   downloadAnalyticsCSV(periodData, currency);
+
                   toast.success("Analytics exported successfully.");
                 } catch (error) {
                   console.error("Analytics CSV export failed:", error);
+
                   toast.error("Failed to export analytics.");
                 }
 
                 setIsDownloadOpen(false);
               }}
-              className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-white/[0.06]"
+              className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-accent"
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#049552]/10 text-[#8ff0bc] transition-colors group-hover:bg-[#049552]/15">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary/15">
                 <Download size={16} />
               </div>
 
               <div>
-                <p className="text-sm font-medium text-white">CSV</p>
+                <p className="text-sm font-medium text-foreground">CSV</p>
 
-                <p className="mt-0.5 text-xs text-gray-500">Analytics data</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Analytics data
+                </p>
               </div>
             </button>
 
@@ -507,21 +503,24 @@ function Analytics() {
                   toast.success("Analytics report exported successfully.");
                 } catch (error) {
                   console.error("Analytics PDF export failed:", error);
+
                   toast.error("Failed to export analytics report.");
                 }
 
                 setIsDownloadOpen(false);
               }}
-              className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-white/[0.06]"
+              className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-accent"
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#049552]/10 text-[#8ff0bc] transition-colors group-hover:bg-[#049552]/15">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary/15">
                 <span className="text-[10px] font-bold tracking-wide">PDF</span>
               </div>
 
               <div>
-                <p className="text-sm font-medium text-white">PDF</p>
+                <p className="text-sm font-medium text-foreground">PDF</p>
 
-                <p className="mt-0.5 text-xs text-gray-500">Analytics report</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Analytics report
+                </p>
               </div>
             </button>
 
@@ -540,21 +539,22 @@ function Analytics() {
                   toast.success("Analytics snapshot exported successfully.");
                 } catch (error) {
                   console.error("Analytics PNG export failed:", error);
+
                   toast.error("Failed to export analytics snapshot.");
                 }
 
                 setIsDownloadOpen(false);
               }}
-              className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-white/[0.06]"
+              className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-accent"
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#049552]/10 text-[#8ff0bc]">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <span className="text-[10px] font-bold tracking-wide">PNG</span>
               </div>
 
               <div>
-                <p className="text-sm font-medium text-white">PNG</p>
+                <p className="text-sm font-medium text-foreground">PNG</p>
 
-                <p className="mt-0.5 text-xs text-gray-500">
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   Analytics snapshot
                 </p>
               </div>
@@ -565,108 +565,116 @@ function Analytics() {
 
       {/* OVERVIEW CARDS */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-white/10 bg-[#22332b]/60 transition-all duration-200 hover:-translate-y-1 hover:border-[#049552]/30">
+        <Card className="border-border bg-card transition-all duration-200 hover:-translate-y-1 hover:border-primary/30">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-sm font-medium text-gray-400">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Total Balance
             </CardTitle>
 
             <Wallet
               size={20}
-              className={balance >= 0 ? "text-[#049552]" : "text-red-400"}
+              className={balance >= 0 ? "text-primary" : "text-destructive"}
             />
           </CardHeader>
 
           <CardContent>
             <p
               className={`text-2xl font-bold ${
-                balance >= 0 ? "text-[#049552]" : "text-red-400"
+                balance >= 0 ? "text-primary" : "text-destructive"
               }`}
             >
               {formatCurrency(balance, currency)}
             </p>
 
-            <p className="mt-2 text-xs text-gray-500">Income minus expenses</p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Income minus expenses
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="border-white/10 bg-[#22332b]/60 transition-all duration-200 hover:-translate-y-1 hover:border-[#049552]/30">
+        <Card className="border-border bg-card transition-all duration-200 hover:-translate-y-1 hover:border-primary/30">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-sm font-medium text-gray-400">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Total Income
             </CardTitle>
 
-            <TrendingUp size={20} className="text-[#049552]" />
+            <TrendingUp size={20} className="text-primary" />
           </CardHeader>
 
           <CardContent>
-            <p className="text-2xl font-bold text-[#049552]">
+            <p className="text-2xl font-bold text-primary">
               {formatCurrency(income, currency)}
             </p>
 
-            <p className="mt-2 text-xs text-gray-500">Total money received</p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Total money received
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="border-white/10 bg-[#22332b]/60 transition-all duration-200 hover:-translate-y-1 hover:border-red-400/30">
+        <Card className="border-border bg-card transition-all duration-200 hover:-translate-y-1 hover:border-destructive/30">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-sm font-medium text-gray-400">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Total Expenses
             </CardTitle>
 
-            <TrendingDown size={20} className="text-red-400" />
+            <TrendingDown size={20} className="text-destructive" />
           </CardHeader>
 
           <CardContent>
-            <p className="text-2xl font-bold text-red-400">
+            <p className="text-2xl font-bold text-destructive">
               {formatCurrency(expenses, currency)}
             </p>
 
-            <p className="mt-2 text-xs text-gray-500">Total money spent</p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Total money spent
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="border-white/10 bg-[#22332b]/60 transition-all duration-200 hover:-translate-y-1 hover:border-[#049552]/30">
+        <Card className="border-border bg-card transition-all duration-200 hover:-translate-y-1 hover:border-primary/30">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-sm font-medium text-gray-400">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Savings Rate
             </CardTitle>
 
             <PiggyBank
               size={20}
-              className={savingsRate >= 0 ? "text-[#049552]" : "text-red-400"}
+              className={savingsRate >= 0 ? "text-primary" : "text-destructive"}
             />
           </CardHeader>
 
           <CardContent>
             <p
               className={`text-2xl font-bold ${
-                savingsRate >= 0 ? "text-[#049552]" : "text-red-400"
+                savingsRate >= 0 ? "text-primary" : "text-destructive"
               }`}
             >
               {Math.round(savingsRate)}%
             </p>
 
-            <p className="mt-2 text-xs text-gray-500">{currentPeriod.label}</p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {currentPeriod.label}
+            </p>
           </CardContent>
         </Card>
       </div>
 
       {/* INCOME VS EXPENSES */}
-      <Card className="mt-6 border-white/10 bg-[#22332b]/40">
+      <Card className="mt-6 border-border bg-card/70">
         <CardHeader>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <CardTitle className="text-lg text-white">
+              <CardTitle className="text-lg text-foreground">
                 Income vs Expenses
               </CardTitle>
 
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Compare your financial activity over time.
               </p>
             </div>
 
-            <div className="flex flex-wrap rounded-xl border border-white/10 bg-white/[0.03] p-1">
+            <div className="flex flex-wrap rounded-xl border border-border bg-background/50 p-1">
               {[
                 ["daily", "Daily"],
                 ["weekly", "Weekly"],
@@ -679,8 +687,8 @@ function Analytics() {
                   onClick={() => setPeriod(value)}
                   className={`rounded-lg px-3 py-2 text-xs font-medium transition-all ${
                     period === value
-                      ? "bg-[#049552] text-white shadow-lg shadow-[#049552]/20"
-                      : "text-gray-500 hover:text-white"
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {label}
@@ -693,21 +701,22 @@ function Analytics() {
         <CardContent>
           {/* COMPARISON CARDS */}
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
+            <div className="rounded-xl border border-border/60 bg-background/40 p-4">
               <div className="flex items-center justify-between">
-                <p className="text-xs text-gray-500">Income</p>
-                <ArrowUpRight size={16} className="text-[#049552]" />
+                <p className="text-xs text-muted-foreground">Income</p>
+
+                <ArrowUpRight size={16} className="text-primary" />
               </div>
 
-              <p className="mt-2 text-xl font-bold text-[#049552]">
+              <p className="mt-2 text-xl font-bold text-primary">
                 {formatCurrency(currentPeriodData.income, currency)}
               </p>
 
               <p
                 className={`mt-1 text-xs ${
                   comparison.incomeChange >= 0
-                    ? "text-[#049552]"
-                    : "text-red-400"
+                    ? "text-primary"
+                    : "text-destructive"
                 }`}
               >
                 {formatPercent(comparison.incomeChange)} vs{" "}
@@ -715,21 +724,22 @@ function Analytics() {
               </p>
             </div>
 
-            <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
+            <div className="rounded-xl border border-border/60 bg-background/40 p-4">
               <div className="flex items-center justify-between">
-                <p className="text-xs text-gray-500">Expenses</p>
-                <ArrowDownRight size={16} className="text-red-400" />
+                <p className="text-xs text-muted-foreground">Expenses</p>
+
+                <ArrowDownRight size={16} className="text-destructive" />
               </div>
 
-              <p className="mt-2 text-xl font-bold text-red-400">
+              <p className="mt-2 text-xl font-bold text-destructive">
                 {formatCurrency(currentPeriodData.expenses, currency)}
               </p>
 
               <p
                 className={`mt-1 text-xs ${
                   comparison.expenseChange <= 0
-                    ? "text-[#049552]"
-                    : "text-red-400"
+                    ? "text-primary"
+                    : "text-destructive"
                 }`}
               >
                 {formatPercent(comparison.expenseChange)} vs{" "}
@@ -737,20 +747,22 @@ function Analytics() {
               </p>
             </div>
 
-            <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
+            <div className="rounded-xl border border-border/60 bg-background/40 p-4">
               <div className="flex items-center justify-between">
-                <p className="text-xs text-gray-500">Net</p>
+                <p className="text-xs text-muted-foreground">Net</p>
 
                 {currentPeriodData.net >= 0 ? (
-                  <TrendingUp size={16} className="text-[#049552]" />
+                  <TrendingUp size={16} className="text-primary" />
                 ) : (
-                  <TrendingDown size={16} className="text-red-400" />
+                  <TrendingDown size={16} className="text-destructive" />
                 )}
               </div>
 
               <p
                 className={`mt-2 text-xl font-bold ${
-                  currentPeriodData.net >= 0 ? "text-[#049552]" : "text-red-400"
+                  currentPeriodData.net >= 0
+                    ? "text-primary"
+                    : "text-destructive"
                 }`}
               >
                 {formatCurrency(currentPeriodData.net, currency)}
@@ -758,7 +770,9 @@ function Analytics() {
 
               <p
                 className={`mt-1 text-xs ${
-                  comparison.netChange >= 0 ? "text-[#049552]" : "text-red-400"
+                  comparison.netChange >= 0
+                    ? "text-primary"
+                    : "text-destructive"
                 }`}
               >
                 {formatPercent(comparison.netChange)} vs{" "}
@@ -771,7 +785,7 @@ function Analytics() {
           <div className="mt-8 overflow-hidden rounded-xl">
             <div
               ref={chartScrollRef}
-              className=" overflow-x-auto pb-2 [scrollbar-color:#049552_transparent] [scrollbar-width:thin]"
+              className="overflow-x-auto pb-2 [scrollbar-color:#4FAF7B_transparent] [scrollbar-width:thin]"
             >
               <div
                 style={{
@@ -795,7 +809,7 @@ function Analytics() {
                     <CartesianGrid
                       vertical={false}
                       strokeDasharray="3 3"
-                      className="stroke-white/5"
+                      className="stroke-border/50"
                     />
 
                     <XAxis
@@ -805,6 +819,9 @@ function Analytics() {
                       tickMargin={10}
                       interval={0}
                       className="text-xs"
+                      tick={{
+                        fill: "#98A39D",
+                      }}
                     />
 
                     <YAxis
@@ -812,6 +829,9 @@ function Analytics() {
                       axisLine={false}
                       tickMargin={8}
                       width={60}
+                      tick={{
+                        fill: "#98A39D",
+                      }}
                       tickFormatter={(value) => {
                         const symbols = {
                           NGN: "₦",
@@ -830,7 +850,7 @@ function Analytics() {
 
                     <ChartTooltip
                       cursor={{
-                        stroke: "#ffffff",
+                        stroke: "#F1F5F2",
                         strokeOpacity: 0.1,
                       }}
                       content={
@@ -848,13 +868,13 @@ function Analytics() {
                       strokeWidth={3}
                       dot={{
                         r: 4,
-                        fill: "#049552",
+                        fill: "#4FAF7B",
                         strokeWidth: 0,
                       }}
                       activeDot={{
                         r: 6,
                         strokeWidth: 3,
-                        stroke: "#049552",
+                        stroke: "#4FAF7B",
                       }}
                     />
 
@@ -866,13 +886,13 @@ function Analytics() {
                       strokeWidth={3}
                       dot={{
                         r: 4,
-                        fill: "#f87171",
+                        fill: "#D66B6B",
                         strokeWidth: 0,
                       }}
                       activeDot={{
                         r: 6,
                         strokeWidth: 3,
-                        stroke: "#f87171",
+                        stroke: "#D66B6B",
                       }}
                     />
                   </LineChart>
@@ -883,13 +903,13 @@ function Analytics() {
             {/* LEGEND */}
             <div className="mt-4 flex justify-center gap-6">
               <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-[#049552]" />
-                <span className="text-xs text-gray-500">Income</span>
+                <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+                <span className="text-xs text-muted-foreground">Income</span>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
-                <span className="text-xs text-gray-500">Expenses</span>
+                <span className="h-2.5 w-2.5 rounded-full bg-destructive" />
+                <span className="text-xs text-muted-foreground">Expenses</span>
               </div>
             </div>
           </div>
@@ -899,19 +919,19 @@ function Analytics() {
       {/* PERIOD INSIGHTS */}
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         {/* SPENDING BREAKDOWN */}
-        <Card className="border-white/10 bg-[#22332b]/40">
+        <Card className="border-border bg-card/70">
           <CardHeader>
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#049552]/10 text-[#049552]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <PieChart size={19} />
               </div>
 
               <div>
-                <CardTitle className="text-lg text-white">
+                <CardTitle className="text-lg text-foreground">
                   Spending Breakdown
                 </CardTitle>
 
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-muted-foreground">
                   Where your money is going {currentPeriod.description}.
                 </p>
               </div>
@@ -920,14 +940,17 @@ function Analytics() {
 
           <CardContent>
             {topCategories.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-white/10 px-5 py-10 text-center">
-                <Receipt size={30} className="mx-auto mb-3 text-gray-600" />
+              <div className="rounded-xl border border-dashed border-border px-5 py-10 text-center">
+                <Receipt
+                  size={30}
+                  className="mx-auto mb-3 text-muted-foreground/50"
+                />
 
-                <p className="text-sm font-medium text-gray-400">
+                <p className="text-sm font-medium text-muted-foreground">
                   No spending in this period
                 </p>
 
-                <p className="mt-1 text-xs text-gray-600">
+                <p className="mt-1 text-xs text-muted-foreground/60">
                   Expense categories will appear here when you spend money.
                 </p>
               </div>
@@ -943,25 +966,25 @@ function Analytics() {
                     <div key={category}>
                       <div className="mb-2 flex items-center justify-between gap-4">
                         <div className="flex min-w-0 items-center gap-2">
-                          <span className="truncate text-sm text-gray-300">
+                          <span className="truncate text-sm text-secondary-foreground">
                             {category}
                           </span>
                         </div>
 
                         <div className="shrink-0 text-right">
-                          <span className="text-sm font-semibold text-white">
+                          <span className="text-sm font-semibold text-foreground">
                             {formatCurrency(amount, currency)}
                           </span>
 
-                          <span className="ml-2 text-xs text-gray-500">
+                          <span className="ml-2 text-xs text-muted-foreground">
                             {Math.round(percentage)}%
                           </span>
                         </div>
                       </div>
 
-                      <div className="h-2 overflow-hidden rounded-full bg-white/5">
+                      <div className="h-2 overflow-hidden rounded-full bg-muted">
                         <div
-                          className="h-full rounded-full bg-[#049552] transition-all duration-700"
+                          className="h-full rounded-full bg-primary transition-all duration-700"
                           style={{
                             width: `${Math.min(percentage, 100)}%`,
                           }}
@@ -972,7 +995,7 @@ function Analytics() {
                 })}
 
                 {spendingBreakdown.length > 6 && (
-                  <p className="pt-1 text-center text-xs text-gray-600">
+                  <p className="pt-1 text-center text-xs text-muted-foreground/60">
                     Showing your top 6 categories.
                   </p>
                 )}
@@ -982,19 +1005,19 @@ function Analytics() {
         </Card>
 
         {/* SPENDING INSIGHTS */}
-        <Card className="border-white/10 bg-[#22332b]/40">
+        <Card className="border-border bg-card/70">
           <CardHeader>
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#049552]/10 text-[#049552]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <BarChart3 size={19} />
               </div>
 
               <div>
-                <CardTitle className="text-lg text-white">
+                <CardTitle className="text-lg text-foreground">
                   Spending Insights
                 </CardTitle>
 
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-muted-foreground">
                   A quick look at your spending patterns.
                 </p>
               </div>
@@ -1004,14 +1027,16 @@ function Analytics() {
           <CardContent>
             <div className="grid gap-3 sm:grid-cols-2">
               {/* AVERAGE */}
-              <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
-                <p className="text-xs text-gray-500">Average Spending</p>
+              <div className="rounded-xl border border-border/60 bg-background/40 p-4">
+                <p className="text-xs text-muted-foreground">
+                  Average Spending
+                </p>
 
-                <p className="mt-2 text-lg font-bold text-white">
+                <p className="mt-2 text-lg font-bold text-foreground">
                   {formatCurrency(averageSpending, currency)}
                 </p>
 
-                <p className="mt-1 text-xs text-gray-600">
+                <p className="mt-1 text-xs text-muted-foreground/60">
                   Per{" "}
                   {period === "daily"
                     ? "day"
@@ -1024,14 +1049,14 @@ function Analytics() {
               </div>
 
               {/* TOP CATEGORY */}
-              <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
-                <p className="text-xs text-gray-500">Top Category</p>
+              <div className="rounded-xl border border-border/60 bg-background/40 p-4">
+                <p className="text-xs text-muted-foreground">Top Category</p>
 
-                <p className="mt-2 truncate text-lg font-bold text-white">
+                <p className="mt-2 truncate text-lg font-bold text-foreground">
                   {topCategories[0]?.category || "—"}
                 </p>
 
-                <p className="mt-1 text-xs text-gray-600">
+                <p className="mt-1 text-xs text-muted-foreground/60">
                   {topCategories[0]
                     ? formatCurrency(topCategories[0].amount, currency)
                     : "No spending"}
@@ -1039,20 +1064,22 @@ function Analytics() {
               </div>
 
               {/* HIGHEST */}
-              <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
+              <div className="rounded-xl border border-border/60 bg-background/40 p-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs text-gray-500">Highest Spending</p>
+                  <p className="text-xs text-muted-foreground">
+                    Highest Spending
+                  </p>
 
-                  <ArrowUpRight size={15} className="text-red-400" />
+                  <ArrowUpRight size={15} className="text-destructive" />
                 </div>
 
-                <p className="mt-2 text-lg font-bold text-red-400">
+                <p className="mt-2 text-lg font-bold text-destructive">
                   {highestSpendingPeriod
                     ? formatCurrency(highestSpendingPeriod.expenses, currency)
                     : "—"}
                 </p>
 
-                <p className="mt-1 text-xs text-gray-600">
+                <p className="mt-1 text-xs text-muted-foreground/60">
                   {highestSpendingPeriod
                     ? highestSpendingPeriod.label
                     : "No spending"}
@@ -1060,20 +1087,22 @@ function Analytics() {
               </div>
 
               {/* LOWEST */}
-              <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
+              <div className="rounded-xl border border-border/60 bg-background/40 p-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs text-gray-500">Lowest Spending</p>
+                  <p className="text-xs text-muted-foreground">
+                    Lowest Spending
+                  </p>
 
-                  <ArrowDownRight size={15} className="text-[#049552]" />
+                  <ArrowDownRight size={15} className="text-primary" />
                 </div>
 
-                <p className="mt-2 text-lg font-bold text-[#049552]">
+                <p className="mt-2 text-lg font-bold text-primary">
                   {lowestSpendingPeriod
                     ? formatCurrency(lowestSpendingPeriod.expenses, currency)
                     : "—"}
                 </p>
 
-                <p className="mt-1 text-xs text-gray-600">
+                <p className="mt-1 text-xs text-muted-foreground/60">
                   {lowestSpendingPeriod
                     ? lowestSpendingPeriod.label
                     : "No spending"}
@@ -1082,20 +1111,20 @@ function Analytics() {
             </div>
 
             {/* SMART INSIGHT */}
-            <div className="mt-4 rounded-xl border border-[#049552]/10 bg-[#049552]/5 p-4">
+            <div className="mt-4 rounded-xl border border-primary/10 bg-primary/5 p-4">
               <div className="flex items-start gap-3">
                 <div className="mt-0.5 shrink-0">
                   {currentPeriodData.net > 0 ? (
-                    <TrendingUp size={18} className="text-[#049552]" />
+                    <TrendingUp size={18} className="text-primary" />
                   ) : currentPeriodData.net < 0 ? (
-                    <TrendingDown size={18} className="text-red-400" />
+                    <TrendingDown size={18} className="text-destructive" />
                   ) : (
-                    <Minus size={18} className="text-gray-500" />
+                    <Minus size={18} className="text-muted-foreground" />
                   )}
                 </div>
 
                 <div>
-                  <p className="text-sm font-medium text-white">
+                  <p className="text-sm font-medium text-foreground">
                     {currentPeriodData.net > 0
                       ? "You're spending within your income."
                       : currentPeriodData.net < 0
@@ -1103,7 +1132,7 @@ function Analytics() {
                         : "Your income and expenses are currently balanced."}
                   </p>
 
-                  <p className="mt-1 text-xs leading-5 text-gray-500">
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
                     {topCategories[0]
                       ? `${topCategories[0].category} is your biggest spending category for ${currentPeriod.description} activity.`
                       : "Add more expense transactions to unlock more detailed spending insights."}
@@ -1116,43 +1145,49 @@ function Analytics() {
       </div>
 
       {/* PERIOD SUMMARY */}
-      <Card className="mt-6 border-white/10 bg-[#22332b]/40">
+      <Card className="mt-6 border-border bg-card/70">
         <CardContent className="p-5">
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
-              <p className="text-xs text-gray-500">{currentPeriod.label}</p>
+              <p className="text-xs text-muted-foreground">
+                {currentPeriod.label}
+              </p>
 
-              <p className="mt-1 text-lg font-semibold text-white">
+              <p className="mt-1 text-lg font-semibold text-foreground">
                 {formatCurrency(currentPeriodData.net, currency)}
               </p>
 
-              <p className="mt-1 text-xs text-gray-600">Net result</p>
+              <p className="mt-1 text-xs text-muted-foreground/60">
+                Net result
+              </p>
             </div>
 
             <div>
-              <p className="text-xs text-gray-500">Savings Rate</p>
+              <p className="text-xs text-muted-foreground">Savings Rate</p>
 
               <p
                 className={`mt-1 text-lg font-semibold ${
-                  savingsRate >= 0 ? "text-[#049552]" : "text-red-400"
+                  savingsRate >= 0 ? "text-primary" : "text-destructive"
                 }`}
               >
                 {Math.round(savingsRate)}%
               </p>
 
-              <p className="mt-1 text-xs text-gray-600">
+              <p className="mt-1 text-xs text-muted-foreground/60">
                 Income kept after expenses
               </p>
             </div>
 
             <div>
-              <p className="text-xs text-gray-500">Period Spending</p>
+              <p className="text-xs text-muted-foreground">Period Spending</p>
 
-              <p className="mt-1 text-lg font-semibold text-red-400">
+              <p className="mt-1 text-lg font-semibold text-destructive">
                 {formatCurrency(currentPeriodExpenses, currency)}
               </p>
 
-              <p className="mt-1 text-xs text-gray-600">Total expenses</p>
+              <p className="mt-1 text-xs text-muted-foreground/60">
+                Total expenses
+              </p>
             </div>
           </div>
         </CardContent>

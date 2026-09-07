@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import SideBar from "./SideBar";
 import { createBackup } from "../utils/backup";
 import { getProfile } from "../utils/profile";
@@ -12,9 +12,12 @@ import {
 import NotificationCenter from "./NotificationCenter";
 import { formatCurrency } from "../utils/currency";
 import { processRecurringTransactions } from "../utils/recurringTransactions";
+import ProfileMenu from "./ProfileMenu";
+import { LogOut } from "lucide-react";
 
 function Layout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const navigate = useNavigate();
 
   // Online / Offline status
   const [isOnline, setIsOnline] = useState(true);
@@ -153,6 +156,14 @@ function Layout() {
       window.removeEventListener("offline", handleOffline);
     };
   }, []);
+
+  function handleSignOut() {
+    localStorage.removeItem("pennyplot-profile");
+
+    setProfile(null);
+
+    navigate("/");
+  }
 
   /*
     ============================================================
@@ -415,11 +426,24 @@ function Layout() {
       >
         {/* Sticky global header */}
         <header className="sticky top-0 z-[100] border-b border-border/60 bg-background/95 px-4 py-3 backdrop-blur-md">
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-end gap-2">
             <NotificationCenter
               notifications={notifications}
               setNotifications={setNotifications}
             />
+
+            <div className="md:hidden">
+              <ProfileMenu profile={profile} mobile />
+            </div>
+
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-secondary-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <LogOut size={16} />
+              <span className="hidden sm:inline">Sign out</span>
+            </button>
           </div>
         </header>
 

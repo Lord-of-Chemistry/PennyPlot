@@ -3,6 +3,9 @@ const BACKUP_KEY = "pennyplot-backup";
 const CUSTOM_INCOME_KEY = "pennyplot-custom-income-categories";
 const CUSTOM_EXPENSE_KEY = "pennyplot-custom-expense-categories";
 
+const THEME_KEY = "pennyplot-theme";
+const ACCENT_KEY = "pennyplot-accent";
+
 export function createBackup() {
   const transactions = JSON.parse(
     localStorage.getItem("pennyplot-transactions") || "[]",
@@ -17,6 +20,12 @@ export function createBackup() {
 
   const dateFormat =
     localStorage.getItem("pennyplot-date-format") || "DD/MM/YYYY";
+
+  const theme =
+    localStorage.getItem(THEME_KEY) || "dark";
+
+  const accent =
+    localStorage.getItem(ACCENT_KEY) || "emerald";
 
   const customIncomeCategories = JSON.parse(
     localStorage.getItem(CUSTOM_INCOME_KEY) || "[]",
@@ -38,6 +47,8 @@ export function createBackup() {
       settings: {
         currency,
         dateFormat,
+        theme,
+        accent,
       },
 
       customCategories: {
