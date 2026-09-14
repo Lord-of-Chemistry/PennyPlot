@@ -20,6 +20,8 @@ import {
   Minus,
   Download,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   ChartContainer,
@@ -29,9 +31,16 @@ import {
 
 function Analytics() {
   const { transactions, currency } = useOutletContext();
+
   const [period, setPeriod] = useState("monthly");
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+
   const chartScrollRef = useRef(null);
+
+  const CHART_VISIBLE_PERIODS = 8;
+
+  const [chartStartIndex, setChartStartIndex] = useState(0);
+  const [showAllHistory, setShowAllHistory] = useState(false);
 
   function formatPercent(value) {
     if (!Number.isFinite(value)) {
@@ -117,6 +126,9 @@ function Analytics() {
     return date.getFullYear().toString();
   }
 
+  /*
+   * VALID TRANSACTIONS
+   */
   const validTransactions = useMemo(() => {
     return transactions
       .map((transaction) => ({
@@ -127,18 +139,38 @@ function Analytics() {
       .filter((transaction) => !Number.isNaN(transaction.parsedDate.getTime()));
   }, [transactions]);
 
-  const income = validTransactions
-    .filter((transaction) => transaction.type === "income")
-    .reduce((total, transaction) => total + transaction.numericAmount, 0);
+  /*
+   * TOTALS
+   */
+  const { income, expenses } = useMemo(() => {
+    let totalIncome = 0;
+    let totalExpenses = 0;
 
-  const expenses = validTransactions
-    .filter((transaction) => transaction.type === "expense")
-    .reduce((total, transaction) => total + transaction.numericAmount, 0);
+    for (const transaction of validTransactions) {
+      if (transaction.type === "income") {
+        totalIncome += transaction.numericAmount;
+      } else if (transaction.type === "expense") {
+        totalExpenses += transaction.numericAmount;
+      }
+    }
+
+    return {
+      income: totalIncome,
+      expenses: totalExpenses,
+    };
+  }, [validTransactions]);
 
   const balance = income - expenses;
 
   /*
-   * COMPLETE PERIOD TIMELINE
+   * PERIOD TIMELINE
+   *
+   * IMPORTANT:
+   * We aggregate transactions ONCE instead of filtering
+   * the entire transaction list for every single period.
+   *
+   * This is what prevents Daily mode from freezing with
+   * several years of transaction data.
    */
   const periodData = useMemo(() => {
     if (validTransactions.length === 0) {
@@ -147,17 +179,18 @@ function Analytics() {
 
     const today = new Date();
 
-    const earliestTransaction = validTransactions.reduce(
-      (earliest, transaction) =>
-        transaction.parsedDate < earliest ? transaction.parsedDate : earliest,
-      validTransactions[0].parsedDate,
-    );
+    let earliestTransaction = validTransactions[0].parsedDate;
+    let latestTransaction = validTransactions[0].parsedDate;
 
-    const latestTransaction = validTransactions.reduce(
-      (latest, transaction) =>
-        transaction.parsedDate > latest ? transaction.parsedDate : latest,
-      validTransactions[0].parsedDate,
-    );
+    for (const transaction of validTransactions) {
+      if (transaction.parsedDate < earliestTransaction) {
+        earliestTransaction = transaction.parsedDate;
+      }
+
+      if (transaction.parsedDate > latestTransaction) {
+        latestTransaction = transaction.parsedDate;
+      }
+    }
 
     const firstPeriodStart = getPeriodStart(earliestTransaction, period);
 
@@ -173,41 +206,73 @@ function Analytics() {
         ? latestTransactionPeriodStart
         : currentPeriodStart;
 
+    /*
+     * Aggregate every transaction into its period.
+     *
+     * Map key = period start timestamp.
+     */
+    const periodTotals = new Map();
+
+    for (const transaction of validTransactions) {
+      const periodStart = getPeriodStart(transaction.parsedDate, period);
+
+      const key = periodStart.getTime();
+
+      const existing = periodTotals.get(key);
+
+      if (existing) {
+        if (transaction.type === "income") {
+          existing.income += transaction.numericAmount;
+        } else if (transaction.type === "expense") {
+          existing.expenses += transaction.numericAmount;
+        }
+      } else {
+        periodTotals.set(key, {
+          income: transaction.type === "income" ? transaction.numericAmount : 0,
+
+          expenses:
+            transaction.type === "expense" ? transaction.numericAmount : 0,
+        });
+      }
+    }
+
+    /*
+     * Build the complete timeline.
+     *
+     * This loop only creates the periods themselves.
+     * It does NOT scan transactions.
+     */
     const periods = [];
+
     let current = new Date(firstPeriodStart);
 
     while (current <= lastPeriodStart) {
       const start = new Date(current);
-      const end = movePeriod(start, period, 1);
+      const key = start.getTime();
 
-      const periodTransactions = validTransactions.filter(
-        (transaction) =>
-          transaction.parsedDate >= start && transaction.parsedDate < end,
-      );
-
-      const periodIncome = periodTransactions
-        .filter((transaction) => transaction.type === "income")
-        .reduce((total, transaction) => total + transaction.numericAmount, 0);
-
-      const periodExpenses = periodTransactions
-        .filter((transaction) => transaction.type === "expense")
-        .reduce((total, transaction) => total + transaction.numericAmount, 0);
+      const totals = periodTotals.get(key) || {
+        income: 0,
+        expenses: 0,
+      };
 
       periods.push({
-        key: start.getTime(),
+        key,
         date: start,
         label: formatPeriodLabel(start, period),
-        income: periodIncome,
-        expenses: periodExpenses,
-        net: periodIncome - periodExpenses,
+        income: totals.income,
+        expenses: totals.expenses,
+        net: totals.income - totals.expenses,
       });
 
-      current = end;
+      current = movePeriod(start, period, 1);
     }
 
     return periods;
   }, [validTransactions, period]);
 
+  /*
+   * CURRENT PERIOD
+   */
   const currentPeriodData = periodData[periodData.length - 1] || {
     income: 0,
     expenses: 0,
@@ -243,7 +308,9 @@ function Analytics() {
 
     return {
       incomeChange: calculateChange(current.income, previous.income),
+
       expenseChange: calculateChange(current.expenses, previous.expenses),
+
       netChange: calculateChange(current.net, previous.net),
     };
   }, [periodData]);
@@ -258,21 +325,25 @@ function Analytics() {
 
     const currentPeriodEnd = movePeriod(currentPeriodStart, period, 1);
 
-    const currentPeriodTransactions = validTransactions.filter(
-      (transaction) =>
-        transaction.parsedDate >= currentPeriodStart &&
-        transaction.parsedDate < currentPeriodEnd &&
-        transaction.type === "expense",
-    );
-
     const categories = {};
 
-    currentPeriodTransactions.forEach((transaction) => {
+    for (const transaction of validTransactions) {
+      if (transaction.type !== "expense") {
+        continue;
+      }
+
+      if (
+        transaction.parsedDate < currentPeriodStart ||
+        transaction.parsedDate >= currentPeriodEnd
+      ) {
+        continue;
+      }
+
       const category = transaction.category || "Other";
 
       categories[category] =
         (categories[category] || 0) + transaction.numericAmount;
-    });
+    }
 
     return Object.entries(categories)
       .map(([category, amount]) => ({
@@ -305,18 +376,31 @@ function Analytics() {
 
   /*
    * HIGHEST / LOWEST SPENDING PERIOD
+   *
+   * Uses a single pass instead of sorting the entire
+   * periodData array.
    */
-  const highestSpendingPeriod =
-    periodData.length > 0
-      ? [...periodData].sort((a, b) => b.expenses - a.expenses)[0]
-      : null;
+  const { highestSpendingPeriod, lowestSpendingPeriod } = useMemo(() => {
+    let highest = null;
+    let lowest = null;
 
-  const spendingPeriods = periodData.filter((item) => item.expenses > 0);
+    for (const item of periodData) {
+      if (item.expenses > 0) {
+        if (!highest || item.expenses > highest.expenses) {
+          highest = item;
+        }
 
-  const lowestSpendingPeriod =
-    spendingPeriods.length > 0
-      ? [...spendingPeriods].sort((a, b) => a.expenses - b.expenses)[0]
-      : null;
+        if (!lowest || item.expenses < lowest.expenses) {
+          lowest = item;
+        }
+      }
+    }
+
+    return {
+      highestSpendingPeriod: highest,
+      lowestSpendingPeriod: lowest,
+    };
+  }, [periodData]);
 
   /*
    * PERIOD NAME
@@ -370,6 +454,118 @@ function Analytics() {
   const chartWidth = Math.max(700, periodData.length * 90);
 
   /*
+   * CHART HISTORY NAVIGATION
+   */
+  const chartEndIndex = Math.min(
+    chartStartIndex + CHART_VISIBLE_PERIODS,
+    periodData.length,
+  );
+
+  const visibleChartData = showAllHistory
+    ? periodData
+    : periodData.slice(chartStartIndex, chartEndIndex);
+
+  const hasPreviousChartPeriods = chartStartIndex > 0;
+
+  const hasNextChartPeriods =
+    !showAllHistory && chartEndIndex < periodData.length;
+
+  const latestChartStartIndex = Math.max(
+    0,
+    periodData.length - CHART_VISIBLE_PERIODS,
+  );
+
+  const isAtLatest =
+    !showAllHistory && chartStartIndex >= latestChartStartIndex;
+
+  const visibleStartPeriod =
+    visibleChartData.length > 0 ? visibleChartData[0] : null;
+
+  const visibleEndPeriod =
+    visibleChartData.length > 0
+      ? visibleChartData[visibleChartData.length - 1]
+      : null;
+
+  const chartRangeLabel =
+    visibleStartPeriod && visibleEndPeriod
+      ? visibleStartPeriod.date.getTime() === visibleEndPeriod.date.getTime()
+        ? visibleStartPeriod.label
+        : `${visibleStartPeriod.label} — ${visibleEndPeriod.label}`
+      : "No history";
+
+  function goToPreviousChartPeriods() {
+    setShowAllHistory(false);
+
+    setChartStartIndex((currentIndex) =>
+      Math.max(0, currentIndex - CHART_VISIBLE_PERIODS),
+    );
+  }
+
+  function goToNextChartPeriods() {
+    setShowAllHistory(false);
+
+    setChartStartIndex((currentIndex) => {
+      const nextIndex = currentIndex + CHART_VISIBLE_PERIODS;
+
+      const maximumStartIndex = Math.max(
+        0,
+        periodData.length - CHART_VISIBLE_PERIODS,
+      );
+
+      return Math.min(nextIndex, maximumStartIndex);
+    });
+  }
+
+  function goToLatestChartPeriods() {
+    setShowAllHistory(false);
+
+    setChartStartIndex(latestChartStartIndex);
+  }
+
+  function toggleAllHistory() {
+    setShowAllHistory((current) => !current);
+
+    if (!showAllHistory) {
+      setChartStartIndex(0);
+    } else {
+      setChartStartIndex(latestChartStartIndex);
+    }
+  }
+
+  /*
+   * RESET CHART WINDOW WHEN PERIOD CHANGES
+   *
+   * Also reacts when a new period is created by
+   * newly imported/added transactions.
+   */
+  useEffect(() => {
+    if (periodData.length === 0) {
+      setChartStartIndex(0);
+      setShowAllHistory(false);
+      return;
+    }
+
+    setChartStartIndex(Math.max(0, periodData.length - CHART_VISIBLE_PERIODS));
+
+    setShowAllHistory(false);
+  }, [period, periodData.length]);
+
+  /*
+   * KEEP THE COMPACT CHART AT THE NEWEST PERIOD
+   */
+  useEffect(() => {
+    const container = chartScrollRef.current;
+
+    if (!container || showAllHistory) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      container.scrollLeft = container.scrollWidth;
+    });
+  }, [period, chartStartIndex, showAllHistory, visibleChartData.length]);
+
+  /*
    * EMPTY STATE
    */
   if (transactions.length === 0) {
@@ -402,16 +598,6 @@ function Analytics() {
       </div>
     );
   }
-
-  useEffect(() => {
-    const container = chartScrollRef.current;
-
-    if (!container) return;
-
-    requestAnimationFrame(() => {
-      container.scrollLeft = container.scrollWidth;
-    });
-  }, [period, periodData]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -612,7 +798,7 @@ function Analytics() {
           </CardContent>
         </Card>
 
-        <Card className="border-border bg-card transition-all duration-200 hover:-translate-y-1 hover:border-destructive/30">
+        <Card className="border-border bg-card transition-all duration-200 hover:-translate-y-1 hover:border-primary/30">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Total Expenses
@@ -783,133 +969,221 @@ function Analytics() {
 
           {/* CHART */}
           <div className="mt-8 overflow-hidden rounded-xl">
-            <div
-              ref={chartScrollRef}
-              className="overflow-x-auto pb-2 [scrollbar-color:#4FAF7B_transparent] [scrollbar-width:thin]"
-            >
-              <div
-                style={{
-                  width: `${chartWidth}px`,
-                  minWidth: "100%",
-                }}
-              >
-                <ChartContainer
-                  config={chartConfig}
-                  className="h-[300px] w-full"
+            {/* CHART NAVIGATION */}
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">
+                  {showAllHistory ? "Full history" : "Visible history"}
+                </p>
+
+                <p className="mt-1 text-sm font-semibold text-foreground">
+                  {chartRangeLabel}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {/* PREVIOUS */}
+                <button
+                  type="button"
+                  onClick={goToPreviousChartPeriods}
+                  disabled={!hasPreviousChartPeriods}
+                  className="flex items-center gap-1.5 rounded-lg border border-border bg-background/50 px-3 py-2 text-xs font-medium text-secondary-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                  aria-label="View previous periods"
                 >
-                  <LineChart
-                    data={periodData}
-                    margin={{
-                      top: 10,
-                      right: 20,
-                      left: 0,
-                      bottom: 0,
-                    }}
-                  >
-                    <CartesianGrid
-                      vertical={false}
-                      strokeDasharray="3 3"
-                      className="stroke-border/50"
-                    />
+                  <ChevronLeft size={14} />
 
-                    <XAxis
-                      dataKey="label"
-                      tickLine={false}
-                      axisLine={false}
-                      tickMargin={10}
-                      interval={0}
-                      className="text-xs"
-                      tick={{
-                        fill: "#98A39D",
-                      }}
-                    />
+                  <span>Previous</span>
+                </button>
 
-                    <YAxis
-                      tickLine={false}
-                      axisLine={false}
-                      tickMargin={8}
-                      width={60}
-                      tick={{
-                        fill: "#98A39D",
-                      }}
-                      tickFormatter={(value) => {
-                        const symbols = {
-                          NGN: "₦",
-                          USD: "$",
-                          GBP: "£",
-                          EUR: "€",
-                        };
+                {/* NEXT */}
+                <button
+                  type="button"
+                  onClick={goToNextChartPeriods}
+                  disabled={!hasNextChartPeriods}
+                  className="flex items-center gap-1.5 rounded-lg border border-border bg-background/50 px-3 py-2 text-xs font-medium text-secondary-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                  aria-label="View next periods"
+                >
+                  <span>Next</span>
 
-                        return `${symbols[currency] || "₦"}${Number(
-                          value,
-                        ).toLocaleString("en-NG", {
-                          notation: "compact",
-                        })}`;
-                      }}
-                    />
+                  <ChevronRight size={14} />
+                </button>
 
-                    <ChartTooltip
-                      cursor={{
-                        stroke: "#F1F5F2",
-                        strokeOpacity: 0.1,
-                      }}
-                      content={
-                        <ChartTooltipContent
-                          formatter={(value) => formatCurrency(value, currency)}
-                        />
-                      }
-                    />
+                {/* LATEST */}
+                <button
+                  type="button"
+                  onClick={goToLatestChartPeriods}
+                  disabled={isAtLatest}
+                  className="rounded-lg border border-border bg-background/50 px-3 py-2 text-xs font-medium text-secondary-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Latest
+                </button>
 
-                    <Line
-                      type="monotone"
-                      dataKey="income"
-                      name="Income"
-                      stroke="var(--color-income)"
-                      strokeWidth={3}
-                      dot={{
-                        r: 4,
-                        fill: "#4FAF7B",
-                        strokeWidth: 0,
-                      }}
-                      activeDot={{
-                        r: 6,
-                        strokeWidth: 3,
-                        stroke: "#4FAF7B",
-                      }}
-                    />
-
-                    <Line
-                      type="monotone"
-                      dataKey="expenses"
-                      name="Expenses"
-                      stroke="var(--color-expenses)"
-                      strokeWidth={3}
-                      dot={{
-                        r: 4,
-                        fill: "#D66B6B",
-                        strokeWidth: 0,
-                      }}
-                      activeDot={{
-                        r: 6,
-                        strokeWidth: 3,
-                        stroke: "#D66B6B",
-                      }}
-                    />
-                  </LineChart>
-                </ChartContainer>
+                {/* ALL HISTORY */}
+                <button
+                  type="button"
+                  onClick={toggleAllHistory}
+                  className={`rounded-lg px-3 py-2 text-xs font-medium transition-all ${
+                    showAllHistory
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                      : "border border-border bg-background/50 text-secondary-foreground hover:bg-accent hover:text-foreground"
+                  }`}
+                >
+                  {showAllHistory ? "Compact view" : "View all history"}
+                </button>
               </div>
             </div>
 
-            {/* LEGEND */}
-            <div className="mt-4 flex justify-center gap-6">
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-primary" />
-                <span className="text-xs text-muted-foreground">Income</span>
+            {/* CHART */}
+            <div className="overflow-hidden rounded-xl">
+              <div
+                ref={chartScrollRef}
+                className="overflow-x-auto pb-2 [scrollbar-color:#4FAF7B_transparent] [scrollbar-width:thin]"
+              >
+                <div
+                  style={{
+                    width: showAllHistory
+                      ? `${chartWidth}px`
+                      : `${Math.max(700, visibleChartData.length * 90)}px`,
+                    minWidth: "100%",
+                  }}
+                >
+                  <ChartContainer
+                    config={chartConfig}
+                    className="h-[300px] w-full"
+                  >
+                    <LineChart
+                      data={visibleChartData}
+                      margin={{
+                        top: 10,
+                        right: 20,
+                        left: 0,
+                        bottom: 0,
+                      }}
+                    >
+                      <CartesianGrid
+                        vertical={false}
+                        strokeDasharray="3 3"
+                        className="stroke-border/50"
+                      />
+
+                      <XAxis
+                        dataKey="label"
+                        tickLine={false}
+                        axisLine={false}
+                        tickMargin={10}
+                        interval={0}
+                        className="text-xs"
+                        tick={{
+                          fill: "#98A39D",
+                        }}
+                      />
+
+                      <YAxis
+                        tickLine={false}
+                        axisLine={false}
+                        tickMargin={8}
+                        width={60}
+                        tick={{
+                          fill: "#98A39D",
+                        }}
+                        tickFormatter={(value) => {
+                          const symbols = {
+                            NGN: "₦",
+                            USD: "$",
+                            GBP: "£",
+                            EUR: "€",
+                          };
+
+                          return `${symbols[currency] || "₦"}${Number(
+                            value,
+                          ).toLocaleString("en-NG", {
+                            notation: "compact",
+                          })}`;
+                        }}
+                      />
+
+                      <ChartTooltip
+                        cursor={{
+                          stroke: "#F1F5F2",
+                          strokeOpacity: 0.1,
+                        }}
+                        content={
+                          <ChartTooltipContent
+                            formatter={(value) =>
+                              formatCurrency(value, currency)
+                            }
+                          />
+                        }
+                      />
+
+                      <Line
+                        type="monotone"
+                        dataKey="income"
+                        name="Income"
+                        stroke="var(--color-income)"
+                        strokeWidth={3}
+                        dot={{
+                          r: 4,
+                          fill: "#4FAF7B",
+                          strokeWidth: 0,
+                        }}
+                        activeDot={{
+                          r: 6,
+                          strokeWidth: 3,
+                          stroke: "#4FAF7B",
+                        }}
+                      />
+
+                      <Line
+                        type="monotone"
+                        dataKey="expenses"
+                        name="Expenses"
+                        stroke="var(--color-expenses)"
+                        strokeWidth={3}
+                        dot={{
+                          r: 4,
+                          fill: "#D66B6B",
+                          strokeWidth: 0,
+                        }}
+                        activeDot={{
+                          r: 6,
+                          strokeWidth: 3,
+                          stroke: "#D66B6B",
+                        }}
+                      />
+                    </LineChart>
+                  </ChartContainer>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-destructive" />
-                <span className="text-xs text-muted-foreground">Expenses</span>
+              {/* HISTORY POSITION */}
+              <div className="mt-3 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                <span>
+                  {showAllHistory
+                    ? `Showing all ${periodData.length} ${period}${
+                        periodData.length === 1 ? "" : "s"
+                      }`
+                    : `Showing ${visibleChartData.length} of ${
+                        periodData.length
+                      } ${period}${periodData.length === 1 ? "" : "s"}`}
+                </span>
+              </div>
+
+              {/* LEGEND */}
+              <div className="mt-4 flex justify-center gap-6">
+                <div className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+
+                  <span className="text-xs text-muted-foreground">Income</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full bg-destructive" />
+
+                  <span className="text-xs text-muted-foreground">
+                    Expenses
+                  </span>
+                </div>
               </div>
             </div>
           </div>

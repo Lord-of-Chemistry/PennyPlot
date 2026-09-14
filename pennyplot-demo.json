@@ -1,0 +1,1515 @@
+{
+  "app": "PennyPlot",
+  "version": "1.0.0",
+  "createdAt": "2026-09-08T09:00:00.000Z",
+  "data": {
+    "transactions": [
+      {
+        "id": "demo-0001",
+        "type": "income",
+        "amount": 120000,
+        "category": "Allowance",
+        "description": "Monthly allowance",
+        "date": "2021-01-03"
+      },
+      {
+        "id": "demo-0002",
+        "type": "expense",
+        "amount": 6500,
+        "category": "Food",
+        "description": "Groceries",
+        "date": "2021-01-04"
+      },
+      {
+        "id": "demo-0003",
+        "type": "expense",
+        "amount": 2500,
+        "category": "Transport",
+        "description": "Transport",
+        "date": "2021-01-05"
+      },
+      {
+        "id": "demo-0004",
+        "type": "expense",
+        "amount": 2000,
+        "category": "Airtime",
+        "description": "Airtime recharge",
+        "date": "2021-01-06"
+      },
+      {
+        "id": "demo-0005",
+        "type": "income",
+        "amount": 35000,
+        "category": "Gift",
+        "description": "Gift received",
+        "date": "2021-01-09"
+      },
+      {
+        "id": "demo-0006",
+        "type": "expense",
+        "amount": 5000,
+        "category": "Entertainment",
+        "description": "Movie and snacks",
+        "date": "2021-01-12"
+      },
+      {
+        "id": "demo-0007",
+        "type": "expense",
+        "amount": 4500,
+        "category": "Data",
+        "description": "Internet data",
+        "date": "2021-01-15"
+      },
+      {
+        "id": "demo-0008",
+        "type": "income",
+        "amount": 25000,
+        "category": "Freelance",
+        "description": "Design task",
+        "date": "2021-01-19"
+      },
+      {
+        "id": "demo-0009",
+        "type": "expense",
+        "amount": 7500,
+        "category": "Shopping",
+        "description": "Clothing",
+        "date": "2021-01-22"
+      },
+      {
+        "id": "demo-0010",
+        "type": "expense",
+        "amount": 3500,
+        "category": "Personal Care",
+        "description": "Personal care items",
+        "date": "2021-01-27"
+      },
+
+      {
+        "id": "demo-0011",
+        "type": "income",
+        "amount": 125000,
+        "category": "Allowance",
+        "description": "Monthly allowance",
+        "date": "2021-02-02"
+      },
+      {
+        "id": "demo-0012",
+        "type": "expense",
+        "amount": 8000,
+        "category": "Food",
+        "description": "Groceries and meals",
+        "date": "2021-02-04"
+      },
+      {
+        "id": "demo-0013",
+        "type": "expense",
+        "amount": 3000,
+        "category": "Transport",
+        "description": "Transport",
+        "date": "2021-02-06"
+      },
+      {
+        "id": "demo-0014",
+        "type": "expense",
+        "amount": 4500,
+        "category": "Data",
+        "description": "Data plan",
+        "date": "2021-02-08"
+      },
+      {
+        "id": "demo-0015",
+        "type": "income",
+        "amount": 42000,
+        "category": "Freelance",
+        "description": "Website assistance",
+        "date": "2021-02-11"
+      },
+      {
+        "id": "demo-0016",
+        "type": "expense",
+        "amount": 9000,
+        "category": "Shopping",
+        "description": "New clothes",
+        "date": "2021-02-14"
+      },
+      {
+        "id": "demo-0017",
+        "type": "expense",
+        "amount": 4000,
+        "category": "Entertainment",
+        "description": "Entertainment",
+        "date": "2021-02-18"
+      },
+      {
+        "id": "demo-0018",
+        "type": "income",
+        "amount": 15000,
+        "category": "Refund",
+        "description": "Purchase refund",
+        "date": "2021-02-22"
+      },
+
+      {
+        "id": "demo-0019",
+        "type": "income",
+        "amount": 130000,
+        "category": "Allowance",
+        "description": "Monthly allowance",
+        "date": "2021-03-02"
+      },
+      {
+        "id": "demo-0020",
+        "type": "expense",
+        "amount": 9500,
+        "category": "Food",
+        "description": "Food and groceries",
+        "date": "2021-03-04"
+      },
+      {
+        "id": "demo-0021",
+        "type": "expense",
+        "amount": 3500,
+        "category": "Transport",
+        "description": "Transport",
+        "date": "2021-03-06"
+      },
+      {
+        "id": "demo-0022",
+        "type": "expense",
+        "amount": 2500,
+        "category": "Airtime",
+        "description": "Airtime recharge",
+        "date": "2021-03-08"
+      },
+      {
+        "id": "demo-0023",
+        "type": "income",
+        "amount": 60000,
+        "category": "Freelance",
+        "description": "Landing page project",
+        "date": "2021-03-12"
+      },
+      {
+        "id": "demo-0024",
+        "type": "expense",
+        "amount": 11000,
+        "category": "Education",
+        "description": "Books and study materials",
+        "date": "2021-03-15"
+      },
+      {
+        "id": "demo-0025",
+        "type": "expense",
+        "amount": 6500,
+        "category": "Entertainment",
+        "description": "Games and entertainment",
+        "date": "2021-03-20"
+      },
+      {
+        "id": "demo-0026",
+        "type": "income",
+        "amount": 30000,
+        "category": "Gift",
+        "description": "Gift received",
+        "date": "2021-03-25"
+      },
+
+      {
+        "id": "demo-0027",
+        "type": "income",
+        "amount": 135000,
+        "category": "Allowance",
+        "description": "Monthly allowance",
+        "date": "2021-04-02"
+      },
+      {
+        "id": "demo-0028",
+        "type": "expense",
+        "amount": 10500,
+        "category": "Food",
+        "description": "Groceries",
+        "date": "2021-04-04"
+      },
+      {
+        "id": "demo-0029",
+        "type": "expense",
+        "amount": 4000,
+        "category": "Transport",
+        "description": "Transport",
+        "date": "2021-04-06"
+      },
+      {
+        "id": "demo-0030",
+        "type": "income",
+        "amount": 55000,
+        "category": "Business",
+        "description": "Small business sale",
+        "date": "2021-04-10"
+      },
+      {
+        "id": "demo-0031",
+        "type": "expense",
+        "amount": 7000,
+        "category": "Shopping",
+        "description": "Shopping",
+        "date": "2021-04-13"
+      },
+      {
+        "id": "demo-0032",
+        "type": "expense",
+        "amount": 5000,
+        "category": "Data",
+        "description": "Internet plan",
+        "date": "2021-04-16"
+      },
+      {
+        "id": "demo-0033",
+        "type": "expense",
+        "amount": 8000,
+        "category": "Education",
+        "description": "Learning materials",
+        "date": "2021-04-21"
+      },
+
+      {
+        "id": "demo-0034",
+        "type": "income",
+        "amount": 145000,
+        "category": "Allowance",
+        "description": "Monthly allowance",
+        "date": "2021-05-02"
+      },
+      {
+        "id": "demo-0035",
+        "type": "income",
+        "amount": 70000,
+        "category": "Freelance",
+        "description": "Website project",
+        "date": "2021-05-07"
+      },
+      {
+        "id": "demo-0036",
+        "type": "expense",
+        "amount": 12000,
+        "category": "Food",
+        "description": "Groceries and meals",
+        "date": "2021-05-09"
+      },
+      {
+        "id": "demo-0037",
+        "type": "expense",
+        "amount": 5000,
+        "category": "Transport",
+        "description": "Transport",
+        "date": "2021-05-11"
+      },
+      {
+        "id": "demo-0038",
+        "type": "expense",
+        "amount": 8500,
+        "category": "Shopping",
+        "description": "Clothing and accessories",
+        "date": "2021-05-15"
+      },
+      {
+        "id": "demo-0039",
+        "type": "expense",
+        "amount": 4500,
+        "category": "Entertainment",
+        "description": "Entertainment",
+        "date": "2021-05-20"
+      },
+      {
+        "id": "demo-0040",
+        "type": "income",
+        "amount": 20000,
+        "category": "Refund",
+        "description": "Refund received",
+        "date": "2021-05-25"
+      },
+
+      {
+        "id": "demo-0041",
+        "type": "income",
+        "amount": 150000,
+        "category": "Allowance",
+        "description": "Monthly allowance",
+        "date": "2022-01-03"
+      },
+      {
+        "id": "demo-0042",
+        "type": "income",
+        "amount": 80000,
+        "category": "Freelance",
+        "description": "Frontend project",
+        "date": "2022-01-08"
+      },
+      {
+        "id": "demo-0043",
+        "type": "expense",
+        "amount": 14000,
+        "category": "Food",
+        "description": "Groceries",
+        "date": "2022-01-10"
+      },
+      {
+        "id": "demo-0044",
+        "type": "expense",
+        "amount": 5500,
+        "category": "Transport",
+        "description": "Transport",
+        "date": "2022-01-12"
+      },
+      {
+        "id": "demo-0045",
+        "type": "expense",
+        "amount": 5000,
+        "category": "Data",
+        "description": "Data plan",
+        "date": "2022-01-15"
+      },
+      {
+        "id": "demo-0046",
+        "type": "expense",
+        "amount": 15000,
+        "category": "Shopping",
+        "description": "Shopping",
+        "date": "2022-01-19"
+      },
+      {
+        "id": "demo-0047",
+        "type": "income",
+        "amount": 45000,
+        "category": "Business",
+        "description": "Business income",
+        "date": "2022-01-22"
+      },
+      {
+        "id": "demo-0048",
+        "type": "expense",
+        "amount": 7000,
+        "category": "Entertainment",
+        "description": "Entertainment",
+        "date": "2022-01-25"
+      },
+
+      {
+        "id": "demo-0049",
+        "type": "income",
+        "amount": 155000,
+        "category": "Allowance",
+        "description": "Monthly allowance",
+        "date": "2022-03-02"
+      },
+      {
+        "id": "demo-0050",
+        "type": "income",
+        "amount": 95000,
+        "category": "Freelance",
+        "description": "Web development project",
+        "date": "2022-03-06"
+      },
+      {
+        "id": "demo-0051",
+        "type": "expense",
+        "amount": 16000,
+        "category": "Food",
+        "description": "Food and groceries",
+        "date": "2022-03-08"
+      },
+      {
+        "id": "demo-0052",
+        "type": "expense",
+        "amount": 6000,
+        "category": "Transport",
+        "description": "Transport",
+        "date": "2022-03-10"
+      },
+      {
+        "id": "demo-0053",
+        "type": "expense",
+        "amount": 18000,
+        "category": "Education",
+        "description": "Course materials",
+        "date": "2022-03-13"
+      },
+      {
+        "id": "demo-0054",
+        "type": "expense",
+        "amount": 12000,
+        "category": "Shopping",
+        "description": "Clothes",
+        "date": "2022-03-17"
+      },
+      {
+        "id": "demo-0055",
+        "type": "income",
+        "amount": 35000,
+        "category": "Gift",
+        "description": "Gift received",
+        "date": "2022-03-21"
+      },
+      {
+        "id": "demo-0056",
+        "type": "expense",
+        "amount": 8000,
+        "category": "Entertainment",
+        "description": "Entertainment",
+        "date": "2022-03-24"
+      },
+
+      {
+        "id": "demo-0057",
+        "type": "income",
+        "amount": 165000,
+        "category": "Allowance",
+        "description": "Monthly allowance",
+        "date": "2022-06-02"
+      },
+      {
+        "id": "demo-0058",
+        "type": "income",
+        "amount": 125000,
+        "category": "Freelance",
+        "description": "React project",
+        "date": "2022-06-07"
+      },
+      {
+        "id": "demo-0059",
+        "type": "expense",
+        "amount": 18000,
+        "category": "Food",
+        "description": "Groceries and meals",
+        "date": "2022-06-09"
+      },
+      {
+        "id": "demo-0060",
+        "type": "expense",
+        "amount": 7500,
+        "category": "Transport",
+        "description": "Transport",
+        "date": "2022-06-11"
+      },
+      {
+        "id": "demo-0061",
+        "type": "expense",
+        "amount": 7000,
+        "category": "Data",
+        "description": "Internet data",
+        "date": "2022-06-13"
+      },
+      {
+        "id": "demo-0062",
+        "type": "expense",
+        "amount": 22000,
+        "category": "Tech",
+        "description": "Tech accessories",
+        "date": "2022-06-18"
+      },
+      {
+        "id": "demo-0063",
+        "type": "income",
+        "amount": 60000,
+        "category": "Business",
+        "description": "Business income",
+        "date": "2022-06-21"
+      },
+      {
+        "id": "demo-0064",
+        "type": "expense",
+        "amount": 9000,
+        "category": "Entertainment",
+        "description": "Entertainment",
+        "date": "2022-06-25"
+      },
+
+      {
+        "id": "demo-0065",
+        "type": "income",
+        "amount": 175000,
+        "category": "Allowance",
+        "description": "Monthly allowance",
+        "date": "2023-01-02"
+      },
+      {
+        "id": "demo-0066",
+        "type": "income",
+        "amount": 110000,
+        "category": "Freelance",
+        "description": "Portfolio website project",
+        "date": "2023-01-06"
+      },
+      {
+        "id": "demo-0067",
+        "type": "expense",
+        "amount": 20000,
+        "category": "Food",
+        "description": "Groceries",
+        "date": "2023-01-08"
+      },
+      {
+        "id": "demo-0068",
+        "type": "expense",
+        "amount": 8500,
+        "category": "Transport",
+        "description": "Transport",
+        "date": "2023-01-10"
+      },
+      {
+        "id": "demo-0069",
+        "type": "expense",
+        "amount": 6000,
+        "category": "Data",
+        "description": "Internet plan",
+        "date": "2023-01-12"
+      },
+      {
+        "id": "demo-0070",
+        "type": "expense",
+        "amount": 25000,
+        "category": "Shopping",
+        "description": "Clothing and accessories",
+        "date": "2023-01-16"
+      },
+      {
+        "id": "demo-0071",
+        "type": "income",
+        "amount": 75000,
+        "category": "Business",
+        "description": "Business income",
+        "date": "2023-01-19"
+      },
+      {
+        "id": "demo-0072",
+        "type": "expense",
+        "amount": 12000,
+        "category": "Entertainment",
+        "description": "Entertainment",
+        "date": "2023-01-22"
+      },
+      {
+        "id": "demo-0073",
+        "type": "expense",
+        "amount": 15000,
+        "category": "Education",
+        "description": "Learning resources",
+        "date": "2023-01-26"
+      },
+
+      {
+        "id": "demo-0074",
+        "type": "income",
+        "amount": 180000,
+        "category": "Allowance",
+        "description": "Monthly allowance",
+        "date": "2023-04-02"
+      },
+      {
+        "id": "demo-0075",
+        "type": "income",
+        "amount": 145000,
+        "category": "Freelance",
+        "description": "React dashboard project",
+        "date": "2023-04-07"
+      },
+      {
+        "id": "demo-0076",
+        "type": "expense",
+        "amount": 23000,
+        "category": "Food",
+        "description": "Food and groceries",
+        "date": "2023-04-09"
+      },
+      {
+        "id": "demo-0077",
+        "type": "expense",
+        "amount": 9000,
+        "category": "Transport",
+        "description": "Transport",
+        "date": "2023-04-11"
+      },
+      {
+        "id": "demo-0078",
+        "type": "expense",
+        "amount": 6500,
+        "category": "Airtime",
+        "description": "Airtime",
+        "date": "2023-04-13"
+      },
+      {
+        "id": "demo-0079",
+        "id": "demo-0079",
+        "type": "income",
+        "amount": 85000,
+        "category": "Business",
+        "description": "Small business income",
+        "date": "2023-04-16"
+      },
+      {
+        "id": "demo-0080",
+        "type": "expense",
+        "amount": 30000,
+        "category": "Tech",
+        "description": "Computer accessories",
+        "date": "2023-04-19"
+      },
+      {
+        "id": "demo-0081",
+        "type": "expense",
+        "amount": 14000,
+        "category": "Entertainment",
+        "description": "Entertainment",
+        "date": "2023-04-23"
+      },
+
+      {
+        "id": "demo-0082",
+        "type": "income",
+        "amount": 190000,
+        "category": "Allowance",
+        "description": "Monthly allowance",
+        "date": "2024-01-02"
+      },
+      {
+        "id": "demo-0083",
+        "type": "income",
+        "amount": 180000,
+        "category": "Freelance",
+        "description": "Web application project",
+        "date": "2024-01-05"
+      },
+      {
+        "id": "demo-0084",
+        "type": "income",
+        "amount": 70000,
+        "category": "Business",
+        "description": "Business income",
+        "date": "2024-01-09"
+      },
+      {
+        "id": "demo-0085",
+        "type": "expense",
+        "amount": 27000,
+        "category": "Food",
+        "description": "Groceries and meals",
+        "date": "2024-01-11"
+      },
+      {
+        "id": "demo-0086",
+        "type": "expense",
+        "amount": 11000,
+        "category": "Transport",
+        "description": "Transport",
+        "date": "2024-01-13"
+      },
+      {
+        "id": "demo-0087",
+        "type": "expense",
+        "amount": 8000,
+        "category": "Data",
+        "description": "Internet data",
+        "date": "2024-01-15"
+      },
+      {
+        "id": "demo-0088",
+        "type": "expense",
+        "amount": 35000,
+        "category": "Shopping",
+        "description": "Shopping",
+        "date": "2024-01-18"
+      },
+      {
+        "id": "demo-0089",
+        "type": "expense",
+        "amount": 15000,
+        "category": "Entertainment",
+        "description": "Entertainment",
+        "date": "2024-01-22"
+      },
+      {
+        "id": "demo-0090",
+        "type": "expense",
+        "amount": 18000,
+        "category": "Education",
+        "description": "Course materials",
+        "date": "2024-01-26"
+      },
+
+      {
+        "id": "demo-0091",
+        "type": "income",
+        "amount": 200000,
+        "category": "Allowance",
+        "description": "Monthly allowance",
+        "date": "2024-06-02"
+      },
+      {
+        "id": "demo-0092",
+        "type": "income",
+        "amount": 220000,
+        "category": "Freelance",
+        "description": "Frontend application",
+        "date": "2024-06-06"
+      },
+      {
+        "id": "demo-0093",
+        "type": "income",
+        "amount": 95000,
+        "category": "Business",
+        "description": "Business income",
+        "date": "2024-06-10"
+      },
+      {
+        "id": "demo-0094",
+        "type": "expense",
+        "amount": 30000,
+        "category": "Food",
+        "description": "Food and groceries",
+        "date": "2024-06-12"
+      },
+      {
+        "id": "demo-0095",
+        "type": "expense",
+        "amount": 12500,
+        "category": "Transport",
+        "description": "Transport",
+        "date": "2024-06-14"
+      },
+      {
+        "id": "demo-0096",
+        "type": "expense",
+        "amount": 9000,
+        "category": "Data",
+        "description": "Internet plan",
+        "date": "2024-06-16"
+      },
+      {
+        "id": "demo-0097",
+        "type": "expense",
+        "amount": 45000,
+        "category": "Tech",
+        "description": "Tech purchase",
+        "date": "2024-06-20"
+      },
+      {
+        "id": "demo-0098",
+        "type": "expense",
+        "amount": 18000,
+        "category": "Entertainment",
+        "description": "Entertainment",
+        "date": "2024-06-24"
+      },
+
+      {
+        "id": "demo-0099",
+        "type": "income",
+        "amount": 220000,
+        "category": "Allowance",
+        "description": "Monthly allowance",
+        "date": "2025-01-02"
+      },
+      {
+        "id": "demo-0100",
+        "type": "income",
+        "amount": 250000,
+        "category": "Freelance",
+        "description": "Full website project",
+        "date": "2025-01-06"
+      },
+      {
+        "id": "demo-0101",
+        "type": "income",
+        "amount": 120000,
+        "category": "Business",
+        "description": "Business income",
+        "date": "2025-01-10"
+      },
+      {
+        "id": "demo-0102",
+        "type": "expense",
+        "amount": 35000,
+        "category": "Food",
+        "description": "Groceries and meals",
+        "date": "2025-01-12"
+      },
+      {
+        "id": "demo-0103",
+        "type": "expense",
+        "amount": 15000,
+        "category": "Transport",
+        "description": "Transport",
+        "date": "2025-01-14"
+      },
+      {
+        "id": "demo-0104",
+        "type": "expense",
+        "amount": 10000,
+        "category": "Data",
+        "description": "Internet data",
+        "date": "2025-01-16"
+      },
+      {
+        "id": "demo-0105",
+        "type": "expense",
+        "amount": 55000,
+        "category": "Shopping",
+        "description": "Major shopping",
+        "date": "2025-01-20"
+      },
+      {
+        "id": "demo-0106",
+        "type": "expense",
+        "amount": 22000,
+        "category": "Entertainment",
+        "description": "Entertainment",
+        "date": "2025-01-24"
+      },
+      {
+        "id": "demo-0107",
+        "type": "income",
+        "amount": 65000,
+        "category": "Gift",
+        "description": "Gift received",
+        "date": "2025-01-28"
+      },
+
+      {
+        "id": "demo-0108",
+        "type": "income",
+        "amount": 230000,
+        "category": "Allowance",
+        "description": "Monthly allowance",
+        "date": "2025-05-02"
+      },
+      {
+        "id": "demo-0109",
+        "type": "income",
+        "amount": 175000,
+        "category": "Freelance",
+        "description": "Dashboard development",
+        "date": "2025-05-05"
+      },
+      {
+        "id": "demo-0110",
+        "type": "expense",
+        "amount": 38000,
+        "category": "Food",
+        "description": "Food and groceries",
+        "date": "2025-05-07"
+      },
+      {
+        "id": "demo-0111",
+        "type": "expense",
+        "amount": 16000,
+        "category": "Transport",
+        "description": "Transport",
+        "date": "2025-05-09"
+      },
+      {
+        "id": "demo-0112",
+        "type": "expense",
+        "amount": 11000,
+        "category": "Data",
+        "description": "Internet plan",
+        "date": "2025-05-11"
+      },
+      {
+        "id": "demo-0113",
+        "type": "income",
+        "amount": 90000,
+        "category": "Business",
+        "description": "Business income",
+        "date": "2025-05-14"
+      },
+      {
+        "id": "demo-0114",
+        "type": "expense",
+        "amount": 28000,
+        "category": "Shopping",
+        "description": "Shopping",
+        "date": "2025-05-17"
+      },
+      {
+        "id": "demo-0115",
+        "type": "expense",
+        "amount": 12000,
+        "category": "Subscriptions",
+        "description": "Digital subscriptions",
+        "date": "2025-05-20"
+      },
+      {
+        "id": "demo-0116",
+        "type": "expense",
+        "amount": 20000,
+        "category": "Education",
+        "description": "Online learning",
+        "date": "2025-05-24"
+      },
+
+      {
+        "id": "demo-0117",
+        "type": "income",
+        "amount": 250000,
+        "category": "Allowance",
+        "description": "Monthly allowance",
+        "date": "2026-01-02"
+      },
+      {
+        "id": "demo-0118",
+        "type": "income",
+        "amount": 300000,
+        "category": "Freelance",
+        "description": "Web application project",
+        "date": "2026-01-05"
+      },
+      {
+        "id": "demo-0119",
+        "type": "income",
+        "amount": 100000,
+        "category": "Business",
+        "description": "Business income",
+        "date": "2026-01-09"
+      },
+      {
+        "id": "demo-0120",
+        "type": "expense",
+        "amount": 45000,
+        "category": "Food",
+        "description": "Groceries and meals",
+        "date": "2026-01-11"
+      },
+      {
+        "id": "demo-0121",
+        "type": "expense",
+        "amount": 18000,
+        "category": "Transport",
+        "description": "Transport",
+        "date": "2026-01-13"
+      },
+      {
+        "id": "demo-0122",
+        "type": "expense",
+        "amount": 12000,
+        "category": "Data",
+        "description": "Internet plan",
+        "date": "2026-01-15"
+      },
+      {
+        "id": "demo-0123",
+        "type": "expense",
+        "amount": 60000,
+        "category": "Shopping",
+        "description": "Major purchase",
+        "date": "2026-01-18"
+      },
+      {
+        "id": "demo-0124",
+        "type": "expense",
+        "amount": 25000,
+        "category": "Entertainment",
+        "description": "Entertainment",
+        "date": "2026-01-21"
+      },
+      {
+        "id": "demo-0125",
+        "id": "demo-0125",
+        "type": "income",
+        "amount": 85000,
+        "category": "Freelance",
+        "description": "Small development task",
+        "date": "2026-01-24"
+      },
+      {
+        "id": "demo-0126",
+        "type": "expense",
+        "amount": 22000,
+        "category": "Subscriptions",
+        "description": "Software subscriptions",
+        "date": "2026-01-27"
+      },
+
+      {
+        "id": "demo-0127",
+        "type": "income",
+        "amount": 260000,
+        "category": "Allowance",
+        "description": "Monthly allowance",
+        "date": "2026-03-02"
+      },
+      {
+        "id": "demo-0128",
+        "type": "income",
+        "amount": 350000,
+        "category": "Freelance",
+        "description": "Large web development project",
+        "date": "2026-03-05"
+      },
+      {
+        "id": "demo-0129",
+        "type": "income",
+        "amount": 140000,
+        "category": "Business",
+        "description": "Business income",
+        "date": "2026-03-09"
+      },
+      {
+        "id": "demo-0130",
+        "type": "expense",
+        "amount": 50000,
+        "category": "Food",
+        "description": "Food and groceries",
+        "date": "2026-03-11"
+      },
+      {
+        "id": "demo-0131",
+        "type": "expense",
+        "amount": 20000,
+        "category": "Transport",
+        "description": "Transport",
+        "date": "2026-03-13"
+      },
+      {
+        "id": "demo-0132",
+        "type": "expense",
+        "amount": 14000,
+        "category": "Data",
+        "description": "Internet data",
+        "date": "2026-03-15"
+      },
+      {
+        "id": "demo-0133",
+        "type": "expense",
+        "amount": 80000,
+        "category": "Tech",
+        "description": "New tech equipment",
+        "date": "2026-03-18"
+      },
+      {
+        "id": "demo-0134",
+        "type": "expense",
+        "amount": 30000,
+        "category": "Entertainment",
+        "description": "Entertainment",
+        "date": "2026-03-21"
+      },
+      {
+        "id": "demo-0135",
+        "type": "income",
+        "amount": 50000,
+        "category": "Gift",
+        "description": "Gift received",
+        "date": "2026-03-25"
+      },
+      {
+        "id": "demo-0136",
+        "type": "expense",
+        "amount": 18000,
+        "category": "Personal Care",
+        "description": "Personal care",
+        "date": "2026-03-28"
+      },
+
+      {
+        "id": "demo-0137",
+        "type": "income",
+        "amount": 275000,
+        "category": "Allowance",
+        "description": "Monthly allowance",
+        "date": "2026-05-02"
+      },
+      {
+        "id": "demo-0138",
+        "type": "income",
+        "amount": 190000,
+        "category": "Freelance",
+        "description": "Website maintenance",
+        "date": "2026-05-06"
+      },
+      {
+        "id": "demo-0139",
+        "type": "income",
+        "amount": 95000,
+        "category": "Business",
+        "description": "Business income",
+        "date": "2026-05-10"
+      },
+      {
+        "id": "demo-0140",
+        "type": "expense",
+        "amount": 48000,
+        "category": "Food",
+        "description": "Groceries and meals",
+        "date": "2026-05-12"
+      },
+      {
+        "id": "demo-0141",
+        "type": "expense",
+        "amount": 17500,
+        "category": "Transport",
+        "description": "Transport",
+        "date": "2026-05-14"
+      },
+      {
+        "id": "demo-0142",
+        "type": "expense",
+        "amount": 13000,
+        "category": "Data",
+        "description": "Internet data",
+        "date": "2026-05-16"
+      },
+      {
+        "id": "demo-0143",
+        "type": "expense",
+        "amount": 45000,
+        "category": "Shopping",
+        "description": "Shopping",
+        "date": "2026-05-19"
+      },
+      {
+        "id": "demo-0144",
+        "type": "expense",
+        "amount": 15000,
+        "category": "Subscriptions",
+        "description": "Software subscriptions",
+        "date": "2026-05-22"
+      },
+      {
+        "id": "demo-0145",
+        "type": "income",
+        "amount": 120000,
+        "category": "Freelance",
+        "description": "Small freelance task",
+        "date": "2026-05-25"
+      },
+      {
+        "id": "demo-0146",
+        "type": "expense",
+        "amount": 22000,
+        "category": "Education",
+        "description": "Learning resources",
+        "date": "2026-05-28"
+      },
+
+      {
+        "id": "demo-0147",
+        "type": "income",
+        "amount": 280000,
+        "category": "Allowance",
+        "description": "Monthly allowance",
+        "date": "2026-07-02"
+      },
+      {
+        "id": "demo-0148",
+        "type": "income",
+        "amount": 275000,
+        "category": "Freelance",
+        "description": "React application project",
+        "date": "2026-07-05"
+      },
+      {
+        "id": "demo-0149",
+        "type": "income",
+        "amount": 110000,
+        "category": "Business",
+        "description": "Business income",
+        "date": "2026-07-09"
+      },
+      {
+        "id": "demo-0150",
+        "type": "expense",
+        "amount": 52000,
+        "category": "Food",
+        "description": "Food and groceries",
+        "date": "2026-07-11"
+      },
+      {
+        "id": "demo-0151",
+        "type": "expense",
+        "amount": 22000,
+        "category": "Transport",
+        "description": "Transport",
+        "date": "2026-07-13"
+      },
+      {
+        "id": "demo-0152",
+        "type": "expense",
+        "amount": 15000,
+        "category": "Airtime",
+        "description": "Airtime recharge",
+        "date": "2026-07-15"
+      },
+      {
+        "id": "demo-0153",
+        "type": "expense",
+        "amount": 75000,
+        "category": "Tech",
+        "description": "Computer accessories",
+        "date": "2026-07-18"
+      },
+      {
+        "id": "demo-0154",
+        "type": "expense",
+        "amount": 28000,
+        "category": "Entertainment",
+        "description": "Entertainment",
+        "date": "2026-07-21"
+      },
+      {
+        "id": "demo-0155",
+        "type": "income",
+        "amount": 65000,
+        "category": "Gift",
+        "description": "Gift received",
+        "date": "2026-07-24"
+      },
+      {
+        "id": "demo-0156",
+        "type": "expense",
+        "amount": 20000,
+        "category": "Personal Care",
+        "description": "Personal care",
+        "date": "2026-07-27"
+      },
+
+      {
+        "id": "demo-0157",
+        "type": "income",
+        "amount": 290000,
+        "category": "Allowance",
+        "description": "Monthly allowance",
+        "date": "2026-08-02"
+      },
+      {
+        "id": "demo-0158",
+        "type": "income",
+        "amount": 320000,
+        "category": "Freelance",
+        "description": "Full-stack website project",
+        "date": "2026-08-05"
+      },
+      {
+        "id": "demo-0159",
+        "type": "income",
+        "amount": 135000,
+        "category": "Business",
+        "description": "Business income",
+        "date": "2026-08-09"
+      },
+      {
+        "id": "demo-0160",
+        "type": "expense",
+        "amount": 55000,
+        "category": "Food",
+        "description": "Groceries and meals",
+        "date": "2026-08-11"
+      },
+      {
+        "id": "demo-0161",
+        "type": "expense",
+        "amount": 24000,
+        "category": "Transport",
+        "description": "Transport",
+        "date": "2026-08-13"
+      },
+      {
+        "id": "demo-0162",
+        "type": "expense",
+        "amount": 15000,
+        "category": "Data",
+        "description": "Internet data",
+        "date": "2026-08-15"
+      },
+      {
+        "id": "demo-0163",
+        "type": "expense",
+        "amount": 65000,
+        "category": "Shopping",
+        "description": "Shopping",
+        "date": "2026-08-18"
+      },
+      {
+        "id": "demo-0164",
+        "type": "expense",
+        "amount": 30000,
+        "category": "Entertainment",
+        "description": "Entertainment",
+        "date": "2026-08-21"
+      },
+      {
+        "id": "demo-0165",
+        "type": "expense",
+        "amount": 25000,
+        "category": "Education",
+        "description": "Online course",
+        "date": "2026-08-24"
+      },
+      {
+        "id": "demo-0166",
+        "type": "income",
+        "amount": 80000,
+        "category": "Refund",
+        "description": "Purchase refund",
+        "date": "2026-08-27"
+      },
+      {
+        "id": "demo-0167",
+        "type": "expense",
+        "amount": 18000,
+        "category": "Subscriptions",
+        "description": "Software subscriptions",
+        "date": "2026-08-29"
+      },
+
+      {
+        "id": "demo-0168",
+        "type": "income",
+        "amount": 300000,
+        "category": "Allowance",
+        "description": "Monthly allowance",
+        "date": "2026-09-01"
+      },
+      {
+        "id": "demo-0169",
+        "type": "income",
+        "amount": 145000,
+        "category": "Freelance",
+        "description": "React dashboard project",
+        "date": "2026-09-02"
+      },
+      {
+        "id": "demo-0170",
+        "type": "expense",
+        "amount": 18500,
+        "category": "Food",
+        "description": "Groceries and meals",
+        "date": "2026-09-02"
+      },
+      {
+        "id": "demo-0171",
+        "type": "income",
+        "amount": 80000,
+        "category": "Business",
+        "description": "Small business income",
+        "date": "2026-09-03"
+      },
+      {
+        "id": "demo-0172",
+        "type": "expense",
+        "amount": 7500,
+        "category": "Transport",
+        "description": "Transport",
+        "date": "2026-09-04"
+      },
+      {
+        "id": "demo-0173",
+        "type": "expense",
+        "amount": 5000,
+        "category": "Data",
+        "description": "Data plan",
+        "date": "2026-09-04"
+      },
+      {
+        "id": "demo-0174",
+        "type": "income",
+        "amount": 55000,
+        "category": "Gift",
+        "description": "Gift received",
+        "date": "2026-09-05"
+      },
+      {
+        "id": "demo-0175",
+        "type": "expense",
+        "amount": 22000,
+        "category": "Shopping",
+        "description": "Personal purchase",
+        "date": "2026-09-06"
+      },
+      {
+        "id": "demo-0176",
+        "type": "expense",
+        "amount": 6500,
+        "category": "Entertainment",
+        "description": "Entertainment",
+        "date": "2026-09-07"
+      }
+    ],
+    "budgets": [
+      {
+        "id": "budget-food",
+        "category": "Food",
+        "amount": 90000,
+        "period": "monthly"
+      },
+      {
+        "id": "budget-transport",
+        "category": "Transport",
+        "amount": 50000,
+        "period": "monthly"
+      },
+      {
+        "id": "budget-shopping",
+        "category": "Shopping",
+        "amount": 70000,
+        "period": "monthly"
+      },
+      {
+        "id": "budget-entertainment",
+        "category": "Entertainment",
+        "amount": 35000,
+        "period": "monthly"
+      },
+      {
+        "id": "budget-data",
+        "category": "Data",
+        "amount": 20000,
+        "period": "monthly"
+      },
+      {
+        "id": "budget-education",
+        "category": "Education",
+        "amount": 60000,
+        "period": "monthly"
+      },
+      {
+        "id": "budget-health",
+        "category": "Health",
+        "amount": 30000,
+        "period": "monthly"
+      },
+      {
+        "id": "budget-subscriptions",
+        "category": "Subscriptions",
+        "amount": 25000,
+        "period": "monthly"
+      },
+      {
+        "id": "budget-personal-care",
+        "category": "Personal Care",
+        "amount": 25000,
+        "period": "monthly"
+      },
+      {
+        "id": "budget-tech",
+        "category": "Tech",
+        "amount": 80000,
+        "period": "monthly"
+      }
+    ],
+    "settings": {
+      "currency": "NGN",
+      "dateFormat": "DD/MM/YYYY",
+      "theme": "dark",
+      "accent": "emerald"
+    },
+    "customCategories": {
+      "income": [
+        "Side Hustle",
+        "Commission",
+        "Content Creation",
+        "Investment Return"
+      ],
+      "expense": ["Gaming", "Tech", "Coffee", "Photography", "Software"]
+    }
+  }
+}

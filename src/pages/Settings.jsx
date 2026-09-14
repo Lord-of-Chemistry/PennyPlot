@@ -2,14 +2,6 @@ import { useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   Settings as SettingsIcon,
   Download,
   Trash2,
@@ -19,7 +11,19 @@ import {
   AlertTriangle,
   Plus,
   X,
+  Moon,
+  Sun,
+  Monitor,
+  Palette,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   createBackup,
   downloadBackup,
@@ -70,6 +74,7 @@ function Settings() {
     dateFormat,
     setDateFormat,
   } = useOutletContext();
+
   const [dialog, setDialog] = useState(null);
   const [pendingBackup, setPendingBackup] = useState(null);
   const [message, setMessage] = useState("");
@@ -509,8 +514,9 @@ function Settings() {
         {/* Appearance */}
         <Card className="border-border bg-card/70">
           <CardHeader>
-            <CardTitle className="text-lg text-foreground">
-              🌙 Appearance
+            <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+              <Palette size={19} />
+              Appearance
             </CardTitle>
 
             <p className="text-sm text-muted-foreground">
@@ -534,20 +540,21 @@ function Settings() {
                   {
                     value: THEMES.DARK,
                     label: "Dark mode",
-                    icon: "🌙",
+                    icon: Moon,
                   },
                   {
                     value: THEMES.LIGHT,
                     label: "Light mode",
-                    icon: "☀️",
+                    icon: Sun,
                   },
                   {
                     value: THEMES.SYSTEM,
                     label: "System theme",
-                    icon: "🖥️",
+                    icon: Monitor,
                   },
                 ].map((option) => {
                   const selected = theme === option.value;
+                  const Icon = option.icon;
 
                   return (
                     <button
@@ -560,7 +567,7 @@ function Settings() {
                           : "border-border bg-background/40 text-secondary-foreground hover:bg-accent hover:text-foreground"
                       }`}
                     >
-                      <span className="text-lg">{option.icon}</span>
+                      <Icon size={18} />
 
                       <span className="text-sm font-medium">
                         {option.label}
@@ -673,9 +680,9 @@ function Settings() {
                 onChange={(e) => updateCurrency(e.target.value)}
                 className="rounded-xl border border-border bg-background/60 px-4 py-2.5 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
               >
-                <option value="NGN">₦ Nigerian Naira</option>
-                <option value="USD">$ US Dollar</option>
-                <option value="GBP">£ British Pound</option>
+                <option value="NGN">₦ Naira</option>
+                <option value="USD">$ Dollar</option>
+                <option value="GBP">£ Pound</option>
                 <option value="EUR">€ Euro</option>
               </select>
             </div>
