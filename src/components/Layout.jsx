@@ -344,7 +344,7 @@ function Layout() {
                 setNotifications={setNotifications}
               />
 
-              <div className="md:hidden">
+              <div>
                 <ProfileMenu profile={profile} mobile />
               </div>
 
