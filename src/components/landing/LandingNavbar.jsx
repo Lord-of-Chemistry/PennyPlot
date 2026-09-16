@@ -7,8 +7,12 @@ function LandingNavbar() {
       <div className="mx-auto max-w-6xl px-5 pt-4 sm:px-6 lg:px-8">
         <div className="flex h-14 items-center justify-between rounded-xl border border-border/60 bg-background/85 px-4 shadow-lg shadow-black/10 backdrop-blur-xl sm:px-5">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <img src="/favicon.svg" alt="PennyPlot" className="h-7 w-7" />
+          <Link
+            to="/"
+            aria-label="PennyPlot home"
+            className="flex items-center gap-2"
+          >
+            <img src="/favicon.svg" alt="" className="h-7 w-7" />
 
             <span className="text-[15px] font-bold tracking-[-0.02em] text-foreground">
               Penny<span className="text-primary">Plot</span>
@@ -21,7 +25,7 @@ function LandingNavbar() {
               to="/dashboard"
               className="hidden rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:block"
             >
-              Sign in
+              Open dashboard
             </Link>
 
             <Link
@@ -31,6 +35,7 @@ function LandingNavbar() {
               Get started
               <ArrowRight
                 size={14}
+                aria-hidden="true"
                 className="transition-transform group-hover:translate-x-0.5"
               />
             </Link>

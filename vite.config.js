@@ -11,25 +11,9 @@ export default defineConfig({
 
     VitePWA({
       registerType: "autoUpdate",
-
+      manifest: false,
       workbox: {
         navigateFallback: "/index.html",
-      },
-
-      manifest: {
-        name: "PennyPlot",
-        short_name: "PennyPlot",
-        description: "Personal finance tracker",
-        theme_color: "#000000",
-        background_color: "#000000",
-        display: "standalone",
-        icons: [
-          {
-            src: "/favicon.svg",
-            sizes: "any",
-            type: "image/svg+xml",
-          },
-        ],
       },
     }),
   ],
