@@ -102,7 +102,7 @@ function ProfileMenu({
               }`}
             >
               <p className="truncate text-sm font-medium text-foreground">
-                {profile?.name || "PennyPlot User"}
+                {profile?.name || "User"}
               </p>
 
               <p className="truncate text-xs text-muted-foreground">
@@ -123,7 +123,7 @@ function ProfileMenu({
 
             {isCollapsed && (
               <span className="pointer-events-none absolute left-full z-40 ml-3 origin-left scale-0 whitespace-nowrap rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground shadow-lg transition-all duration-200 group-hover:scale-100">
-                {profile?.name || "PennyPlot User"}
+                {profile?.name || "User"}
               </span>
             )}
           </>
@@ -132,7 +132,7 @@ function ProfileMenu({
 
       {/* Profile Menu */}
       <div
-        className={`absolute z-[250] w-64 rounded-2xl border border-border bg-popover p-2 shadow-2xl shadow-black/50 transition-all duration-200 ${
+        className={`absolute z-[300] w-64 rounded-2xl border border-border bg-popover p-2 shadow-2xl shadow-black/50 transition-all duration-200 ${
           mobile
             ? "right-0 top-full mt-3 origin-top-right"
             : `bottom-full left-0 mb-3 origin-bottom-left ${

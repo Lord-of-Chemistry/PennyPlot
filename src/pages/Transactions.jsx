@@ -28,7 +28,6 @@ const incomeCategories = [
   "Refund",
   "Other Income",
 ];
-
 const expenseCategories = [
   "Food",
   "Transport",
@@ -43,6 +42,46 @@ const expenseCategories = [
   "Personal Care",
   "Rent/Housing",
   "Other Expense",
+];
+const typeOptions = [
+  {
+    value: "all",
+    label: "All types",
+  },
+  {
+    value: "income",
+    label: "Income",
+  },
+  {
+    value: "expense",
+    label: "Expenses",
+  },
+];
+const sortOptions = [
+  {
+    value: "newest",
+    label: "Newest first",
+  },
+  {
+    value: "oldest",
+    label: "Oldest first",
+  },
+  {
+    value: "highest",
+    label: "Highest amount",
+  },
+  {
+    value: "lowest",
+    label: "Lowest amount",
+  },
+  {
+    value: "a-z",
+    label: "A → Z",
+  },
+  {
+    value: "z-a",
+    label: "Z → A",
+  },
 ];
 
 const CUSTOM_INCOME_KEY = "pennyplot-custom-income-categories";
@@ -69,10 +108,7 @@ function CustomDropdown({
 
   useEffect(() => {
     function handleClickOutside(event) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
       }
     }
@@ -150,9 +186,7 @@ function CustomDropdown({
 
           <span
             className={`truncate ${
-              selectedOption
-                ? "text-foreground"
-                : "text-muted-foreground"
+              selectedOption ? "text-foreground" : "text-muted-foreground"
             }`}
           >
             {selectedOption?.label || placeholder}
@@ -257,15 +291,13 @@ function Transactions() {
     }
   });
 
-  const [customExpenseCategories, setCustomExpenseCategories] = useState(
-    () => {
-      try {
-        return JSON.parse(localStorage.getItem(CUSTOM_EXPENSE_KEY) || "[]");
-      } catch {
-        return [];
-      }
-    },
-  );
+  const [customExpenseCategories, setCustomExpenseCategories] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(CUSTOM_EXPENSE_KEY) || "[]");
+    } catch {
+      return [];
+    }
+  });
 
   function loadCustomCategories() {
     try {
@@ -277,9 +309,7 @@ function Transactions() {
         localStorage.getItem(CUSTOM_EXPENSE_KEY) || "[]",
       );
 
-      setCustomIncomeCategories(
-        Array.isArray(savedIncome) ? savedIncome : [],
-      );
+      setCustomIncomeCategories(Array.isArray(savedIncome) ? savedIncome : []);
 
       setCustomExpenseCategories(
         Array.isArray(savedExpense) ? savedExpense : [],
@@ -292,10 +322,7 @@ function Transactions() {
 
   useEffect(() => {
     function handleStorageChange(event) {
-      if (
-        event.key === CUSTOM_INCOME_KEY ||
-        event.key === CUSTOM_EXPENSE_KEY
-      ) {
+      if (event.key === CUSTOM_INCOME_KEY || event.key === CUSTOM_EXPENSE_KEY) {
         loadCustomCategories();
       }
     }
@@ -363,56 +390,6 @@ function Transactions() {
       })),
     ];
   }, [typeFilter, allIncomeCategories, allExpenseCategories]);
-
-  /* =========================
-     TYPE OPTIONS
-  ========================= */
-
-  const typeOptions = [
-    {
-      value: "all",
-      label: "All types",
-    },
-    {
-      value: "income",
-      label: "Income",
-    },
-    {
-      value: "expense",
-      label: "Expenses",
-    },
-  ];
-
-  /* =========================
-     SORT OPTIONS
-  ========================= */
-
-  const sortOptions = [
-    {
-      value: "newest",
-      label: "Newest first",
-    },
-    {
-      value: "oldest",
-      label: "Oldest first",
-    },
-    {
-      value: "highest",
-      label: "Highest amount",
-    },
-    {
-      value: "lowest",
-      label: "Lowest amount",
-    },
-    {
-      value: "a-z",
-      label: "A → Z",
-    },
-    {
-      value: "z-a",
-      label: "Z → A",
-    },
-  ];
 
   /* =========================
      FILTER + SORT
@@ -601,7 +578,7 @@ function Transactions() {
      DOWNLOAD PNG
   ========================= */
 
-  async function downloadTransactionsAsPNG() {
+  function downloadTransactionsAsPNG() {
     if (transactions.length === 0) {
       toast.error("There are no transactions to export.");
       return;
@@ -623,7 +600,7 @@ function Transactions() {
   ========================= */
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground p-4 md:p-6">
       {/* =========================
           HEADER
       ========================= */}
@@ -709,9 +686,7 @@ function Transactions() {
                 try {
                   downloadTransactionsPDF(transactions, currency);
 
-                  toast.success(
-                    "Transaction report exported successfully.",
-                  );
+                  toast.success("Transaction report exported successfully.");
                 } catch (error) {
                   console.error("PDF export failed:", error);
 
@@ -723,9 +698,7 @@ function Transactions() {
               className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-foreground/[0.06]"
             >
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <span className="text-[10px] font-bold tracking-wide">
-                  PDF
-                </span>
+                <span className="text-[10px] font-bold tracking-wide">PDF</span>
               </div>
 
               <div className="min-w-0">
@@ -748,9 +721,7 @@ function Transactions() {
               className="group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors duration-150 hover:bg-foreground/[0.06]"
             >
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <span className="text-[10px] font-bold tracking-wide">
-                  PNG
-                </span>
+                <span className="text-[10px] font-bold tracking-wide">PNG</span>
               </div>
 
               <div className="min-w-0">
@@ -828,9 +799,7 @@ function Transactions() {
           <span className="font-medium text-foreground">
             {filteredTransactions.length}
           </span>{" "}
-          {filteredTransactions.length === 1
-            ? "transaction"
-            : "transactions"}
+          {filteredTransactions.length === 1 ? "transaction" : "transactions"}
         </p>
 
         {(search || typeFilter !== "all" || categoryFilter !== "all") && (
@@ -906,9 +875,7 @@ function Transactions() {
                           type="text"
                           inputMode="numeric"
                           value={editData.amount}
-                          onChange={(e) =>
-                            handleEditAmount(e.target.value)
-                          }
+                          onChange={(e) => handleEditAmount(e.target.value)}
                           className="w-full bg-transparent px-4 py-3 text-sm text-foreground outline-none"
                         />
                       </div>
@@ -920,8 +887,9 @@ function Transactions() {
                         onChange={(value) => {
                           const newCategories = getCategoriesForType(value);
 
-                          const currentCategoryExists =
-                            newCategories.includes(editData.category);
+                          const currentCategoryExists = newCategories.includes(
+                            editData.category,
+                          );
 
                           setEditData({
                             ...editData,
@@ -1007,9 +975,7 @@ function Transactions() {
 
                         <span>•</span>
 
-                        <span>
-                          {formatDate(transaction.date, dateFormat)}
-                        </span>
+                        <span>{formatDate(transaction.date, dateFormat)}</span>
 
                         <span>•</span>
 
@@ -1020,9 +986,7 @@ function Transactions() {
                               : "text-red-400"
                           }
                         >
-                          {transaction.type === "income"
-                            ? "Income"
-                            : "Expense"}
+                          {transaction.type === "income" ? "Income" : "Expense"}
                         </span>
                       </div>
                     </div>

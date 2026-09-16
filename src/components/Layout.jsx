@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
+import { LogOut } from "lucide-react";
 import SideBar from "./SideBar";
+import NotificationCenter from "./NotificationCenter";
+import ProfileMenu from "./ProfileMenu";
 import { createBackup } from "../utils/backup";
 import { getProfile } from "../utils/profile";
 import {
@@ -9,19 +12,13 @@ import {
   createNotification,
   NOTIFICATION_TYPES,
 } from "../utils/notifications";
-import NotificationCenter from "./NotificationCenter";
 import { formatCurrency } from "../utils/currency";
 import { processRecurringTransactions } from "../utils/recurringTransactions";
-import ProfileMenu from "./ProfileMenu";
-import { LogOut } from "lucide-react";
 
 function Layout() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
 
-  // Online / Offline status
-  const [isOnline, setIsOnline] = useState(true);
-  const [showBackOnline, setShowBackOnline] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Currency
   const [currency, setCurrency] = useState(() => {
@@ -44,20 +41,14 @@ function Layout() {
       return savedTransactions ? JSON.parse(savedTransactions) : [];
     } catch (error) {
       console.error("Failed to load transactions:", error);
-
       return [];
     }
   });
 
   // Notifications
-  const [notifications, setNotifications] = useState(getNotifications());
+  const [notifications, setNotifications] = useState(() => getNotifications());
 
-  /*
-    ============================================================
-    RECURRING TRANSACTIONS
-    ============================================================
-  */
-
+  //RECURRING TRANSACTIONS
   useEffect(() => {
     const result = processRecurringTransactions(transactions);
 
@@ -84,84 +75,9 @@ function Layout() {
     });
   }, []);
 
-  /*
-    ============================================================
-    INTERNET CONNECTION
-    ============================================================
-  */
-
-  // Check if the internet is actually reachable
-  async function checkConnection(showNotification = false) {
-    try {
-      await fetch(
-        `https://www.google.com/generate_204?cacheBust=${Date.now()}`,
-        {
-          method: "GET",
-          mode: "no-cors",
-          cache: "no-store",
-        },
-      );
-
-      setIsOnline((previous) => {
-        if (!previous && showNotification) {
-          setShowBackOnline(true);
-
-          const notification = createNotification({
-            type: NOTIFICATION_TYPES.CONNECTION,
-            title: "Back online",
-            message: "PennyPlot is connected to the internet again.",
-          });
-
-          setNotifications((currentNotifications) => [
-            notification,
-            ...currentNotifications,
-          ]);
-
-          setTimeout(() => {
-            setShowBackOnline(false);
-          }, 3000);
-        }
-
-        return true;
-      });
-    } catch {
-      setIsOnline(false);
-    }
-  }
-
-  // Monitor internet connection
-  useEffect(() => {
-    checkConnection();
-
-    const connectionInterval = setInterval(() => {
-      checkConnection(true);
-    }, 5000);
-
-    function handleOnline() {
-      checkConnection(true);
-    }
-
-    function handleOffline() {
-      setIsOnline(false);
-      setShowBackOnline(false);
-    }
-
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-
-    return () => {
-      clearInterval(connectionInterval);
-
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, []);
-
   function handleSignOut() {
     localStorage.removeItem("pennyplot-profile");
-
     setProfile(null);
-
     navigate("/");
   }
 
@@ -169,29 +85,21 @@ function Layout() {
     ============================================================
     BUDGET ALERT SYSTEM
     ============================================================
-
-    This now lives in Layout instead of Budgets.jsx.
-
-    Therefore budget alerts can be detected globally,
-    regardless of which page the user is currently viewing.
-
-    75%  -> Warning
-    90%  -> Almost reached
-    100% -> Exceeded
   */
 
   const budgets = useMemo(() => {
     try {
       const savedBudgets = localStorage.getItem("pennyplot-budgets");
 
-      if (!savedBudgets) return [];
+      if (!savedBudgets) {
+        return [];
+      }
 
       const parsedBudgets = JSON.parse(savedBudgets);
 
       return Array.isArray(parsedBudgets) ? parsedBudgets : [];
     } catch (error) {
       console.error("Failed to load budgets for alerts:", error);
-
       return [];
     }
   }, [transactions]);
@@ -231,9 +139,11 @@ function Layout() {
           0,
         );
 
-      const percentage = budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
+      const budgetAmount = Number(budget.amount || 0);
 
-      const remaining = Number(budget.amount || 0) - spent;
+      const percentage = budgetAmount > 0 ? (spent / budgetAmount) * 100 : 0;
+
+      const remaining = budgetAmount - spent;
 
       return {
         ...budget,
@@ -244,9 +154,10 @@ function Layout() {
     });
   }, [budgets, transactions]);
 
-  // Check budget thresholds globally
   useEffect(() => {
-    if (budgetData.length === 0) return;
+    if (budgetData.length === 0) {
+      return;
+    }
 
     const ALERTS_KEY = "pennyplot-budget-alerts";
 
@@ -256,7 +167,15 @@ function Layout() {
       const savedAlerts = localStorage.getItem(ALERTS_KEY);
 
       if (savedAlerts) {
-        sentAlerts = JSON.parse(savedAlerts);
+        const parsedAlerts = JSON.parse(savedAlerts);
+
+        if (
+          parsedAlerts &&
+          typeof parsedAlerts === "object" &&
+          !Array.isArray(parsedAlerts)
+        ) {
+          sentAlerts = parsedAlerts;
+        }
       }
     } catch (error) {
       console.error("Failed to load budget alert history:", error);
@@ -278,9 +197,6 @@ function Layout() {
       const budgetPeriodKey =
         budget.period === "yearly" ? yearlyPeriodKey : monthlyPeriodKey;
 
-      /*
-        100%+ — Budget exceeded
-      */
       if (percentage >= 100) {
         const alertKey = `${budget.id}-${budget.period}-${budgetPeriodKey}-100`;
 
@@ -306,9 +222,6 @@ function Layout() {
         return;
       }
 
-      /*
-        90%+ — Almost exceeded
-      */
       if (percentage >= 90) {
         const alertKey = `${budget.id}-${budget.period}-${budgetPeriodKey}-90`;
 
@@ -336,9 +249,6 @@ function Layout() {
         return;
       }
 
-      /*
-        75%+ — Approaching limit
-      */
       if (percentage >= 75) {
         const alertKey = `${budget.id}-${budget.period}-${budgetPeriodKey}-75`;
 
@@ -372,11 +282,10 @@ function Layout() {
 
   /*
     ============================================================
-    LOCAL STORAGE
+    PERSISTENCE
     ============================================================
   */
 
-  // Save transactions locally
   useEffect(() => {
     localStorage.setItem(
       "pennyplot-transactions",
@@ -384,117 +293,89 @@ function Layout() {
     );
   }, [transactions]);
 
-  // Create automatic backup
   useEffect(() => {
     createBackup();
   }, [transactions]);
 
-  // Save date format
+  useEffect(() => {
+    localStorage.setItem("pennyplot-currency", currency);
+  }, [currency]);
+
   useEffect(() => {
     localStorage.setItem("pennyplot-date-format", dateFormat);
   }, [dateFormat]);
 
-  // Save profile
   useEffect(() => {
-    localStorage.setItem("pennyplot-profile", JSON.stringify(profile));
+    if (profile) {
+      localStorage.setItem("pennyplot-profile", JSON.stringify(profile));
+    }
   }, [profile]);
 
-  // Save notifications
   useEffect(() => {
     saveNotifications(notifications);
   }, [notifications]);
-
-  /*
-    ============================================================
-    LAYOUT
-    ============================================================
-  */
 
   return (
     <div className="min-h-screen bg-background">
       <SideBar
         isCollapsed={isCollapsed}
         setIsCollapsed={setIsCollapsed}
-        isOnline={isOnline}
         profile={profile}
       />
 
       <main
         className={`bg-background text-foreground transition-[margin] duration-300 ease-in-out ${
-          isCollapsed ? "md:ml-20" : "md:ml-56"
+          isCollapsed ? "md:ml-20" : "md:ml-60"
         }`}
       >
-      
-{/* Sticky global header */}
-<header className="sticky top-0 z-[100] border-b border-border/60 bg-background/95 px-4 py-3 backdrop-blur-md">
-  <div className="flex items-center justify-between gap-4">
-    {/* PennyPlot branding */}
-    <div className="flex items-center gap-2">
-      <img
-        src="/favicon.svg"
-        alt="PennyPlot"
-        className="h-8 w-8"
-      />
+        <header className="sticky top-0 z-[100] border-b border-border/60 bg-background/95 px-4 py-3 backdrop-blur-md">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <img src="/favicon.svg" alt="PennyPlot" className="h-8 w-8" />
 
-      <span className="text-lg font-bold tracking-tight text-foreground">
-        Penny<span className="text-primary">Plot</span>
-      </span>
-    </div>
+              <span className="text-lg font-bold tracking-tight text-foreground">
+                Penny<span className="text-primary">Plot</span>
+              </span>
+            </div>
 
-    {/* Header actions */}
-    <div className="ml-auto flex items-center gap-2">
-      <NotificationCenter
-        notifications={notifications}
-        setNotifications={setNotifications}
-      />
+            <div className="ml-auto flex items-center gap-2">
+              <NotificationCenter
+                notifications={notifications}
+                setNotifications={setNotifications}
+              />
 
-      <div className="md:hidden">
-        <ProfileMenu profile={profile} mobile />
-      </div>
+              <div className="md:hidden">
+                <ProfileMenu profile={profile} mobile />
+              </div>
 
-      <button
-        type="button"
-        onClick={handleSignOut}
-        aria-label="Sign out"
-        title="Sign out"
-        className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-secondary-foreground transition-colors hover:bg-accent hover:text-foreground"
-      >
-        <LogOut size={16} />
-        <span className="hidden sm:inline">Sign out</span>
-      </button>
-    </div>
-  </div>
-</header>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                aria-label="Sign out"
+                title="Sign out"
+                className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-secondary-foreground transition-colors hover:bg-accent hover:text-foreground"
+              >
+                <LogOut size={16} />
+                <span className="hidden sm:inline">Sign out</span>
+              </button>
+            </div>
+          </div>
+        </header>
 
-        {/* Back online notification */}
-        <div
-          className={`fixed right-4 top-4 z-[150] flex items-center gap-2 rounded-xl border border-primary/30 bg-accent px-4 py-3 text-sm text-foreground shadow-2xl transition-all duration-300 ${
-            showBackOnline
-              ? "translate-y-0 opacity-100"
-              : "pointer-events-none -translate-y-3 opacity-0"
-          }`}
-        >
-          <span className="h-2.5 w-2.5 rounded-full bg-primary" />
-          Back online
-        </div>
-
-        <div className="p-4 pb-24 md:pb-4">
-          <Outlet
-            context={{
-              transactions,
-              setTransactions,
-              isOnline,
-              currency,
-              setCurrency,
-              dateFormat,
-              setDateFormat,
-              profile,
-              setProfile,
-              notifications,
-              setNotifications,
-            }}
-          />
-        </div>
+        <Outlet
+          context={{
+            transactions,
+            setTransactions,
+            currency,
+            setCurrency,
+            dateFormat,
+            setDateFormat,
+            profile,
+            setProfile,
+            notifications,
+            setNotifications,
+          }}
+        />
       </main>
     </div>
   );

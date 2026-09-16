@@ -36,9 +36,7 @@ const defaultExpenseCategories = [
 ];
 
 function AddTransaction() {
-  const { setTransactions } = useOutletContext();
-  const { dateFormat } = useOutletContext();
-
+  const { setTransactions, dateFormat } = useOutletContext();
   const [type, setType] = useState("expense");
   const [description, setDescription] =
     useState("");
