@@ -99,9 +99,7 @@ function Transactions() {
   const categories = useMemo(() => {
     return [
       ...new Set(
-        transactions
-          .map((transaction) => transaction.category)
-          .filter(Boolean),
+        transactions.map((transaction) => transaction.category).filter(Boolean),
       ),
     ].sort();
   }, [transactions]);
@@ -124,11 +122,7 @@ function Transactions() {
 
         if (!query) return true;
 
-        return [
-          transaction.description,
-          transaction.category,
-          transaction.type,
-        ]
+        return [transaction.description, transaction.category, transaction.type]
           .filter(Boolean)
           .some((value) => value.toLowerCase().includes(query));
       })
@@ -150,13 +144,7 @@ function Transactions() {
 
         return dateDifference;
       });
-  }, [
-    transactions,
-    searchTerm,
-    typeFilter,
-    categoryFilter,
-    sortOrder,
-  ]);
+  }, [transactions, searchTerm, typeFilter, categoryFilter, sortOrder]);
 
   const groupedTransactions = useMemo(
     () => groupTransactionsByMonth(filteredTransactions),
@@ -164,11 +152,10 @@ function Transactions() {
   );
 
   const sortedMonths = useMemo(() => {
-    return Object.entries(groupedTransactions).sort(
-      ([monthA], [monthB]) =>
-        sortOrder === "oldest"
-          ? monthA.localeCompare(monthB)
-          : monthB.localeCompare(monthA),
+    return Object.entries(groupedTransactions).sort(([monthA], [monthB]) =>
+      sortOrder === "oldest"
+        ? monthA.localeCompare(monthB)
+        : monthB.localeCompare(monthA),
     );
   }, [groupedTransactions, sortOrder]);
 
@@ -272,9 +259,7 @@ function Transactions() {
 
     const csv = [headers, ...rows]
       .map((row) =>
-        row
-          .map((value) => `"${String(value).replace(/"/g, '""')}"`)
-          .join(","),
+        row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(","),
       )
       .join("\n");
 
@@ -412,7 +397,7 @@ function Transactions() {
         </section>
 
         {/* Search and filters */}
-        <section className="mt-7">
+        <section className="mt-7 z-40 relative">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <div className="relative min-w-0 flex-1">
               <Search
@@ -474,6 +459,7 @@ function Transactions() {
 
                 {showFilters && (
                   <div className="absolute right-0 top-full z-30 mt-2 w-64 rounded-xl border border-border bg-card p-4 shadow-xl">
+                    {" "}
                     <div>
                       <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                         Category
@@ -508,7 +494,6 @@ function Transactions() {
                         ))}
                       </div>
                     </div>
-
                     <div className="mt-5 border-t border-border/60 pt-4">
                       <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                         Sort
@@ -542,9 +527,7 @@ function Transactions() {
             </div>
           </div>
 
-          {(searchTerm ||
-            typeFilter !== "all" ||
-            categoryFilter !== "all") && (
+          {(searchTerm || typeFilter !== "all" || categoryFilter !== "all") && (
             <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
               <span>
                 {filteredTransactions.length} result
@@ -603,12 +586,10 @@ function Transactions() {
                             {monthTransactions.length} transaction
                             {monthTransactions.length === 1 ? "" : "s"}
                             <span className="mx-1.5">·</span>
-                            Net{" "}
+                            Net:{" "}
                             <span
                               className={
-                                net >= 0
-                                  ? "text-primary"
-                                  : "text-foreground"
+                                net >= 0 ? "text-primary" : "text-foreground"
                               }
                             >
                               {formatCurrency(net, currency)}
@@ -809,9 +790,7 @@ function Transactions() {
                             <div className="flex shrink-0 items-center gap-2">
                               <p
                                 className={`text-sm font-medium tabular-nums ${
-                                  isIncome
-                                    ? "text-primary"
-                                    : "text-foreground"
+                                  isIncome ? "text-primary" : "text-foreground"
                                 }`}
                               >
                                 {isIncome ? "+" : "−"}
