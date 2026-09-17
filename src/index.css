@@ -207,3 +207,41 @@ body {
     transform: translateY(0);
   }
 }
+
+@keyframes pennyplot-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pennyplot-page-in {
+  animation: pennyplot-page-in 280ms ease-out both;
+}
+
+.pennyplot-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.28) transparent;
+}
+
+.pennyplot-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.pennyplot-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.pennyplot-scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.28);
+}
+
+.pennyplot-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.42);
+}
