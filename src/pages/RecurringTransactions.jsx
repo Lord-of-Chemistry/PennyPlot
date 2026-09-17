@@ -311,7 +311,7 @@ function RecurringTransactions() {
   }
 
   return (
-    <div className="pennyplot-page-in min-h-screen bg-background pb-24 text-foreground">
+    <div className="pennyplot-page-in min-h-screen bg-background pb-24 text-foreground pb-5">
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
         <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
