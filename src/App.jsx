@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import LandingPage from "./pages/LandingPage";
+import FirstLaunch from "./pages/FirstLaunch";
 import Dashboard from "./pages/Dashboard";
 import Transactions from "./pages/Transactions";
 import RecurringTransactions from "./pages/RecurringTransactions";
@@ -20,6 +21,7 @@ function App() {
       <Routes>
         {/* Landing page — NO Layout / NO Sidebar */}
         <Route path="/" element={<LandingPage />} />
+        <Route path="/welcome" element={<FirstLaunch />} />
 
         {/* App pages — Layout + Sidebar */}
         <Route element={<Layout />}>

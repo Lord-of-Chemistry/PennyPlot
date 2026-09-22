@@ -84,92 +84,92 @@
 }
 
 :root {
-  --background: #F7FAF8;
-  --foreground: #17201B;
+  --background: #f7faf8;
+  --foreground: #17201b;
 
-  --card: #FFFFFF;
-  --card-foreground: #17201B;
+  --card: #ffffff;
+  --card-foreground: #17201b;
 
-  --popover: #FFFFFF;
-  --popover-foreground: #17201B;
+  --popover: #ffffff;
+  --popover-foreground: #17201b;
 
-  --primary: #4FAF7B;
-  --primary-foreground: #08100B;
+  --primary: #4faf7b;
+  --primary-foreground: #08100b;
 
-  --secondary: #EAF0EC;
-  --secondary-foreground: #26332B;
+  --secondary: #eaf0ec;
+  --secondary-foreground: #26332b;
 
-  --muted: #EAF0EC;
+  --muted: #eaf0ec;
   --muted-foreground: #657169;
 
-  --accent: #E8EFEB;
-  --accent-foreground: #17201B;
+  --accent: #e8efeb;
+  --accent-foreground: #17201b;
 
-  --destructive: #C95F5F;
+  --destructive: #c95f5f;
 
-  --border: #DCE5DF;
-  --input: #DCE5DF;
-  --ring: #4FAF7B;
+  --border: #dce5df;
+  --input: #dce5df;
+  --ring: #4faf7b;
 
-  --chart-1: #4FAF7B;
-  --chart-2: #65C48F;
-  --chart-3: #3D8F63;
-  --chart-4: #2D6A4F;
-  --chart-5: #7FBF9A;
+  --chart-1: #4faf7b;
+  --chart-2: #65c48f;
+  --chart-3: #3d8f63;
+  --chart-4: #2d6a4f;
+  --chart-5: #7fbf9a;
 
-  --sidebar: #FFFFFF;
-  --sidebar-foreground: #17201B;
-  --sidebar-primary: #4FAF7B;
-  --sidebar-primary-foreground: #08100B;
-  --sidebar-accent: #E8EFEB;
-  --sidebar-accent-foreground: #17201B;
-  --sidebar-border: #DCE5DF;
-  --sidebar-ring: #4FAF7B;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #17201b;
+  --sidebar-primary: #4faf7b;
+  --sidebar-primary-foreground: #08100b;
+  --sidebar-accent: #e8efeb;
+  --sidebar-accent-foreground: #17201b;
+  --sidebar-border: #dce5df;
+  --sidebar-ring: #4faf7b;
 }
 
 .dark {
-  --background: #0B0F0D;
-  --foreground: #F1F5F2;
+  --background: #0b0f0d;
+  --foreground: #f1f5f2;
   --card: #121816;
-  --card-foreground: #F1F5F2;
-  --popover: #151B18;
-  --popover-foreground: #F1F5F2;
-  --primary: #4FAF7B;
-  --primary-foreground: #08100B;
-  --secondary: #1A211D;
-  --secondary-foreground: #DCE5DF;
-  --muted: #1A211D;
-  --muted-foreground: #98A39D;
-  --accent: #1E2923;
-  --accent-foreground: #F1F5F2;
-  --destructive: #D66B6B;
-  --border: #252D29;
-  --input: #252D29;
-  --ring: #4FAF7B;
-  --chart-1: #4FAF7B;
-  --chart-2: #65C48F;
-  --chart-3: #3D8F63;
-  --chart-4: #2D6A4F;
-  --chart-5: #7FBF9A;
-  --sidebar: #151B18;
-  --sidebar-foreground: #F1F5F2;
-  --sidebar-primary: #4FAF7B;
-  --sidebar-primary-foreground: #08100B;
-  --sidebar-accent: #1E2923;
-  --sidebar-accent-foreground: #F1F5F2;
-  --sidebar-border: #252D29;
-  --sidebar-ring: #4FAF7B;
+  --card-foreground: #f1f5f2;
+  --popover: #151b18;
+  --popover-foreground: #f1f5f2;
+  --primary: #4faf7b;
+  --primary-foreground: #08100b;
+  --secondary: #1a211d;
+  --secondary-foreground: #dce5df;
+  --muted: #1a211d;
+  --muted-foreground: #98a39d;
+  --accent: #1e2923;
+  --accent-foreground: #f1f5f2;
+  --destructive: #d66b6b;
+  --border: #252d29;
+  --input: #252d29;
+  --ring: #4faf7b;
+  --chart-1: #4faf7b;
+  --chart-2: #65c48f;
+  --chart-3: #3d8f63;
+  --chart-4: #2d6a4f;
+  --chart-5: #7fbf9a;
+  --sidebar: #151b18;
+  --sidebar-foreground: #f1f5f2;
+  --sidebar-primary: #4faf7b;
+  --sidebar-primary-foreground: #08100b;
+  --sidebar-accent: #1e2923;
+  --sidebar-accent-foreground: #f1f5f2;
+  --sidebar-border: #252d29;
+  --sidebar-ring: #4faf7b;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-  
-body {
-  background: var(--background);
-  color: var(--foreground);
-}
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+  }
 
   html {
     @apply font-sans;
@@ -244,4 +244,357 @@ body {
 
 .pennyplot-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 163, 184, 0.42);
+}
+
+@keyframes pennyplot-onboarding-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes pennyplot-slide-forward {
+  from {
+    opacity: 0;
+    transform: translateX(28px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes pennyplot-slide-backward {
+  from {
+    opacity: 0;
+    transform: translateX(-28px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes pennyplot-visual-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+    filter: blur(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes pennyplot-copy-eyebrow {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pennyplot-copy-title {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pennyplot-copy-description {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pennyplot-final-icon {
+  0% {
+    opacity: 0;
+    transform: scale(0.7) rotate(-8deg);
+  }
+
+  70% {
+    transform: scale(1.06) rotate(2deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes pennyplot-slide-forward {
+  from {
+    opacity: 0;
+    transform: translateX(24px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes pennyplot-slide-backward {
+  from {
+    opacity: 0;
+    transform: translateX(-24px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes pennyplot-visual-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+    filter: blur(3px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes pennyplot-copy-eyebrow {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pennyplot-copy-title {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pennyplot-copy-description {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pennyplot-final-icon {
+  0% {
+    opacity: 0;
+    transform: scale(0.7) rotate(-8deg);
+  }
+
+  70% {
+    transform: scale(1.06) rotate(2deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+/* Forward: paint enters from the left and leaves to the right. */
+@keyframes pennyplot-paint-forward {
+  0% {
+    clip-path: ellipse(12% 75% at -10% 50%);
+  }
+
+  42% {
+    clip-path: ellipse(70% 100% at 45% 50%);
+  }
+
+  58% {
+    clip-path: ellipse(90% 105% at 55% 50%);
+  }
+
+  100% {
+    clip-path: ellipse(12% 75% at 110% 50%);
+  }
+}
+
+/* Backward: same effect, reversed. */
+@keyframes pennyplot-paint-backward {
+  0% {
+    clip-path: ellipse(12% 75% at 110% 50%);
+  }
+
+  42% {
+    clip-path: ellipse(70% 100% at 55% 50%);
+  }
+
+  58% {
+    clip-path: ellipse(90% 105% at 45% 50%);
+  }
+
+  100% {
+    clip-path: ellipse(12% 75% at -10% 50%);
+  }
+}
+
+.pennyplot-slide-forward {
+  animation: pennyplot-slide-forward 500ms cubic-bezier(0.22, 1, 0.36, 1)
+    both;
+}
+
+.pennyplot-slide-backward {
+  animation: pennyplot-slide-backward 500ms cubic-bezier(0.22, 1, 0.36, 1)
+    both;
+}
+
+.pennyplot-visual-in {
+  animation: pennyplot-visual-in 620ms cubic-bezier(0.16, 1, 0.3, 1) 70ms both;
+}
+
+.pennyplot-copy-eyebrow {
+  animation: pennyplot-copy-eyebrow 400ms cubic-bezier(0.22, 1, 0.36, 1) 140ms
+    both;
+}
+
+.pennyplot-copy-title {
+  animation: pennyplot-copy-title 480ms cubic-bezier(0.22, 1, 0.36, 1) 190ms
+    both;
+}
+
+.pennyplot-copy-description {
+  animation: pennyplot-copy-description 430ms
+    cubic-bezier(0.22, 1, 0.36, 1) 270ms both;
+}
+
+.pennyplot-final-icon {
+  animation: pennyplot-final-icon 550ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.pennyplot-paint-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.pennyplot-paint-layer {
+  position: absolute;
+  inset: -10%;
+  background: hsl(var(--primary));
+  transform: translateZ(0);
+}
+
+.pennyplot-paint-main {
+  animation-duration: 720ms;
+  animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+  animation-fill-mode: both;
+}
+
+.pennyplot-paint-secondary {
+  opacity: 0.72;
+  transform: scale(1.04);
+  animation-duration: 680ms;
+  animation-delay: 25ms;
+  animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+  animation-fill-mode: both;
+}
+
+.pennyplot-paint-edge {
+  opacity: 0.38;
+  transform: scale(1.08);
+  animation-duration: 640ms;
+  animation-delay: 45ms;
+  animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+  animation-fill-mode: both;
+}
+
+.pennyplot-paint-forward .pennyplot-paint-main {
+  animation-name: pennyplot-paint-forward;
+}
+
+.pennyplot-paint-forward .pennyplot-paint-secondary {
+  animation-name: pennyplot-paint-forward;
+  animation-delay: 25ms;
+}
+
+.pennyplot-paint-forward .pennyplot-paint-edge {
+  animation-name: pennyplot-paint-forward;
+  animation-delay: 45ms;
+}
+
+.pennyplot-paint-backward .pennyplot-paint-main {
+  animation-name: pennyplot-paint-backward;
+}
+
+.pennyplot-paint-backward .pennyplot-paint-secondary {
+  animation-name: pennyplot-paint-backward;
+  animation-delay: 25ms;
+}
+
+.pennyplot-paint-backward .pennyplot-paint-edge {
+  animation-name: pennyplot-paint-backward;
+  animation-delay: 45ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pennyplot-slide-forward,
+  .pennyplot-slide-backward,
+  .pennyplot-visual-in,
+  .pennyplot-copy-eyebrow,
+  .pennyplot-copy-title,
+  .pennyplot-copy-description,
+  .pennyplot-final-icon,
+  .pennyplot-paint-main,
+  .pennyplot-paint-secondary,
+  .pennyplot-paint-edge {
+    animation: none !important;
+  }
 }

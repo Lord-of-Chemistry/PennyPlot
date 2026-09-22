@@ -1,6 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
-import { Plus, X, Wallet, ChevronDown } from "lucide-react";
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  CalendarDays,
+  ChevronDown,
+  Plus,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import {
   getCurrencyName,
@@ -35,566 +42,389 @@ const defaultExpenseCategories = [
   "Other Expense",
 ];
 
-function AddTransaction() {
-  const { setTransactions, dateFormat } = useOutletContext();
+function readCustomCategories(key) {
+  try {
+    const categories = JSON.parse(localStorage.getItem(key) || "[]");
+    return Array.isArray(categories) ? categories : [];
+  } catch {
+    return [];
+  }
+}
+
+function getToday() {
+  return new Date().toISOString().split("T")[0];
+}
+
+function AddTransaction({ onClose }) {
+  const { setTransactions, dateFormat, currency } = useOutletContext();
+
   const [type, setType] = useState("expense");
-  const [description, setDescription] =
-    useState("");
-  const [amount, setAmount] =
-    useState("");
-  const [category, setCategory] =
-    useState("Food");
-  const [date, setDate] = useState(
-    new Date().toISOString().split("T")[0],
+  const [description, setDescription] = useState("");
+  const [amount, setAmount] = useState("");
+  const [category, setCategory] = useState("Food");
+  const [date, setDate] = useState(getToday());
+  const [error, setError] = useState("");
+
+  const [typeOpen, setTypeOpen] = useState(false);
+  const [categoryOpen, setCategoryOpen] = useState(false);
+
+  const [customIncomeCategories, setCustomIncomeCategories] = useState(() =>
+    readCustomCategories("pennyplot-custom-income-categories"),
   );
-  const [error, setError] =
-    useState("");
 
-  const [typeOpen, setTypeOpen] =
-    useState(false);
-  const [categoryOpen, setCategoryOpen] =
-    useState(false);
-
-  const [customIncomeCategories, setCustomIncomeCategories] =
-    useState(() => {
-      try {
-        return JSON.parse(
-          localStorage.getItem(
-            "pennyplot-custom-income-categories",
-          ) || "[]",
-        );
-      } catch {
-        return [];
-      }
-    });
-
-  const [customExpenseCategories, setCustomExpenseCategories] =
-    useState(() => {
-      try {
-        return JSON.parse(
-          localStorage.getItem(
-            "pennyplot-custom-expense-categories",
-          ) || "[]",
-        );
-      } catch {
-        return [];
-      }
-    });
+  const [customExpenseCategories, setCustomExpenseCategories] = useState(() =>
+    readCustomCategories("pennyplot-custom-expense-categories"),
+  );
 
   const dropdownRef = useRef(null);
+  const descriptionRef = useRef(null);
 
-  /*
-    Keep custom categories updated when
-    localStorage changes in another tab/window.
-  */
-  useEffect(() => {
-    function handleStorageChange(event) {
-      if (
-        event.key ===
-          "pennyplot-custom-income-categories" ||
-        event.key ===
-          "pennyplot-custom-expense-categories"
-      ) {
-        try {
-          setCustomIncomeCategories(
-            JSON.parse(
-              localStorage.getItem(
-                "pennyplot-custom-income-categories",
-              ) || "[]",
-            ),
-          );
-
-          setCustomExpenseCategories(
-            JSON.parse(
-              localStorage.getItem(
-                "pennyplot-custom-expense-categories",
-              ) || "[]",
-            ),
-          );
-        } catch {
-          setCustomIncomeCategories([]);
-          setCustomExpenseCategories([]);
-        }
-      }
-    }
-
-    window.addEventListener(
-      "storage",
-      handleStorageChange,
-    );
-
-    return () => {
-      window.removeEventListener(
-        "storage",
-        handleStorageChange,
-      );
-    };
-  }, []);
-
-  /*
-    Read the latest categories whenever
-    the Add Transaction component becomes active.
-  */
-  useEffect(() => {
-    function refreshCategories() {
-      try {
-        setCustomIncomeCategories(
-          JSON.parse(
-            localStorage.getItem(
-              "pennyplot-custom-income-categories",
-            ) || "[]",
-          ),
-        );
-
-        setCustomExpenseCategories(
-          JSON.parse(
-            localStorage.getItem(
-              "pennyplot-custom-expense-categories",
-            ) || "[]",
-          ),
-        );
-      } catch {
-        setCustomIncomeCategories([]);
-        setCustomExpenseCategories([]);
-      }
-    }
-
-    window.addEventListener(
-      "focus",
-      refreshCategories,
-    );
-
-    return () => {
-      window.removeEventListener(
-        "focus",
-        refreshCategories,
-      );
-    };
-  }, []);
+  const currencySymbol = getCurrencySymbol(currency);
+  const currencyName = getCurrencyName(currency);
 
   const categories =
     type === "income"
-      ? [
-          ...defaultIncomeCategories,
-          ...customIncomeCategories,
-        ]
-      : [
-          ...defaultExpenseCategories,
-          ...customExpenseCategories,
-        ];
+      ? [...defaultIncomeCategories, ...customIncomeCategories]
+      : [...defaultExpenseCategories, ...customExpenseCategories];
 
-  /*
-    Close dropdowns when clicking outside.
-  */
+  useEffect(() => {
+    descriptionRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    function refreshCategories() {
+      setCustomIncomeCategories(
+        readCustomCategories("pennyplot-custom-income-categories"),
+      );
+
+      setCustomExpenseCategories(
+        readCustomCategories("pennyplot-custom-expense-categories"),
+      );
+    }
+
+    function handleStorageChange(event) {
+      if (
+        event.key === "pennyplot-custom-income-categories" ||
+        event.key === "pennyplot-custom-expense-categories"
+      ) {
+        refreshCategories();
+      }
+    }
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("focus", refreshCategories);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("focus", refreshCategories);
+    };
+  }, []);
+
   useEffect(() => {
     function handleClickOutside(event) {
       if (
         dropdownRef.current &&
-        !dropdownRef.current.contains(
-          event.target,
-        )
+        !dropdownRef.current.contains(event.target)
       ) {
         setTypeOpen(false);
         setCategoryOpen(false);
       }
     }
 
-    document.addEventListener(
-      "mousedown",
-      handleClickOutside,
-    );
+    document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
-      document.removeEventListener(
-        "mousedown",
-        handleClickOutside,
-      );
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
-  /*
-    Close dropdowns with Escape.
-  */
   useEffect(() => {
     function handleEscape(event) {
-      if (event.key === "Escape") {
+      if (event.key !== "Escape") return;
+
+      if (typeOpen || categoryOpen) {
         setTypeOpen(false);
         setCategoryOpen(false);
+        return;
       }
+
+      onClose?.();
     }
 
-    document.addEventListener(
-      "keydown",
-      handleEscape,
-    );
+    document.addEventListener("keydown", handleEscape);
 
     return () => {
-      document.removeEventListener(
-        "keydown",
-        handleEscape,
-      );
+      document.removeEventListener("keydown", handleEscape);
     };
-  }, []);
+  }, [typeOpen, categoryOpen, onClose]);
 
   function formatAmount(value) {
     if (!value) return "";
 
-    return Number(value).toLocaleString(
-      "en-NG",
-    );
+    return Number(value).toLocaleString("en-NG");
   }
 
-  function handleAmountChange(e) {
-    const numbersOnly =
-      e.target.value.replace(/\D/g, "");
-
+  function handleAmountChange(event) {
+    const numbersOnly = event.target.value.replace(/\D/g, "");
     setAmount(numbersOnly);
-  }
-
-  function handleSubmit(e) {
-    e.preventDefault();
     setError("");
-
-    if (!description.trim()) {
-      setError(
-        "Please enter a description.",
-      );
-
-      toast.error(
-        "Please enter a description.",
-      );
-
-      return;
-    }
-
-    const numericAmount = Number(amount);
-
-    if (
-      !numericAmount ||
-      numericAmount <= 0
-    ) {
-      setError(
-        "Please enter a valid amount.",
-      );
-
-      toast.error(
-        "Please enter a valid amount.",
-      );
-
-      return;
-    }
-
-    if (!date) {
-      setError(
-        "Please select a date.",
-      );
-
-      toast.error(
-        "Please select a date.",
-      );
-
-      return;
-    }
-
-    const newTransaction = {
-      id: Date.now(),
-      type,
-      description:
-        description.trim(),
-      amount: numericAmount,
-      category,
-      date,
-    };
-
-    setTransactions((prev) => [
-      newTransaction,
-      ...prev,
-    ]);
-
-    toast.success(
-      `${
-        type === "income"
-          ? "Income"
-          : "Expense"
-      } added successfully.`,
-    );
-
-    setDescription("");
-    setAmount("");
-    setType("expense");
-    setCategory("Food");
-    setDate(
-      new Date()
-        .toISOString()
-        .split("T")[0],
-    );
-    setError("");
-
-    setTypeOpen(false);
-    setCategoryOpen(false);
   }
 
   function selectType(value) {
     setType(value);
     setTypeOpen(false);
 
-    if (value === "income") {
-      setCategory("Salary");
-    } else {
-      setCategory("Food");
-    }
+    setCategory(value === "income" ? "Salary" : "Food");
+    setError("");
   }
 
   function selectCategory(value) {
     setCategory(value);
     setCategoryOpen(false);
+    setError("");
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault();
+    setError("");
+
+    const trimmedDescription = description.trim();
+    const numericAmount = Number(amount);
+
+    if (!trimmedDescription) {
+      setError("Add a description for this transaction.");
+      return;
+    }
+
+    if (!numericAmount || numericAmount <= 0) {
+      setError("Enter an amount greater than zero.");
+      return;
+    }
+
+    if (!date) {
+      setError("Select a date for this transaction.");
+      return;
+    }
+
+    const newTransaction = {
+      id: Date.now(),
+      type,
+      description: trimmedDescription,
+      amount: numericAmount,
+      category,
+      date,
+    };
+
+    setTransactions((previousTransactions) => [
+      newTransaction,
+      ...previousTransactions,
+    ]);
+
+    toast.success(
+      `${type === "income" ? "Income" : "Expense"} added successfully.`,
+    );
+
+    onClose?.();
   }
 
   return (
     <section className="w-full">
-      <div className="relative z-10 overflow-visible rounded-3xl border-2 border-primary/30 bg-card pt-2 shadow-2xl shadow-black/30">
+      <div className="overflow-hidden rounded-2xl bg-card">
         {/* Header */}
-        <div className="border-b border-border px-5 py-6 md:px-7">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/15 text-primary ring-1 ring-primary/20">
-              <Wallet size={21} />
-            </div>
+        <div className="flex items-start justify-between gap-4 px-5 pb-5 pt-6 sm:px-6">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.14em] text-primary">
+              New transaction
+            </p>
 
-            <div>
-              <h2 className="text-xl font-semibold text-foreground">
-                Add Transaction
-              </h2>
+            <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground">
+              Add something
+            </h2>
 
-              <p className="mt-1 text-sm text-muted-foreground">
-                Record a new income or expense
-              </p>
-            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Record money coming in or going out.
+            </p>
           </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            aria-label="Close"
+          >
+            <X size={18} />
+          </button>
         </div>
 
-        {/* Form */}
-        <div className="p-5 md:p-7">
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-6"
-          >
+        <form onSubmit={handleSubmit}>
+          {/* Type switch */}
+          <div className="px-5 sm:px-6">
+            <div className="grid grid-cols-2 rounded-xl bg-muted/60 p-1">
+              <button
+                type="button"
+                onClick={() => selectType("expense")}
+                className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+                  type === "expense"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <ArrowUpRight
+                  size={16}
+                  className={
+                    type === "expense" ? "text-destructive" : ""
+                  }
+                />
+                Expense
+              </button>
+
+              <button
+                type="button"
+                onClick={() => selectType("income")}
+                className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+                  type === "income"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <ArrowDownLeft
+                  size={16}
+                  className={type === "income" ? "text-primary" : ""}
+                />
+                Income
+              </button>
+            </div>
+          </div>
+
+          {/* Main fields */}
+          <div className="space-y-5 px-5 pb-6 pt-6 sm:px-6">
+            {/* Amount */}
+            <div>
+              <label
+                htmlFor="transaction-amount"
+                className="mb-2 block text-xs font-medium text-muted-foreground"
+              >
+                Amount
+              </label>
+
+              <div className="flex items-center rounded-xl border border-border bg-background px-4 transition-colors focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/10">
+                <span className="mr-2 text-lg font-medium text-primary">
+                  {currencySymbol}
+                </span>
+
+                <input
+                  id="transaction-amount"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  value={formatAmount(amount)}
+                  onChange={handleAmountChange}
+                  placeholder="0"
+                  className="min-w-0 flex-1 bg-transparent py-3.5 text-2xl font-semibold tracking-tight text-foreground outline-none placeholder:text-muted-foreground/30"
+                />
+              </div>
+
+              <p className="mt-1.5 text-[11px] text-muted-foreground/60">
+                {amount
+                  ? `${currencySymbol}${formatAmount(amount)}`
+                  : `Amount in ${currencyName}`}
+              </p>
+            </div>
+
             {/* Description */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-muted-foreground">
+              <label
+                htmlFor="transaction-description"
+                className="mb-2 block text-xs font-medium text-muted-foreground"
+              >
                 Description
               </label>
 
               <input
+                ref={descriptionRef}
+                id="transaction-description"
                 type="text"
                 value={description}
-                onChange={(e) =>
-                  setDescription(
-                    e.target.value,
-                  )
+                onChange={(event) => {
+                  setDescription(event.target.value);
+                  setError("");
+                }}
+                placeholder={
+                  type === "expense"
+                    ? "What did you spend on?"
+                    : "Where did the money come from?"
                 }
-                placeholder="e.g. Lunch, Salary, Transport"
-                className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition-all duration-200 placeholder:text-muted-foreground/50 hover:border-border/80 focus:border-primary focus:ring-2 focus:ring-primary/15"
+                autoComplete="off"
+                className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/40 focus:border-primary/60 focus:ring-2 focus:ring-primary/10"
               />
             </div>
 
-            {/* Amount */}
-            <div>
-              <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                Amount
-              </label>
-
-              <div className="flex overflow-hidden rounded-xl border border-border bg-background transition-all duration-200 hover:border-border/80 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15">
-                <div className="flex items-center border-r border-border bg-foreground/[0.02] px-4 text-base font-bold text-primary">
-                  {getCurrencySymbol()}
-                </div>
-
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={formatAmount(
-                    amount,
-                  )}
-                  onChange={
-                    handleAmountChange
-                  }
-                  placeholder="0"
-                  className="w-full bg-transparent px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/50"
-                />
-              </div>
-
-              <p className="mt-2 text-xs text-muted-foreground/60 transition-all duration-200">
-                {amount
-                  ? `${getCurrencySymbol()}${formatAmount(
-                      amount,
-                    )}`
-                  : `Enter amount in ${getCurrencyName()}`}
-              </p>
-            </div>
-
-            {/* Type / Category / Date */}
+            {/* Category / Date */}
             <div
               ref={dropdownRef}
-              className="grid gap-5 md:grid-cols-3"
+              className="grid gap-4 sm:grid-cols-2"
             >
-              {/* Type */}
-              <div className="relative z-50">
-                <label className="mb-2 block text-sm font-medium text-muted-foreground">
-                  Type
-                </label>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTypeOpen(
-                      (prev) => !prev,
-                    );
-
-                    setCategoryOpen(
-                      false,
-                    );
-                  }}
-                  className="flex w-full items-center justify-between rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition-all duration-200 hover:border-border/80 focus:border-primary focus:ring-2 focus:ring-primary/15"
-                >
-                  <span
-                    className={
-                      type === "income"
-                        ? "text-primary"
-                        : "text-red-400"
-                    }
-                  >
-                    {type === "expense"
-                      ? "Expense"
-                      : "Income"}
-                  </span>
-
-                  <ChevronDown
-                    size={17}
-                    className={`text-muted-foreground transition-transform duration-200 ${
-                      typeOpen
-                        ? "rotate-180"
-                        : ""
-                    }`}
-                  />
-                </button>
-
-                {/* Type Dropdown */}
-                <div
-                  className={`absolute bottom-full left-0 right-0 z-50 mb-2 origin-bottom rounded-xl border border-border bg-popover p-1.5 shadow-2xl shadow-black/50 ring-1 ring-black/20 transition-all duration-200 ease-out md:top-full md:bottom-auto md:mt-2 md:mb-0 md:origin-top ${
-                    typeOpen
-                      ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
-                      : "pointer-events-none translate-y-1 scale-95 opacity-0"
-                  }`}
-                >
-                  <button
-                    type="button"
-                    onClick={() =>
-                      selectType(
-                        "expense",
-                      )
-                    }
-                    className={`flex w-full rounded-lg px-3 py-2.5 text-left text-sm transition-all duration-150 ${
-                      type === "expense"
-                        ? "bg-red-500/10 text-red-400"
-                        : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
-                    }`}
-                  >
-                    Expense
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      selectType(
-                        "income",
-                      )
-                    }
-                    className={`mt-1 flex w-full rounded-lg px-3 py-2.5 text-left text-sm transition-all duration-150 ${
-                      type === "income"
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
-                    }`}
-                  >
-                    Income
-                  </button>
-                </div>
-              </div>
-
-              {/* Category */}
-              <div className="relative z-50">
-                <label className="mb-2 block text-sm font-medium text-muted-foreground">
+              <div className="relative">
+                <label className="mb-2 block text-xs font-medium text-muted-foreground">
                   Category
                 </label>
 
                 <button
                   type="button"
                   onClick={() => {
-                    setCategoryOpen(
-                      (prev) => !prev,
-                    );
-
+                    setCategoryOpen((open) => !open);
                     setTypeOpen(false);
                   }}
-                  className="flex w-full items-center justify-between rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition-all duration-200 hover:border-border/80 focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  className="flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-background px-4 py-3 text-left text-sm text-foreground transition-colors hover:border-border/80 focus:outline-none focus:ring-2 focus:ring-primary/10"
                 >
-                  <span className="truncate">
-                    {category}
-                  </span>
+                  <span className="truncate">{category}</span>
 
                   <ChevronDown
-                    size={17}
+                    size={16}
                     className={`shrink-0 text-muted-foreground transition-transform duration-200 ${
-                      categoryOpen
-                        ? "rotate-180"
-                        : ""
+                      categoryOpen ? "rotate-180" : ""
                     }`}
                   />
                 </button>
 
-                {/* Category Dropdown */}
                 <div
-                  className={`absolute bottom-full left-0 right-0 z-50 mb-2 origin-bottom rounded-xl border border-border bg-popover shadow-2xl shadow-black/50 ring-1 ring-black/20 transition-all duration-200 ease-out md:top-full md:bottom-auto md:mt-2 md:mb-0 md:origin-top md:mr-5 ${
+                  className={`absolute bottom-full left-0 right-0 z-30 mb-2 origin-bottom rounded-xl border border-border bg-popover p-1.5 shadow-2xl transition-all duration-150 ${
                     categoryOpen
                       ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
-                      : "pointer-events-none translate-y-1 scale-95 opacity-0"
+                      : "pointer-events-none translate-y-1 scale-[0.98] opacity-0"
                   }`}
                 >
-                  <div className="max-h-60 overflow-y-auto overscroll-contain p-1.5 scrollbar-width:thin [scrollbar-color:var(--primary)_transparent]">
-                    {categories.map(
-                      (item) => (
-                        <button
-                          key={item}
-                          type="button"
-                          onClick={() =>
-                            selectCategory(
-                              item,
-                            )
-                          }
-                          className={`flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm transition-all duration-150 ${
-                            category ===
-                            item
-                              ? "bg-primary/10 text-primary"
-                              : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
-                          }`}
-                        >
-                          <span className="truncate">
-                            {item}
-                          </span>
-                        </button>
-                      ),
-                    )}
+                  <div className="max-h-52 overflow-y-auto">
+                    {categories.map((item) => (
+                      <button
+                        key={item}
+                        type="button"
+                        onClick={() => selectCategory(item)}
+                        className={`flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
+                          category === item
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        }`}
+                      >
+                        {item}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
 
-              {/* Date */}
-              <div className="relative z-10">
-                <label className="mb-2 block text-sm font-medium text-muted-foreground">
+              <div>
+                <label className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                  <CalendarDays size={13} />
                   Date
                 </label>
 
                 <DatePicker
                   value={date}
-                  onChange={setDate}
+                  onChange={(value) => {
+                    setDate(value);
+                    setError("");
+                  }}
                   dateFormat={dateFormat}
                 />
               </div>
@@ -602,42 +432,27 @@ function AddTransaction() {
 
             {/* Error */}
             <div
-              className={`grid transition-all duration-200 ease-out ${
+              className={`overflow-hidden transition-all duration-200 ${
                 error
-                  ? "grid-rows-[1fr] opacity-100"
-                  : "grid-rows-[0fr] opacity-0"
+                  ? "max-h-20 opacity-100"
+                  : "max-h-0 opacity-0"
               }`}
             >
-              <div className="overflow-hidden">
-                <div className="flex items-center justify-between rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-                  <span>{error}</span>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setError("")
-                    }
-                    className="transition-colors duration-150 hover:text-red-300"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
+              <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-3.5 py-3 text-xs text-destructive">
+                {error}
               </div>
             </div>
 
             {/* Submit */}
             <button
               type="submit"
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-primary/30 active:translate-y-0 active:scale-[0.99]"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/15 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-primary/25 active:translate-y-0"
             >
-              <Plus
-                size={18}
-                className="transition-transform duration-200"
-              />
-              Add Transaction
+              <Plus size={17} />
+              Add transaction
             </button>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
     </section>
   );

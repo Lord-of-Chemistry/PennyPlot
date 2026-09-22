@@ -60,17 +60,9 @@ function DatePicker({
 
   const selectedDate = parseDate(value);
 
-  /* =========================
-     SYNC DISPLAY VALUE
-  ========================= */
-
   useEffect(() => {
     setInputValue(value ? formatInputDate(selectedDate, dateFormat) : "");
   }, [value, dateFormat]);
-
-  /* =========================
-     HANDLE CALENDAR
-  ========================= */
 
   function handleCalendarSelect(date) {
     if (!date) return;
@@ -78,20 +70,12 @@ function DatePicker({
     const formatted = formatDateForStorage(date);
 
     onChange(formatted);
-
     setInputValue(formatInputDate(date, dateFormat));
-
     setOpen(false);
   }
 
-  /* =========================
-     HANDLE MANUAL INPUT
-  ========================= */
-
   function handleInputChange(event) {
-    const value = event.target.value;
-
-    setInputValue(value);
+    setInputValue(event.target.value);
   }
 
   function handleInputBlur() {
@@ -106,7 +90,6 @@ function DatePicker({
       const formatted = formatDateForStorage(parsed);
 
       onChange(formatted);
-
       setInputValue(formatInputDate(parsed, dateFormat));
     } else {
       setInputValue(value ? formatInputDate(selectedDate, dateFormat) : "");
@@ -129,10 +112,6 @@ function DatePicker({
       setOpen(false);
     }
   }
-
-  /* =========================
-     PARSE TYPED DATE
-  ========================= */
 
   function parseTypedDate(input, format) {
     const parts = input
@@ -184,21 +163,17 @@ function DatePicker({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <div
-        className={`flex w-full items-center overflow-hidden rounded-xl border border-white/10 bg-[#1b2922] transition-all duration-200 hover:border-white/20 focus-within:border-[#049552] focus-within:ring-1 focus-within:ring-[#049552]/30 ${className}`}
+        className={`flex w-full items-center overflow-hidden rounded-xl border border-border bg-background transition-colors hover:border-border/80 focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/10 ${className}`}
       >
-        {/* Calendar icon */}
-
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="flex shrink-0 items-center justify-center px-4 text-gray-500 transition-colors hover:text-[#049552]"
+            className="flex shrink-0 items-center justify-center px-4 text-muted-foreground transition-colors hover:text-primary"
             aria-label="Open calendar"
           >
             <CalendarDays size={17} />
           </button>
         </PopoverTrigger>
-
-        {/* Date input */}
 
         <input
           ref={inputRef}
@@ -208,41 +183,39 @@ function DatePicker({
           onBlur={handleInputBlur}
           onKeyDown={handleInputKeyDown}
           placeholder={dateFormat}
-          className="min-w-0 flex-1 bg-transparent py-3 pr-2 text-sm text-white outline-none placeholder:text-gray-500"
+          className="min-w-0 flex-1 bg-transparent py-3 pr-2 text-sm text-foreground outline-none placeholder:text-muted-foreground/40"
         />
-
-        {/* Dropdown arrow */}
 
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="flex shrink-0 items-center justify-center px-4 text-gray-500 transition-colors hover:text-white"
+            className="flex shrink-0 items-center justify-center px-4 text-muted-foreground transition-colors hover:text-foreground"
             aria-label="Open calendar"
           >
             <ChevronDown
               size={16}
               className={`transition-transform duration-200 ${
-                open ? "rotate-180 text-[#049552]" : ""
+                open ? "rotate-180 text-primary" : ""
               }`}
             />
           </button>
         </PopoverTrigger>
       </div>
 
-      {/* Calendar */}
-
       <PopoverContent
         align="start"
         sideOffset={8}
-        className="w-auto border-white/10 bg-[#1b2922] p-0 text-white shadow-2xl shadow-black/40"
+        className="z-[300] w-auto overflow-hidden rounded-xl border border-border bg-popover p-0 text-popover-foreground shadow-2xl"
       >
-        <Calendar
-          mode="single"
-          selected={selectedDate}
-          onSelect={handleCalendarSelect}
-          initialFocus
-          className="rounded-xl"
-        />
+        <div className="max-h-[min(24rem,60vh)] overflow-y-auto [scrollbar-color:hsl(var(--muted-foreground)/0.35)_transparent] [scrollbar-width:thin]">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={handleCalendarSelect}
+            initialFocus
+            className="rounded-xl"
+          />
+        </div>
       </PopoverContent>
     </Popover>
   );

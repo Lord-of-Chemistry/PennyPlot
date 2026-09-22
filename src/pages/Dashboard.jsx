@@ -1,4 +1,6 @@
-import { Link, useOutletContext } from "react-router-dom";
+import { useOutletContext, Link } from "react-router-dom";
+import { useState } from "react";
+import AddTransaction from "../components/AddTransaction";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -47,6 +49,7 @@ const categoryIcons = {
 
 function Dashboard() {
   const { transactions, currency, dateFormat, profile } = useOutletContext();
+  const [isAddTransactionOpen, setIsAddTransactionOpen] = useState(false);
 
   /*
     ============================================================
@@ -253,8 +256,9 @@ function Dashboard() {
             </p>
           </div>
 
-          <Link
-            to="/transactions"
+          <button
+            type="button"
+            onClick={() => setIsAddTransactionOpen(true)}
             className="group inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/10 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/20 sm:h-auto sm:w-auto sm:gap-2 sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm sm:font-medium"
             aria-label="Add transaction"
           >
@@ -264,7 +268,7 @@ function Dashboard() {
             />
 
             <span className="hidden sm:inline">Add transaction</span>
-          </Link>
+          </button>
         </header>
 
         {/* ======================================================
@@ -272,7 +276,6 @@ function Dashboard() {
         ====================================================== */}
 
         <section className="animate-in fade-in slide-in-from-bottom-3 relative overflow-hidden rounded-[2rem] border border-border/50 bg-card p-6 shadow-2xl shadow-black/10 duration-700 sm:p-8">
-          {/* Decorative light */}
           <div
             aria-hidden="true"
             className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-primary/10 blur-3xl"
@@ -516,13 +519,14 @@ function Dashboard() {
                   finances.
                 </p>
 
-                <Link
-                  to="/transactions"
+                <button
+                  type="button"
+                  onClick={() => setIsAddTransactionOpen(true)}
                   className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-medium text-primary-foreground shadow-lg shadow-primary/10 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-primary/20"
                 >
                   <Plus size={15} />
                   Add transaction
-                </Link>
+                </button>
               </div>
             ) : (
               <div className="space-y-1">
@@ -637,6 +641,21 @@ function Dashboard() {
           </section>
         </div>
       </div>
+
+      {isAddTransactionOpen && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setIsAddTransactionOpen(false);
+            }
+          }}
+        >
+          <div className="relative max-h-[90svh] w-full max-w-lg overflow-y-auto rounded-2xl border border-border bg-background shadow-2xl">
+            <AddTransaction onClose={() => setIsAddTransactionOpen(false)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

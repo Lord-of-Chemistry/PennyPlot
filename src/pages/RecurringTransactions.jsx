@@ -438,7 +438,7 @@ function RecurringTransactions() {
             }
           }}
         >
-          <div className="pennyplot-scrollbar max-h-[90vh] w-full overflow-y-auto rounded-t-3xl border border-border bg-card shadow-2xl animate-in slide-in-from-bottom-4 duration-300 sm:max-w-xl sm:rounded-2xl sm:zoom-in-95">
+          <div className="pennyplot-scrollbar max-h-[90vh] mt-4 pt-2 w-full overflow-y-auto rounded-t-3xl border border-border bg-card shadow-2xl animate-in slide-in-from-bottom-4 duration-300 sm:max-w-xl sm:rounded-2xl sm:zoom-in-95">
             <div className="flex items-start justify-between border-b border-border/60 px-5 py-4">
               <div>
                 <p className="text-xs font-medium uppercase tracking-[0.16em] text-primary">
