@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
-import LandingPage from "./pages/LandingPage";
 import FirstLaunch from "./pages/FirstLaunch";
 import Dashboard from "./pages/Dashboard";
 import Transactions from "./pages/Transactions";
@@ -19,11 +18,8 @@ function App() {
       <InstallPrompt />
 
       <Routes>
-        {/* Landing page — NO Layout / NO Sidebar */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/welcome" element={<FirstLaunch />} />
+        <Route path="/" element={<FirstLaunch />} />
 
-        {/* App pages — Layout + Sidebar */}
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/transactions" element={<Transactions />} />

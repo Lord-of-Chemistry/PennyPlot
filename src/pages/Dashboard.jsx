@@ -651,7 +651,7 @@ function Dashboard() {
             }
           }}
         >
-          <div className="relative max-h-[90svh] w-full max-w-lg overflow-y-auto rounded-2xl border border-border bg-background shadow-2xl">
+          <div className="pp-scrollbar relative max-h-[90svh] w-full max-w-lg overflow-y-auto rounded-2xl border border-border bg-background shadow-2xl">
             <AddTransaction onClose={() => setIsAddTransactionOpen(false)} />
           </div>
         </div>

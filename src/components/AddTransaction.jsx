@@ -9,10 +9,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  getCurrencyName,
-  getCurrencySymbol,
-} from "../utils/currency";
+import { getCurrencyName, getCurrencySymbol } from "../utils/currency";
 import DatePicker from "../components/DatePicker";
 
 const defaultIncomeCategories = [
@@ -122,10 +119,7 @@ function AddTransaction({ onClose }) {
 
   useEffect(() => {
     function handleClickOutside(event) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setTypeOpen(false);
         setCategoryOpen(false);
       }
@@ -229,7 +223,7 @@ function AddTransaction({ onClose }) {
 
   return (
     <section className="w-full">
-      <div className="overflow-hidden rounded-2xl bg-card">
+      <div className="rounded-2xl bg-card">
         {/* Header */}
         <div className="flex items-start justify-between gap-4 px-5 pb-5 pt-6 sm:px-6">
           <div>
@@ -271,9 +265,7 @@ function AddTransaction({ onClose }) {
               >
                 <ArrowUpRight
                   size={16}
-                  className={
-                    type === "expense" ? "text-destructive" : ""
-                  }
+                  className={type === "expense" ? "text-destructive" : ""}
                 />
                 Expense
               </button>
@@ -360,10 +352,7 @@ function AddTransaction({ onClose }) {
             </div>
 
             {/* Category / Date */}
-            <div
-              ref={dropdownRef}
-              className="grid gap-4 sm:grid-cols-2"
-            >
+            <div ref={dropdownRef} className="grid gap-4 sm:grid-cols-2">
               <div className="relative">
                 <label className="mb-2 block text-xs font-medium text-muted-foreground">
                   Category
@@ -433,9 +422,7 @@ function AddTransaction({ onClose }) {
             {/* Error */}
             <div
               className={`overflow-hidden transition-all duration-200 ${
-                error
-                  ? "max-h-20 opacity-100"
-                  : "max-h-0 opacity-0"
+                error ? "max-h-20 opacity-100" : "max-h-0 opacity-0"
               }`}
             >
               <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-3.5 py-3 text-xs text-destructive">

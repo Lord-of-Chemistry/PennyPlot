@@ -205,17 +205,15 @@ function DatePicker({
       <PopoverContent
         align="start"
         sideOffset={8}
-        className="z-[300] w-auto overflow-hidden rounded-xl border border-border bg-popover p-0 text-popover-foreground shadow-2xl"
+        className="z-[9999] w-auto rounded-xl border border-border bg-popover p-0 text-popover-foreground shadow-2xl"
       >
-        <div className="max-h-[min(24rem,60vh)] overflow-y-auto [scrollbar-color:hsl(var(--muted-foreground)/0.35)_transparent] [scrollbar-width:thin]">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={handleCalendarSelect}
-            initialFocus
-            className="rounded-xl"
-          />
-        </div>
+        <Calendar
+          mode="single"
+          selected={selectedDate}
+          onSelect={handleCalendarSelect}
+          initialFocus
+          className="rounded-xl"
+        />
       </PopoverContent>
     </Popover>
   );

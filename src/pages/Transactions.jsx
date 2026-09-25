@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import {
   ArrowDownRight,
@@ -12,32 +12,60 @@ import {
   Filter,
   MoreHorizontal,
   Search,
-  X,
   Trash2,
+  X,
 } from "lucide-react";
-import DatePicker from "../components/DatePicker";
-import { formatCurrency, getCurrencySymbol } from "../utils/currency";
+
+import DatePicker from "@/components/DatePicker";
+
+const expenseCategories = [
+  "Food",
+  "Transport",
+  "Shopping",
+  "Bills",
+  "Entertainment",
+  "Health",
+  "Education",
+  "Other",
+];
+
+const incomeCategories = [
+  "Salary",
+  "Freelance",
+  "Business",
+  "Gift",
+  "Investment",
+  "Other",
+];
 
 function parseTransactionDate(date) {
-  if (!date) return new Date();
+  if (!date) return null;
 
   if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     const [year, month, day] = date.split("-").map(Number);
-    return new Date(year, month - 1, day);
+    const parsed = new Date(year, month - 1, day);
+
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
 
-  return new Date(date);
+  const parsed = new Date(date);
+
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
 function getMonthKey(date) {
-  const transactionDate = parseTransactionDate(date);
+  const parsedDate = parseTransactionDate(date);
 
-  return `${transactionDate.getFullYear()}-${String(
-    transactionDate.getMonth() + 1,
+  if (!parsedDate) return null;
+
+  return `${parsedDate.getFullYear()}-${String(
+    parsedDate.getMonth() + 1
   ).padStart(2, "0")}`;
 }
 
 function formatMonthLabel(monthKey) {
+  if (!monthKey) return "Unknown date";
+
   const [year, month] = monthKey.split("-").map(Number);
 
   return new Date(year, month - 1, 1).toLocaleDateString("en-NG", {
@@ -47,160 +75,228 @@ function formatMonthLabel(monthKey) {
 }
 
 function formatTransactionDate(date) {
-  const transactionDate = parseTransactionDate(date);
+  const parsedDate = parseTransactionDate(date);
 
-  return transactionDate.toLocaleDateString("en-NG", {
+  if (!parsedDate) return "Unknown date";
+
+  return parsedDate.toLocaleDateString("en-NG", {
     day: "numeric",
     month: "short",
+    year: "numeric",
   });
 }
 
-function formatTransactionTime(date) {
-  const transactionDate = parseTransactionDate(date);
-
-  return transactionDate.toLocaleTimeString("en-NG", {
-    hour: "numeric",
-    minute: "2-digit",
-  });
+function formatAmount(amount) {
+  return Number(amount || 0).toLocaleString("en-NG");
 }
 
-function getInitial(description = "") {
-  return description.trim().charAt(0).toUpperCase() || "•";
+function getInitial(description) {
+  return description?.trim()?.charAt(0)?.toUpperCase() || "?";
 }
 
-function groupTransactionsByMonth(transactions) {
-  return transactions.reduce((groups, transaction) => {
-    const monthKey = getMonthKey(transaction.date);
+function getCategories(type, customCategories) {
+  const defaults =
+    type === "income" ? incomeCategories : expenseCategories;
 
-    if (!groups[monthKey]) {
-      groups[monthKey] = [];
-    }
-
-    groups[monthKey].push(transaction);
-
-    return groups;
-  }, {});
+  return [...new Set([...defaults, ...customCategories])];
 }
 
 function Transactions() {
-  const { transactions, setTransactions, currency, dateFormat } =
-    useOutletContext();
+  const {
+    transactions,
+    setTransactions,
+    currency,
+  } = useOutletContext();
 
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState("newest");
+
   const [showFilters, setShowFilters] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [openTransactionMenu, setOpenTransactionMenu] = useState(null);
 
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState(null);
 
-  const categories = useMemo(() => {
+  const filterRef = useRef(null);
+  const exportRef = useRef(null);
+  const transactionMenuRef = useRef(null);
+
+  const customCategories = useMemo(() => {
+    try {
+      const saved = localStorage.getItem("pennyplot-custom-categories");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  }, []);
+
+  const allCategories = useMemo(() => {
     return [
-      ...new Set(
-        transactions.map((transaction) => transaction.category).filter(Boolean),
-      ),
-    ].sort();
-  }, [transactions]);
+      ...new Set([
+        ...expenseCategories,
+        ...incomeCategories,
+        ...customCategories,
+        ...transactions.map((transaction) => transaction.category).filter(Boolean),
+      ]),
+    ];
+  }, [transactions, customCategories]);
+
+  useEffect(() => {
+    function handlePointerDown(event) {
+      if (
+        filterRef.current &&
+        !filterRef.current.contains(event.target)
+      ) {
+        setShowFilters(false);
+      }
+
+      if (
+        exportRef.current &&
+        !exportRef.current.contains(event.target)
+      ) {
+        setShowExportMenu(false);
+      }
+
+      if (
+        transactionMenuRef.current &&
+        !transactionMenuRef.current.contains(event.target)
+      ) {
+        setOpenTransactionMenu(null);
+      }
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        setShowFilters(false);
+        setShowExportMenu(false);
+        setOpenTransactionMenu(null);
+      }
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   const filteredTransactions = useMemo(() => {
-    const query = searchTerm.trim().toLowerCase();
+    const query = searchQuery.trim().toLowerCase();
 
-    return [...transactions]
-      .filter((transaction) => {
-        if (typeFilter !== "all" && transaction.type !== typeFilter) {
-          return false;
-        }
+    return transactions.filter((transaction) => {
+      const matchesSearch =
+        !query ||
+        transaction.description?.toLowerCase().includes(query) ||
+        transaction.category?.toLowerCase().includes(query) ||
+        transaction.type?.toLowerCase().includes(query);
 
-        if (
-          categoryFilter !== "all" &&
-          transaction.category !== categoryFilter
-        ) {
-          return false;
-        }
+      const matchesType =
+        typeFilter === "all" || transaction.type === typeFilter;
 
-        if (!query) return true;
+      const matchesCategory =
+        categoryFilter === "all" ||
+        transaction.category === categoryFilter;
 
-        return [transaction.description, transaction.category, transaction.type]
-          .filter(Boolean)
-          .some((value) => value.toLowerCase().includes(query));
-      })
-      .sort((a, b) => {
-        const dateDifference =
-          parseTransactionDate(b.date) - parseTransactionDate(a.date);
+      return matchesSearch && matchesType && matchesCategory;
+    });
+  }, [transactions, searchQuery, typeFilter, categoryFilter]);
 
-        if (sortOrder === "oldest") {
-          return -dateDifference;
-        }
+  const sortedTransactions = useMemo(() => {
+    const result = [...filteredTransactions];
 
-        if (sortOrder === "highest") {
-          return Number(b.amount || 0) - Number(a.amount || 0);
-        }
+    result.sort((a, b) => {
+      if (sortOrder === "highest") {
+        return Number(b.amount || 0) - Number(a.amount || 0);
+      }
 
-        if (sortOrder === "lowest") {
-          return Number(a.amount || 0) - Number(b.amount || 0);
-        }
+      if (sortOrder === "lowest") {
+        return Number(a.amount || 0) - Number(b.amount || 0);
+      }
 
-        return dateDifference;
-      });
-  }, [transactions, searchTerm, typeFilter, categoryFilter, sortOrder]);
+      const dateA = parseTransactionDate(a.date);
+      const dateB = parseTransactionDate(b.date);
 
-  const groupedTransactions = useMemo(
-    () => groupTransactionsByMonth(filteredTransactions),
-    [filteredTransactions],
-  );
+      const timeA = dateA ? dateA.getTime() : 0;
+      const timeB = dateB ? dateB.getTime() : 0;
 
-  const sortedMonths = useMemo(() => {
-    return Object.entries(groupedTransactions).sort(([monthA], [monthB]) =>
-      sortOrder === "oldest"
-        ? monthA.localeCompare(monthB)
-        : monthB.localeCompare(monthA),
-    );
-  }, [groupedTransactions, sortOrder]);
+      return sortOrder === "oldest"
+        ? timeA - timeB
+        : timeB - timeA;
+    });
 
-  const totalIncome = useMemo(
+    return result;
+  }, [filteredTransactions, sortOrder]);
+
+  const groupedTransactions = useMemo(() => {
+    if (sortOrder === "highest" || sortOrder === "lowest") {
+      return [
+        {
+          monthKey: "all",
+          label: "All transactions",
+          transactions: sortedTransactions,
+        },
+      ];
+    }
+
+    const groups = new Map();
+
+    sortedTransactions.forEach((transaction) => {
+      const monthKey = getMonthKey(transaction.date) || "unknown";
+
+      if (!groups.has(monthKey)) {
+        groups.set(monthKey, []);
+      }
+
+      groups.get(monthKey).push(transaction);
+    });
+
+    return Array.from(groups.entries()).map(([monthKey, monthTransactions]) => ({
+      monthKey,
+      label:
+        monthKey === "unknown"
+          ? "Unknown date"
+          : formatMonthLabel(monthKey),
+      transactions: monthTransactions,
+    }));
+  }, [sortedTransactions, sortOrder]);
+
+  const overallIncome = useMemo(
     () =>
       transactions
         .filter((transaction) => transaction.type === "income")
-        .reduce((sum, transaction) => sum + Number(transaction.amount || 0), 0),
-    [transactions],
+        .reduce((total, transaction) => total + Number(transaction.amount || 0), 0),
+    [transactions]
   );
 
-  const totalExpenses = useMemo(
+  const overallExpenses = useMemo(
     () =>
       transactions
         .filter((transaction) => transaction.type === "expense")
-        .reduce((sum, transaction) => sum + Number(transaction.amount || 0), 0),
-    [transactions],
+        .reduce((total, transaction) => total + Number(transaction.amount || 0), 0),
+    [transactions]
   );
 
-  function getMonthTotals(monthTransactions) {
-    return monthTransactions.reduce(
-      (totals, transaction) => {
-        const amount = Number(transaction.amount || 0);
-
-        if (transaction.type === "income") {
-          totals.income += amount;
-        } else {
-          totals.expenses += amount;
-        }
-
-        return totals;
-      },
-      { income: 0, expenses: 0 },
-    );
-  }
+  const activeFilterCount = [
+    typeFilter !== "all",
+    categoryFilter !== "all",
+    sortOrder !== "newest",
+  ].filter(Boolean).length;
 
   function startEditing(transaction) {
     setEditingId(transaction.id);
+    setOpenTransactionMenu(null);
 
     setEditForm({
-      description: transaction.description,
-      amount: transaction.amount,
-      type: transaction.type,
+      description: transaction.description || "",
+      amount: String(transaction.amount ?? ""),
+      type: transaction.type || "expense",
       category: transaction.category || "",
-      date: transaction.date,
+      date: transaction.date || "",
     });
   }
 
@@ -209,213 +305,257 @@ function Transactions() {
     setEditForm(null);
   }
 
-  function saveEdit() {
-    if (!editForm?.description?.trim() || !editForm.amount) {
-      return;
-    }
+  function handleEditTypeChange(type) {
+    setEditForm((current) => {
+      const validCategories = getCategories(type, customCategories);
+
+      const categoryStillValid = validCategories.includes(current.category);
+
+      return {
+        ...current,
+        type,
+        category: categoryStillValid ? current.category : "",
+      };
+    });
+  }
+
+  function saveEdit(transactionId) {
+    if (!editForm) return;
+
+    const description = editForm.description.trim();
+    const numericAmount = Number(editForm.amount);
+    const parsedDate = parseTransactionDate(editForm.date);
+
+    if (!description) return;
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) return;
+    if (!editForm.category) return;
+    if (!parsedDate) return;
 
     setTransactions((currentTransactions) =>
       currentTransactions.map((transaction) =>
-        transaction.id === editingId
+        transaction.id === transactionId
           ? {
               ...transaction,
-              ...editForm,
-              description: editForm.description.trim(),
-              amount: Number(editForm.amount),
+              description,
+              amount: numericAmount,
+              type: editForm.type,
+              category: editForm.category,
+              date: editForm.date,
             }
-          : transaction,
-      ),
+          : transaction
+      )
     );
 
     cancelEditing();
   }
 
-  function deleteTransaction(id) {
+  function deleteTransaction(transactionId) {
+    const transaction = transactions.find(
+      (item) => item.id === transactionId
+    );
+
+    if (!transaction) return;
+
     const confirmed = window.confirm(
-      "Delete this transaction? This cannot be undone.",
+      `Delete "${transaction.description}"?`
     );
 
     if (!confirmed) return;
 
     setTransactions((currentTransactions) =>
-      currentTransactions.filter((transaction) => transaction.id !== id),
+      currentTransactions.filter(
+        (item) => item.id !== transactionId
+      )
     );
 
-    if (editingId === id) {
+    setOpenTransactionMenu(null);
+
+    if (editingId === transactionId) {
       cancelEditing();
     }
   }
 
-  function exportCSV() {
-    const headers = ["Date", "Description", "Category", "Type", "Amount"];
+  function clearFilters() {
+    setSearchQuery("");
+    setTypeFilter("all");
+    setCategoryFilter("all");
+    setSortOrder("newest");
+  }
 
-    const rows = filteredTransactions.map((transaction) => [
-      transaction.date,
+  function exportCSV() {
+    const headers = [
+      "Description",
+      "Type",
+      "Category",
+      "Amount",
+      "Date",
+    ];
+
+    const rows = sortedTransactions.map((transaction) => [
       transaction.description,
-      transaction.category || "",
       transaction.type,
+      transaction.category,
       transaction.amount,
+      transaction.date,
     ]);
 
-    const csv = [headers, ...rows]
+    const csv = [
+      headers,
+      ...rows,
+    ]
       .map((row) =>
-        row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(","),
+        row
+          .map((value) =>
+            `"${String(value ?? "").replace(/"/g, '""')}"`
+          )
+          .join(",")
       )
       .join("\n");
 
-    const blob = new Blob([csv], {
-      type: "text/csv;charset=utf-8;",
-    });
-
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = "pennyplot-transactions.csv";
-    link.click();
-
-    URL.revokeObjectURL(url);
-    setShowExportMenu(false);
+    downloadFile(csv, "pennyplot-transactions.csv", "text/csv");
   }
 
   function exportJSON() {
-    const blob = new Blob([JSON.stringify(filteredTransactions, null, 2)], {
-      type: "application/json",
-    });
+    const json = JSON.stringify(sortedTransactions, null, 2);
 
+    downloadFile(
+      json,
+      "pennyplot-transactions.json",
+      "application/json"
+    );
+  }
+
+  function downloadFile(content, filename, type) {
+    const blob = new Blob([content], { type });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
 
     link.href = url;
-    link.download = "pennyplot-transactions.json";
-    link.click();
+    link.download = filename;
 
-    URL.revokeObjectURL(url);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    window.setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 1000);
+
     setShowExportMenu(false);
   }
 
   return (
-    <section className="min-h-screen px-4 pb-28 pt-6 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-6xl">
-        {/* Page heading */}
-        <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+    <div className="min-h-screen px-4 py-6 pb-24 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl space-y-6">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-primary">
-              Your money, in motion.
+            <p className="text-sm text-muted-foreground">
+              Your financial activity
             </p>
 
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
               Transactions
             </h1>
-
-            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-              Everything you&apos;ve earned and spent, in one place.
-            </p>
           </div>
 
-          <div className="relative self-start sm:self-auto">
-            <button
-              type="button"
-              onClick={() => setShowExportMenu((current) => !current)}
-              className="flex items-center gap-2 rounded-xl border border-border/70 bg-card px-3.5 py-2.5 text-sm font-medium text-secondary-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <Download size={15} />
-              Export
-              <ChevronDown
-                size={14}
-                className={`transition-transform ${
-                  showExportMenu ? "rotate-180" : ""
-                }`}
-              />
-            </button>
+          <div className="flex items-center gap-2">
+            <div className="relative" ref={exportRef}>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowExportMenu((current) => !current);
+                  setShowFilters(false);
+                }}
+                className="inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-background px-3 text-sm font-medium transition hover:bg-muted"
+              >
+                <Download className="h-4 w-4" />
+                <span className="hidden sm:inline">Export</span>
+                <ChevronDown className="h-3.5 w-3.5" />
+              </button>
 
-            {showExportMenu && (
-              <div className="absolute right-0 top-full z-30 mt-2 w-48 overflow-hidden rounded-xl border border-border bg-card p-1.5 shadow-xl">
-                <button
-                  type="button"
-                  onClick={exportCSV}
-                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm text-secondary-foreground transition-colors hover:bg-accent hover:text-foreground"
-                >
-                  <FileSpreadsheet size={15} />
-                  Export CSV
-                </button>
+              {showExportMenu && (
+                <div className="absolute right-0 z-50 mt-2 w-52 rounded-xl border border-border bg-popover p-1.5 text-popover-foreground shadow-xl">
+                  <button
+                    type="button"
+                    onClick={exportCSV}
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition hover:bg-muted"
+                  >
+                    <FileSpreadsheet className="h-4 w-4" />
+                    Export CSV
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={exportJSON}
-                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm text-secondary-foreground transition-colors hover:bg-accent hover:text-foreground"
-                >
-                  <FileText size={15} />
-                  Export JSON
-                </button>
-              </div>
-            )}
+                  <button
+                    type="button"
+                    onClick={exportJSON}
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition hover:bg-muted"
+                  >
+                    <FileText className="h-4 w-4" />
+                    Export JSON
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
-        {/* Overall activity */}
-        <section className="mt-10 border-y border-border/60 py-6">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                All activity
-              </p>
+        <section className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl border border-border bg-card/50 p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Overall income
+            </p>
 
-              <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
-                {formatCurrency(totalIncome - totalExpenses, currency)}
-              </p>
+            <p className="mt-2 text-xl font-semibold">
+              {currency} {formatAmount(overallIncome)}
+            </p>
+          </div>
 
-              <p className="mt-1 text-xs text-muted-foreground">
-                Net across all recorded transactions
-              </p>
-            </div>
+          <div className="rounded-2xl border border-border bg-card/50 p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Overall expenses
+            </p>
 
-            <div className="flex gap-8">
-              <div>
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <ArrowUpRight size={13} className="text-primary" />
-                  In
-                </div>
+            <p className="mt-2 text-xl font-semibold">
+              {currency} {formatAmount(overallExpenses)}
+            </p>
+          </div>
 
-                <p className="mt-1 text-sm font-medium text-foreground">
-                  {formatCurrency(totalIncome, currency)}
-                </p>
-              </div>
+          <div className="rounded-2xl border border-border bg-card/50 p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Transactions
+            </p>
 
-              <div>
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <ArrowDownRight size={13} />
-                  Out
-                </div>
-
-                <p className="mt-1 text-sm font-medium text-foreground">
-                  {formatCurrency(totalExpenses, currency)}
-                </p>
-              </div>
-            </div>
+            <p className="mt-2 text-xl font-semibold">
+              {filteredTransactions.length}
+            </p>
           </div>
         </section>
 
-        {/* Search and filters */}
-        <section className="mt-7 z-40 relative">
+        <section className="relative z-40 rounded-2xl border border-border bg-card/50 p-3 sm:p-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-            <div className="relative min-w-0 flex-1">
-              <Search
-                size={16}
-                aria-hidden="true"
-                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"
-              />
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
               <input
                 type="search"
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Search transactions..."
-                className="h-11 w-full rounded-xl border border-border/70 bg-card pl-10 pr-4 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/50"
+                className="h-10 w-full rounded-xl border border-border bg-background pl-9 pr-9 text-sm outline-none transition placeholder:text-muted-foreground focus:border-primary/60 focus:ring-1 focus:ring-primary/10"
               />
+
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                  aria-label="Clear search"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
 
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0">
+            <div className="flex gap-2 overflow-x-auto pb-1 lg:pb-0">
               {[
                 ["all", "All"],
                 ["income", "Income"],
@@ -425,251 +565,243 @@ function Transactions() {
                   key={value}
                   type="button"
                   onClick={() => setTypeFilter(value)}
-                  className={`whitespace-nowrap rounded-lg px-3.5 py-2 text-sm transition-colors ${
+                  className={`h-10 shrink-0 rounded-xl px-3 text-sm font-medium transition ${
                     typeFilter === value
-                      ? "bg-foreground text-background"
-                      : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 >
                   {label}
                 </button>
               ))}
 
-              <div className="relative">
+              <div className="relative shrink-0" ref={filterRef}>
                 <button
                   type="button"
-                  onClick={() => setShowFilters((current) => !current)}
-                  className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm transition-colors ${
-                    showFilters ||
-                    categoryFilter !== "all" ||
-                    sortOrder !== "newest"
-                      ? "bg-accent text-foreground"
-                      : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                  onClick={() => {
+                    setShowFilters((current) => !current);
+                    setShowExportMenu(false);
+                  }}
+                  className={`inline-flex h-10 items-center gap-2 rounded-xl border px-3 text-sm font-medium transition ${
+                    showFilters || activeFilterCount
+                      ? "border-primary/40 bg-primary/10 text-primary"
+                      : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 >
-                  <Filter size={14} />
-                  More
-                  <ChevronDown
-                    size={13}
-                    className={`transition-transform ${
-                      showFilters ? "rotate-180" : ""
-                    }`}
-                  />
+                  <Filter className="h-4 w-4" />
+                  Filters
+
+                  {activeFilterCount > 0 && (
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[11px] font-semibold text-primary-foreground">
+                      {activeFilterCount}
+                    </span>
+                  )}
                 </button>
 
                 {showFilters && (
-                  <div className="absolute right-0 top-full z-30 mt-2 w-64 rounded-xl border border-border bg-card p-4 shadow-xl">
-                    {" "}
-                    <div>
-                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                        Category
-                      </p>
+                  <div className="absolute right-0 z-50 mt-2 w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-border bg-popover p-4 text-popover-foreground shadow-xl">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="mb-2 block text-xs font-medium text-muted-foreground">
+                          Category
+                        </label>
 
-                      <div className="mt-2 flex max-h-36 flex-wrap gap-1.5 overflow-y-auto">
+                        <select
+                          value={categoryFilter}
+                          onChange={(event) =>
+                            setCategoryFilter(event.target.value)
+                          }
+                          className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary/60"
+                        >
+                          <option value="all">All categories</option>
+
+                          {allCategories.map((category) => (
+                            <option key={category} value={category}>
+                              {category}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block text-xs font-medium text-muted-foreground">
+                          Sort by
+                        </label>
+
+                        <select
+                          value={sortOrder}
+                          onChange={(event) =>
+                            setSortOrder(event.target.value)
+                          }
+                          className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary/60"
+                        >
+                          <option value="newest">Newest first</option>
+                          <option value="oldest">Oldest first</option>
+                          <option value="highest">Highest amount</option>
+                          <option value="lowest">Lowest amount</option>
+                        </select>
+                      </div>
+
+                      {activeFilterCount > 0 && (
                         <button
                           type="button"
-                          onClick={() => setCategoryFilter("all")}
-                          className={`rounded-md px-2.5 py-1.5 text-xs transition-colors ${
-                            categoryFilter === "all"
-                              ? "bg-foreground text-background"
-                              : "bg-accent text-muted-foreground hover:text-foreground"
-                          }`}
+                          onClick={clearFilters}
+                          className="w-full rounded-xl bg-muted px-3 py-2.5 text-sm font-medium transition hover:bg-muted/80"
                         >
-                          All
+                          Clear filters
                         </button>
-
-                        {categories.map((category) => (
-                          <button
-                            key={category}
-                            type="button"
-                            onClick={() => setCategoryFilter(category)}
-                            className={`rounded-md px-2.5 py-1.5 text-xs transition-colors ${
-                              categoryFilter === category
-                                ? "bg-foreground text-background"
-                                : "bg-accent text-muted-foreground hover:text-foreground"
-                            }`}
-                          >
-                            {category}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="mt-5 border-t border-border/60 pt-4">
-                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                        Sort
-                      </p>
-
-                      <div className="mt-2 space-y-1">
-                        {[
-                          ["newest", "Newest first"],
-                          ["oldest", "Oldest first"],
-                          ["highest", "Highest amount"],
-                          ["lowest", "Lowest amount"],
-                        ].map(([value, label]) => (
-                          <button
-                            key={value}
-                            type="button"
-                            onClick={() => setSortOrder(value)}
-                            className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm text-secondary-foreground transition-colors hover:bg-accent hover:text-foreground"
-                          >
-                            {label}
-
-                            {sortOrder === value && (
-                              <Check size={14} className="text-primary" />
-                            )}
-                          </button>
-                        ))}
-                      </div>
+                      )}
                     </div>
                   </div>
                 )}
               </div>
             </div>
           </div>
-
-          {(searchTerm || typeFilter !== "all" || categoryFilter !== "all") && (
-            <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-              <span>
-                {filteredTransactions.length} result
-                {filteredTransactions.length === 1 ? "" : "s"}
-              </span>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchTerm("");
-                  setTypeFilter("all");
-                  setCategoryFilter("all");
-                }}
-                className="flex items-center gap-1 text-foreground hover:text-primary"
-              >
-                <X size={12} />
-                Clear filters
-              </button>
-            </div>
-          )}
         </section>
 
-        {/* Monthly transaction groups */}
-        <section className="mt-10">
-          {sortedMonths.length === 0 ? (
-            <div className="flex min-h-64 flex-col items-center justify-center border-t border-border/60 text-center">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted-foreground">
-                <Search size={16} />
-              </div>
-
-              <p className="mt-4 text-sm font-medium text-foreground">
-                No transactions found
-              </p>
-
-              <p className="mt-1 max-w-sm text-xs leading-5 text-muted-foreground">
-                Try changing your search or filters.
-              </p>
+        {groupedTransactions.length === 0 ||
+        groupedTransactions.every(
+          (group) => group.transactions.length === 0
+        ) ? (
+          <div className="rounded-2xl border border-dashed border-border px-6 py-16 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <Search className="h-5 w-5 text-muted-foreground" />
             </div>
-          ) : (
-            <div className="space-y-14">
-              {sortedMonths.map(([monthKey, monthTransactions]) => {
-                const totals = getMonthTotals(monthTransactions);
-                const net = totals.income - totals.expenses;
 
-                return (
-                  <section key={monthKey}>
-                    {/* Month header */}
-                    <div className="border-b border-border/70 pb-4">
-                      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                        <div>
-                          <h2 className="text-lg font-semibold tracking-tight text-foreground">
-                            {formatMonthLabel(monthKey)}
-                          </h2>
+            <h2 className="mt-4 font-semibold">
+              No transactions found
+            </h2>
 
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {monthTransactions.length} transaction
-                            {monthTransactions.length === 1 ? "" : "s"}
-                            <span className="mx-1.5">·</span>
-                            Net:{" "}
-                            <span
-                              className={
-                                net >= 0 ? "text-primary" : "text-foreground"
-                              }
-                            >
-                              {formatCurrency(net, currency)}
-                            </span>
-                          </p>
-                        </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Try changing your search or filters.
+            </p>
 
-                        <div className="flex gap-6 sm:gap-8">
-                          <div>
-                            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                              In
-                            </p>
+            {(searchQuery ||
+              typeFilter !== "all" ||
+              categoryFilter !== "all" ||
+              sortOrder !== "newest") && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="mt-4 text-sm font-medium text-primary hover:underline"
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {groupedTransactions.map((group) => {
+              const income = group.transactions
+                .filter((transaction) => transaction.type === "income")
+                .reduce(
+                  (total, transaction) =>
+                    total + Number(transaction.amount || 0),
+                  0
+                );
 
-                            <p className="mt-1 text-sm font-medium text-primary">
-                              {formatCurrency(totals.income, currency)}
-                            </p>
-                          </div>
+              const expenses = group.transactions
+                .filter((transaction) => transaction.type === "expense")
+                .reduce(
+                  (total, transaction) =>
+                    total + Number(transaction.amount || 0),
+                  0
+                );
 
-                          <div>
-                            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                              Out
-                            </p>
+              return (
+                <section key={group.monthKey}>
+                  <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <h2 className="font-semibold">{group.label}</h2>
 
-                            <p className="mt-1 text-sm font-medium text-foreground">
-                              {formatCurrency(totals.expenses, currency)}
-                            </p>
-                          </div>
-                        </div>
+                      <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                        {income > 0 && (
+                          <span>
+                            In {currency} {formatAmount(income)}
+                          </span>
+                        )}
+
+                        {expenses > 0 && (
+                          <span>
+                            Out {currency} {formatAmount(expenses)}
+                          </span>
+                        )}
                       </div>
                     </div>
 
-                    {/* Transactions within month */}
-                    <div>
-                      {monthTransactions.map((transaction) => {
-                        const isEditing = editingId === transaction.id;
-                        const isIncome = transaction.type === "income";
+                    <span className="text-xs text-muted-foreground">
+                      {group.transactions.length}{" "}
+                      {group.transactions.length === 1
+                        ? "transaction"
+                        : "transactions"}
+                    </span>
+                  </div>
 
-                        if (isEditing) {
-                          return (
-                            <div
-                              key={transaction.id}
-                              className="border-b border-border/60 bg-accent/20 py-5"
-                            >
-                              <div className="flex items-center justify-between">
-                                <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-primary">
-                                  Editing transaction
-                                </p>
+                  <div className="divide-y divide-border/60">
+                    {group.transactions.map((transaction) => {
+                      const isIncome = transaction.type === "income";
+                      const isEditing = editingId === transaction.id;
+
+                      if (isEditing && editForm) {
+                        const categories = getCategories(
+                          editForm.type,
+                          customCategories
+                        );
+
+                        return (
+                          <div
+                            key={transaction.id}
+                            className="py-4"
+                          >
+                            <div className="rounded-2xl border border-border bg-card p-4">
+                              <div className="flex items-start justify-between gap-4">
+                                <div>
+                                  <p className="font-medium">
+                                    Edit transaction
+                                  </p>
+
+                                  <p className="mt-1 text-xs text-muted-foreground">
+                                    Update the details below.
+                                  </p>
+                                </div>
 
                                 <button
                                   type="button"
                                   onClick={cancelEditing}
-                                  className="text-muted-foreground transition-colors hover:text-foreground"
+                                  className="rounded-lg p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
                                   aria-label="Cancel editing"
                                 >
-                                  <X size={16} />
+                                  <X className="h-4 w-4" />
                                 </button>
                               </div>
 
                               <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                                <input
-                                  type="text"
-                                  value={editForm.description}
-                                  onChange={(event) =>
-                                    setEditForm((current) => ({
-                                      ...current,
-                                      description: event.target.value,
-                                    }))
-                                  }
-                                  placeholder="Description"
-                                  className="h-11 rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none focus:border-primary/50"
-                                />
+                                <div className="sm:col-span-2">
+                                  <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                                    Description
+                                  </label>
 
-                                <div className="relative">
-                                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                                    {getCurrencySymbol(currency)}
-                                  </span>
+                                  <input
+                                    value={editForm.description}
+                                    onChange={(event) =>
+                                      setEditForm((current) => ({
+                                        ...current,
+                                        description: event.target.value,
+                                      }))
+                                    }
+                                    className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary/60"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                                    Amount
+                                  </label>
 
                                   <input
                                     type="number"
-                                    min="0"
+                                    min="0.01"
+                                    step="0.01"
                                     value={editForm.amount}
                                     onChange={(event) =>
                                       setEditForm((current) => ({
@@ -677,31 +809,68 @@ function Transactions() {
                                         amount: event.target.value,
                                       }))
                                     }
-                                    className="h-11 w-full rounded-xl border border-border bg-background pl-8 pr-3 text-sm text-foreground outline-none focus:border-primary/50"
+                                    className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary/60"
                                   />
                                 </div>
 
-                                <div className="flex gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() =>
+                                <div>
+                                  <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                                    Date
+                                  </label>
+
+                                  <DatePicker
+                                    value={editForm.date}
+                                    onChange={(date) =>
                                       setEditForm((current) => ({
                                         ...current,
-                                        type:
-                                          current.type === "income"
-                                            ? "expense"
-                                            : "income",
+                                        date,
                                       }))
                                     }
-                                    className="flex-1 rounded-xl border border-border bg-background px-3 py-2.5 text-left text-sm text-foreground"
-                                  >
-                                    {editForm.type === "income"
-                                      ? "Income"
-                                      : "Expense"}
-                                  </button>
+                                  />
+                                </div>
 
-                                  <input
-                                    type="text"
+                                <div>
+                                  <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                                    Type
+                                  </label>
+
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleEditTypeChange("expense")
+                                      }
+                                      className={`h-10 rounded-xl text-sm font-medium transition ${
+                                        editForm.type === "expense"
+                                          ? "bg-primary text-primary-foreground"
+                                          : "bg-muted text-muted-foreground hover:text-foreground"
+                                      }`}
+                                    >
+                                      Expense
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleEditTypeChange("income")
+                                      }
+                                      className={`h-10 rounded-xl text-sm font-medium transition ${
+                                        editForm.type === "income"
+                                          ? "bg-primary text-primary-foreground"
+                                          : "bg-muted text-muted-foreground hover:text-foreground"
+                                      }`}
+                                    >
+                                      Income
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                                    Category
+                                  </label>
+
+                                  <select
                                     value={editForm.category}
                                     onChange={(event) =>
                                       setEditForm((current) => ({
@@ -709,145 +878,160 @@ function Transactions() {
                                         category: event.target.value,
                                       }))
                                     }
-                                    placeholder="Category"
-                                    className="flex-1 rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none focus:border-primary/50"
-                                  />
-                                </div>
+                                    className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary/60"
+                                  >
+                                    <option value="">
+                                      Select category
+                                    </option>
 
-                                <DatePicker
-                                  value={editForm.date}
-                                  onChange={(date) =>
-                                    setEditForm((current) => ({
-                                      ...current,
-                                      date,
-                                    }))
-                                  }
-                                  dateFormat={dateFormat}
-                                />
+                                    {categories.map((category) => (
+                                      <option
+                                        key={category}
+                                        value={category}
+                                      >
+                                        {category}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
                               </div>
 
                               <div className="mt-4 flex justify-end gap-2">
                                 <button
                                   type="button"
                                   onClick={cancelEditing}
-                                  className="rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+                                  className="rounded-xl px-4 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
                                 >
                                   Cancel
                                 </button>
 
                                 <button
                                   type="button"
-                                  onClick={saveEdit}
-                                  className="flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                                >
-                                  <Check size={14} />
-                                  Save changes
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        }
-
-                        return (
-                          <div
-                            key={transaction.id}
-                            className="group flex items-center gap-3 border-b border-border/40 py-4"
-                          >
-                            <div
-                              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-xs font-medium ${
-                                isIncome
-                                  ? "border-primary/20 bg-primary/10 text-primary"
-                                  : "border-border bg-accent text-muted-foreground"
-                              }`}
-                            >
-                              {getInitial(transaction.description)}
-                            </div>
-
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-medium text-foreground">
-                                {transaction.description}
-                              </p>
-
-                              <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
-                                <span>
-                                  {transaction.category || "Uncategorized"}
-                                </span>
-
-                                <span aria-hidden="true">·</span>
-
-                                <span>
-                                  {formatTransactionDate(transaction.date)}
-                                </span>
-
-                                <span aria-hidden="true">·</span>
-
-                                <span>
-                                  {formatTransactionTime(transaction.date)}
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="flex shrink-0 items-center gap-2">
-                              <p
-                                className={`text-sm font-medium tabular-nums ${
-                                  isIncome ? "text-primary" : "text-foreground"
-                                }`}
-                              >
-                                {isIncome ? "+" : "−"}
-                                {formatCurrency(
-                                  Number(transaction.amount || 0),
-                                  currency,
-                                )}
-                              </p>
-
-                              <div className="hidden items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 sm:flex">
-                                <button
-                                  type="button"
-                                  onClick={() => startEditing(transaction)}
-                                  className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                                  aria-label={`Edit ${transaction.description}`}
-                                  title="Edit"
-                                >
-                                  <Edit3 size={14} />
-                                </button>
-
-                                <button
-                                  type="button"
                                   onClick={() =>
-                                    deleteTransaction(transaction.id)
+                                    saveEdit(transaction.id)
                                   }
-                                  className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                                  aria-label={`Delete ${transaction.description}`}
-                                  title="Delete"
+                                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition hover:opacity-90"
                                 >
-                                  <Trash2 size={14} />
-                                </button>
-                              </div>
-
-                              <div className="sm:hidden">
-                                <button
-                                  type="button"
-                                  onClick={() => startEditing(transaction)}
-                                  className="rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
-                                  aria-label={`Edit ${transaction.description}`}
-                                >
-                                  <MoreHorizontal size={15} />
+                                  <Check className="h-4 w-4" />
+                                  Save changes
                                 </button>
                               </div>
                             </div>
                           </div>
                         );
-                      })}
-                    </div>
-                  </section>
-                );
-              })}
-            </div>
-          )}
-        </section>
+                      }
+
+                      return (
+                        <div
+                          key={transaction.id}
+                          className="group relative flex items-center gap-3 py-4"
+                        >
+                          <div
+                            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+                              isIncome
+                                ? "bg-emerald-500/10 text-emerald-500"
+                                : "bg-muted text-muted-foreground"
+                            }`}
+                          >
+                            {isIncome ? (
+                              <ArrowDownRight className="h-4 w-4" />
+                            ) : (
+                              <ArrowUpRight className="h-4 w-4" />
+                            )}
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="truncate text-sm font-medium">
+                                {transaction.description}
+                              </p>
+
+                              <span className="hidden shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground sm:inline">
+                                {transaction.category || "Uncategorized"}
+                              </span>
+                            </div>
+
+                            <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                              <span className="sm:hidden">
+                                {transaction.category || "Uncategorized"}
+                              </span>
+
+                              <span className="sm:hidden">·</span>
+
+                              <span>
+                                {formatTransactionDate(transaction.date)}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex shrink-0 items-center gap-2">
+                            <p
+                              className={`text-sm font-semibold ${
+                                isIncome
+                                  ? "text-emerald-500"
+                                  : "text-foreground"
+                              }`}
+                            >
+                              {isIncome ? "+" : "−"} {currency}{" "}
+                              {formatAmount(transaction.amount)}
+                            </p>
+
+                            <div className="relative" ref={openTransactionMenu === transaction.id ? transactionMenuRef : null}>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setOpenTransactionMenu((current) =>
+                                    current === transaction.id
+                                      ? null
+                                      : transaction.id
+                                  )
+                                }
+                                className="rounded-lg p-2 text-muted-foreground opacity-100 transition hover:bg-muted hover:text-foreground sm:opacity-0 sm:group-hover:opacity-100"
+                                aria-label="Transaction actions"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </button>
+
+                              {openTransactionMenu === transaction.id && (
+                                <div className="absolute right-0 top-full z-50 mt-1 w-36 rounded-xl border border-border bg-popover p-1.5 text-popover-foreground shadow-xl">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      startEditing(transaction)
+                                    }
+                                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-muted"
+                                  >
+                                    <Edit3 className="h-4 w-4" />
+                                    Edit
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      deleteTransaction(transaction.id)
+                                    }
+                                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-destructive transition hover:bg-destructive/10"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                    Delete
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+        )}
       </div>
-    </section>
+    </div>
   );
 }
 
 export default Transactions;
+
